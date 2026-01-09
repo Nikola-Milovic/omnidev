@@ -7,6 +7,7 @@ import {
 	generateAgentsTemplate,
 	generateClaudeTemplate,
 	generateClaudeAppendSection,
+	writeCapabilitiesState,
 } from "@omnidev/core";
 import { promptForProvider } from "../prompts/provider.js";
 
@@ -28,6 +29,11 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	// Create .omni/.gitignore for internal working files
 	if (!existsSync(".omni/.gitignore")) {
 		await Bun.write(".omni/.gitignore", internalGitignore());
+	}
+
+	// Create .omni/capabilities.toml with no capabilities enabled
+	if (!existsSync(".omni/capabilities.toml")) {
+		await writeCapabilitiesState({ enabled: [], disabled: [] });
 	}
 
 	// Get provider selection
@@ -82,22 +88,22 @@ export const initCommand = buildCommand({
 
 function defaultConfig(): string {
 	return `# OmniDev Configuration
+# Main configuration for your OmniDev project
+
 project = "my-project"
 default_profile = "default"
 
-[capabilities]
-enable = ["tasks"]
-disable = []
-
 [profiles.default]
-# Default profile uses base capabilities
+# Default profile - no additional capabilities enabled
 
 [profiles.planning]
-enable = ["tasks"]
+# Example profile for planning work
+enable = []
 disable = []
 
 [profiles.coding]
-enable = ["tasks"]
+# Example profile for coding work
+enable = []
 disable = []
 `;
 }

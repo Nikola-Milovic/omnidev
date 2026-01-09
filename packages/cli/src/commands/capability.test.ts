@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { runCapabilityList } from "./capability";
+import { runCapabilityList, runCapabilityEnable, runCapabilityDisable } from "./capability";
 
 describe("capability list command", () => {
 	let testDir: string;
@@ -39,11 +39,14 @@ describe("capability list command", () => {
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-[capabilities]
-enable = []
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []
+`,
+		);
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -88,12 +91,14 @@ description = "Note management"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-[capabilities]
-enable = ["tasks"]
-disable = ["notes"]
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["tasks"]
+disabled = ["notes"]
+`,
+		);
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -135,11 +140,14 @@ description = "Test"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-[capabilities]
-enable = ["test-cap"]
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []
+`,
+		);
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -175,11 +183,14 @@ description = "Valid capability"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-[capabilities]
-enable = ["valid", "invalid"]
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["valid", "invalid"]
+disabled = []
+`,
+		);
 
 		const consoleLogs: string[] = [];
 		const consoleErrors: string[] = [];
@@ -221,15 +232,16 @@ description = "Task tracking"
 			`project = "test"
 default_profile = "coding"
 
-[capabilities]
-enable = []
-disable = []
-
 [profiles.coding]
 enable = ["tasks"]
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []
+`,
+		);
 		await Bun.write(".omni/active-profile", "coding");
 
 		const consoleLogs: string[] = [];
@@ -273,9 +285,9 @@ enable = ["tasks"]
 		const capabilities = ["alpha", "beta", "gamma"];
 
 		for (const cap of capabilities) {
-			mkdirSync(`omni/capabilities/${cap}`, { recursive: true });
+			mkdirSync(`.omni/capabilities/${cap}`, { recursive: true });
 			await Bun.write(
-				`omni/capabilities/${cap}/capability.toml`,
+				`.omni/capabilities/${cap}/capability.toml`,
 				`[capability]
 id = "${cap}"
 name = "${cap.toUpperCase()}"
@@ -288,11 +300,14 @@ description = "${cap} capability"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-[capabilities]
-enable = ["alpha", "beta", "gamma"]
 `,
 		);
-		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["alpha", "beta", "gamma"]
+disabled = []
+`,
+		);
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -310,5 +325,173 @@ enable = ["alpha", "beta", "gamma"]
 			expect(output).toContain(cap.toUpperCase());
 			expect(output).toContain(`ID: ${cap}`);
 		}
+	});
+});
+
+describe("capability enable command", () => {
+	let testDir: string;
+	let originalCwd: string;
+	let originalExit: typeof process.exit;
+	let exitCode: number | undefined;
+
+	beforeEach(() => {
+		originalCwd = process.cwd();
+		testDir = join(import.meta.dir, `test-capability-enable-${Date.now()}`);
+		mkdirSync(testDir, { recursive: true });
+		process.chdir(testDir);
+
+		// Mock process.exit
+		exitCode = undefined;
+		originalExit = process.exit;
+		process.exit = ((code?: number) => {
+			exitCode = code;
+			throw new Error(`process.exit(${code})`);
+		}) as typeof process.exit;
+	});
+
+	afterEach(() => {
+		process.exit = originalExit;
+		process.chdir(originalCwd);
+		if (existsSync(testDir)) {
+			rmSync(testDir, { recursive: true, force: true });
+		}
+	});
+
+	test("enables a capability", async () => {
+		mkdirSync(".omni/capabilities/tasks", { recursive: true });
+		await Bun.write(
+			".omni/capabilities/tasks/capability.toml",
+			`[capability]
+id = "tasks"
+name = "Tasks"
+version = "1.0.0"
+description = "Task tracking"
+`,
+		);
+
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []
+`,
+		);
+
+		await runCapabilityEnable({}, "tasks");
+
+		const content = await Bun.file(".omni/capabilities.toml").text();
+		expect(content).toContain('enabled = ["tasks"]');
+	});
+
+	test("removes capability from disabled when enabling", async () => {
+		mkdirSync(".omni/capabilities/tasks", { recursive: true });
+		await Bun.write(
+			".omni/capabilities/tasks/capability.toml",
+			`[capability]
+id = "tasks"
+name = "Tasks"
+version = "1.0.0"
+description = "Task tracking"
+`,
+		);
+
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = ["tasks"]
+`,
+		);
+
+		await runCapabilityEnable({}, "tasks");
+
+		const content = await Bun.file(".omni/capabilities.toml").text();
+		expect(content).toContain('enabled = ["tasks"]');
+		expect(content).toContain("disabled = []");
+	});
+
+	test("exits with error if capability doesn't exist", async () => {
+		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []
+`,
+		);
+
+		const originalError = console.error;
+		const originalLog = console.log;
+		console.error = () => {};
+		console.log = () => {};
+
+		try {
+			await runCapabilityEnable({}, "nonexistent");
+		} catch (_error) {
+			// Expected to throw from process.exit mock
+		}
+
+		console.error = originalError;
+		console.log = originalLog;
+
+		expect(exitCode).toBe(1);
+	});
+});
+
+describe("capability disable command", () => {
+	let testDir: string;
+	let originalCwd: string;
+	let originalExit: typeof process.exit;
+	let _exitCode: number | undefined;
+
+	beforeEach(() => {
+		originalCwd = process.cwd();
+		testDir = join(import.meta.dir, `test-capability-disable-${Date.now()}`);
+		mkdirSync(testDir, { recursive: true });
+		process.chdir(testDir);
+
+		// Mock process.exit
+		_exitCode = undefined;
+		originalExit = process.exit;
+		process.exit = ((code?: number) => {
+			_exitCode = code;
+			throw new Error(`process.exit(${code})`);
+		}) as typeof process.exit;
+	});
+
+	afterEach(() => {
+		process.exit = originalExit;
+		process.chdir(originalCwd);
+		if (existsSync(testDir)) {
+			rmSync(testDir, { recursive: true, force: true });
+		}
+	});
+
+	test("disables a capability", async () => {
+		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["tasks"]
+disabled = []
+`,
+		);
+
+		await runCapabilityDisable({}, "tasks");
+
+		const content = await Bun.file(".omni/capabilities.toml").text();
+		expect(content).toContain("enabled = []");
+		expect(content).toContain('disabled = ["tasks"]');
+	});
+
+	test("adds capability to disabled list", async () => {
+		mkdirSync(".omni", { recursive: true });
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []
+`,
+		);
+
+		await runCapabilityDisable({}, "tasks");
+
+		const content = await Bun.file(".omni/capabilities.toml").text();
+		expect(content).toContain('disabled = ["tasks"]');
 	});
 });

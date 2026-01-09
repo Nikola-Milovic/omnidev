@@ -3,3 +3,4 @@ export * from "./loader";
 export * from "./profiles";
 export * from "./env";
 export * from "./provider";
+export * from "./capabilities";

@@ -1,7 +1,13 @@
 import { buildCommand, buildRouteMap } from "@stricli/core";
 import { discoverCapabilities, loadCapabilityConfig } from "@omnidev/core";
 import { loadConfig } from "@omnidev/core";
-import { resolveEnabledCapabilities, getActiveProfile } from "@omnidev/core";
+import {
+	resolveEnabledCapabilitiesFromState,
+	getActiveProfile,
+	loadCapabilitiesState,
+	enableCapability,
+	disableCapability,
+} from "@omnidev/core";
 
 /**
  * Run the capability list command.
@@ -9,8 +15,13 @@ import { resolveEnabledCapabilities, getActiveProfile } from "@omnidev/core";
 export async function runCapabilityList(): Promise<void> {
 	try {
 		const config = await loadConfig();
+		const capabilitiesState = await loadCapabilitiesState();
 		const activeProfile = await getActiveProfile();
-		const enabledIds = resolveEnabledCapabilities(config, activeProfile);
+		const enabledIds = resolveEnabledCapabilitiesFromState(
+			capabilitiesState,
+			config,
+			activeProfile,
+		);
 
 		const capabilityPaths = await discoverCapabilities();
 
@@ -47,6 +58,52 @@ export async function runCapabilityList(): Promise<void> {
 	}
 }
 
+/**
+ * Run the capability enable command.
+ */
+export async function runCapabilityEnable(
+	_flags: Record<string, never>,
+	name: string,
+): Promise<void> {
+	try {
+		// Check if capability exists
+		const capabilityPaths = await discoverCapabilities();
+		const capabilityExists = capabilityPaths.some(async (path) => {
+			const config = await loadCapabilityConfig(path);
+			return config.capability.id === name;
+		});
+
+		if (!capabilityExists) {
+			console.error(`Error: Capability '${name}' not found`);
+			console.log("");
+			console.log("Run 'dev capability list' to see available capabilities");
+			process.exit(1);
+		}
+
+		await enableCapability(name);
+		console.log(`✓ Enabled capability: ${name}`);
+	} catch (error) {
+		console.error("Error enabling capability:", error);
+		process.exit(1);
+	}
+}
+
+/**
+ * Run the capability disable command.
+ */
+export async function runCapabilityDisable(
+	_flags: Record<string, never>,
+	name: string,
+): Promise<void> {
+	try {
+		await disableCapability(name);
+		console.log(`✓ Disabled capability: ${name}`);
+	} catch (error) {
+		console.error("Error disabling capability:", error);
+		process.exit(1);
+	}
+}
+
 const listCommand = buildCommand({
 	docs: {
 		brief: "List all discovered capabilities",
@@ -57,9 +114,49 @@ const listCommand = buildCommand({
 	},
 });
 
+const enableCommand = buildCommand({
+	docs: {
+		brief: "Enable a capability",
+	},
+	parameters: {
+		flags: {},
+		positional: {
+			kind: "tuple" as const,
+			parameters: [
+				{
+					brief: "Capability name to enable",
+					parse: String,
+				},
+			],
+		},
+	},
+	func: runCapabilityEnable,
+});
+
+const disableCommand = buildCommand({
+	docs: {
+		brief: "Disable a capability",
+	},
+	parameters: {
+		flags: {},
+		positional: {
+			kind: "tuple" as const,
+			parameters: [
+				{
+					brief: "Capability name to disable",
+					parse: String,
+				},
+			],
+		},
+	},
+	func: runCapabilityDisable,
+});
+
 export const capabilityRoutes = buildRouteMap({
 	routes: {
 		list: listCommand,
+		enable: enableCommand,
+		disable: disableCommand,
 	},
 	docs: {
 		brief: "Manage capabilities",

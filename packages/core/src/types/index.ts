@@ -72,6 +72,11 @@ export interface CapabilitiesConfig {
 	disable?: string[];
 }
 
+export interface CapabilitiesState {
+	enabled?: string[];
+	disabled?: string[];
+}
+
 export interface OmniConfig {
 	project?: string;
 	default_profile?: string;

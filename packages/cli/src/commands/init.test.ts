@@ -36,8 +36,20 @@ describe("init command", () => {
 		const content = readFileSync(".omni/config.toml", "utf-8");
 		expect(content).toContain('project = "my-project"');
 		expect(content).toContain('default_profile = "default"');
-		expect(content).toContain("[capabilities]");
 		expect(content).toContain("[profiles.default]");
+		// capabilities should NOT be in config.toml anymore
+		expect(content).not.toContain("[capabilities]");
+	});
+
+	test("creates .omni/capabilities.toml with empty state", async () => {
+		await runInit({}, "claude");
+
+		expect(existsSync(".omni/capabilities.toml")).toBe(true);
+
+		const content = readFileSync(".omni/capabilities.toml", "utf-8");
+		expect(content).toContain("# OmniDev Capabilities State");
+		expect(content).toContain("enabled = []");
+		expect(content).toContain("disabled = []");
 	});
 
 	test("creates .omni/ directory with subdirectories", async () => {

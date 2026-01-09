@@ -740,3 +740,31 @@ Files changed:
 - Use --no-verify for commits when pre-existing tests fail but new code is correct
 ---
 
+
+## [2026-01-09 19:45] - US-032
+- Implemented MCP server framework for OmniDev
+- Installed @modelcontextprotocol/sdk 1.25.2 as dependency in packages/mcp
+- Created packages/mcp/src/server.ts with basic MCP server
+- Server uses stdio transport for communication with LLMs
+- Registered ListToolsRequestSchema handler (returns empty tools array for now)
+- Registered CallToolRequestSchema handler (throws error for unknown tools)
+- Implemented graceful shutdown handling for SIGINT and SIGTERM signals
+- Updated packages/mcp/src/index.ts to export startServer function
+- All quality checks pass (typecheck + lint + format:check)
+
+Files changed:
+- packages/mcp/package.json (added @modelcontextprotocol/sdk dependency)
+- packages/mcp/src/server.ts (created with MCP server setup)
+- packages/mcp/src/index.ts (updated to export startServer)
+- bun.lockb (updated with MCP SDK dependencies)
+- scripts/ralph/prd.json (marked US-032 as passing)
+
+**Learnings for future iterations:**
+- MCP SDK's Server class requires name and version in constructor
+- Server capabilities must be declared with { capabilities: { tools: {} } }
+- Use StdioServerTransport for stdio-based MCP communication
+- Log to stderr (console.error) since stdout is reserved for MCP protocol
+- ListToolsRequestSchema and CallToolRequestSchema are the primary handlers for MCP tools
+- Server.connect() is async and must be awaited
+- Pre-existing test failures in registry.test.ts are not related to MCP server changes
+---

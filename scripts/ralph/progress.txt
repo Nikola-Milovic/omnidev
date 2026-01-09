@@ -1061,3 +1061,43 @@ Files changed:
 - Management commands provide good UX with clear status indicators (✓/✗) and helpful error messages
 ---
 
+## [2026-01-09 13:55] - US-043
+- Created Ralph skills and rules for AI agent guidance
+- Files changed:
+  - capabilities/ralph/skills/prd-creation/SKILL.md (created)
+  - capabilities/ralph/skills/ralph-orchestration/SKILL.md (created)
+  - capabilities/ralph/rules/prd-structure.md (created)
+  - capabilities/ralph/rules/iteration-workflow.md (created)
+  - capabilities/ralph/verify-skills-rules.test.ts (created)
+  - scripts/ralph/prd.json (marked US-043 as passing)
+- **Learnings for future iterations:**
+  - Skills use YAML frontmatter (name, description) followed by markdown instructions
+  - Skills/rules are discovered by loader via loadSkills/loadRules functions from @omnidev/core
+  - prd-creation skill guides LLMs in creating structured PRDs with user stories and specs
+  - ralph-orchestration skill defines the iteration workflow (read progress → pick story → implement → test → commit → update)
+  - Rules provide structural guidance (prd-structure.md) and workflow guidance (iteration-workflow.md)
+  - All skills and rules are verified by verify-skills-rules.test.ts integration test
+  - All 410 tests pass with 95.29% line coverage
+---
+
+## [2026-01-09 14:00] - US-044
+- Completed end-to-end integration verification for OmniDev MVP
+- Verified all core functionality from monorepo setup through Ralph capability
+- All acceptance criteria met:
+  - ✅ bun install works from root
+  - ✅ bun run check passes (typecheck + lint + format)
+  - ✅ bun test passes with 410 tests, 95.29% coverage (exceeds 70% requirement)
+  - ✅ omnidev init creates correct structure (omni/, .omni/, .claude/, agents.md, .gitignore)
+  - ✅ omnidev doctor shows all checks passed
+  - ✅ omnidev capability list shows Ralph capability (enabled after config update)
+  - ✅ omnidev agents sync generates skills and rules (.claude/skills/, .cursor/rules/)
+  - ✅ omnidev ralph init creates .omni/ralph/ structure with config, prds/, completed-prds/
+- **Learnings for future iterations:**
+  - End-to-end testing in a clean temporary directory validates the full user experience
+  - All CLI commands work correctly when invoked from test directories
+  - Ralph sync hook integration works through agents sync command
+  - Skills and rules are correctly generated and placed in appropriate directories
+  - Overall test coverage (95.29%) significantly exceeds the 70% threshold
+  - The complete OmniDev MVP is now functional from initialization through Ralph orchestration
+---
+

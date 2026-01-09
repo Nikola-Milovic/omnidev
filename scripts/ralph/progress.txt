@@ -269,3 +269,36 @@ Files changed:
 - Profile system uses `.omni/active-profile` file for persistence (not in config.toml)
 - Active profile resolution is already integrated in buildCapabilityRegistry()
 ---
+## 2026-01-09 22:00 - US-060
+- Implemented comprehensive directory structure documentation and validation
+- Enhanced dev doctor command to validate all config files:
+  - Added checks for provider.toml, capabilities.toml, profiles.toml, .gitignore
+  - Optional check for capabilities directory (not required)
+  - Each check provides helpful fix suggestions
+  - Created helper function createCompleteStructure() for test setup
+  - Added 5 new test cases covering all validation scenarios
+- Comprehensive README documentation:
+  - Updated User Project Structure section with complete .omni folder layout
+  - Added "Understanding the .omni Folder" section explaining Team Mode vs Personal Mode
+  - Added "Configuration Files" table documenting all config files and their purposes
+  - Added "Internal Gitignore Structure" section with examples
+  - Updated CLI commands table with all capability and profile management commands
+  - Updated Configuration section with examples for all config files (config.toml, provider.toml, capabilities.toml, profiles.toml)
+  - Fixed capability path references throughout (.omni/capabilities instead of omni/capabilities)
+- All tests pass (505/505 passing tests)
+- Quality checks pass (typecheck, lint, format)
+
+Files changed:
+- packages/cli/src/commands/doctor.ts - Added 5 new validation functions
+- packages/cli/src/commands/doctor.test.ts - Updated tests with helper function, added 5 new test cases
+- README.md - Complete rewrite of directory structure and configuration documentation sections
+- scripts/ralph/prd.json - Marked US-060 as passes: true
+
+**Learnings for future iterations:**
+- Doctor command is critical for onboarding - comprehensive validation helps users debug setup issues
+- README documentation should be updated in sync with architectural changes
+- Test helper functions (like createCompleteStructure) make tests more maintainable when structure changes
+- Documenting both usage modes (Team vs Personal) helps users make informed decisions about sharing
+- Configuration file documentation should include both examples AND comments explaining purpose
+- US-060 actually included what PRD-012 called "US-061" requirements (usage mode docs) in the README
+---

@@ -324,41 +324,29 @@ When the LLM asks "What tools do I have?" via `omni_query`, OmniDev returns this
 
 ## `index.ts` (main exports)
 
-This is the entry point OmniDev imports. It re-exports everything the capability provides.
+This is the entry point OmniDev imports. Since capabilities are Bun packages, **everything can be programmatic**. Export what you want directly, or let OmniDev discover it from the filesystem.
 
 ```typescript
-import type { CapabilityExports } from '@omnidev/core';
+import type { Skill, Rule, Doc } from '@omnidev/core';
 
 // ============================================
 // 1. SANDBOX TOOLS
 // ============================================
-// These functions are available in the sandbox when LLMs run code via omni_execute.
-// Usage: `import * as tasks from 'tasks'` then `await tasks.create("My task")`
-//
-// This is the PRIMARY way capabilities add functionality. LLMs write code that
-// calls these functions, and OmniDev executes that code in the sandbox.
-
+// Functions available in the sandbox via `import * as tasks from 'tasks'`
 export * from './tools/taskManager';
 
 // ============================================
 // 2. CLI COMMANDS
 // ============================================
-// These extend the `omnidev` CLI with subcommands under `omnidev tasks`.
-// Humans use these to interact with the capability directly.
-
 export { cliCommands } from './cli/commands';
 
 // ============================================
 // 3. TUI VIEWS
 // ============================================
-// OpenTUI React components for rich terminal UIs.
-// These render when CLI commands return data.
-
 export { TaskListView } from './cli/views/TaskList';
 export { TaskBoardView } from './cli/views/TaskBoard';
 export { TaskDetailView } from './cli/views/TaskDetail';
 
-// Map CLI commands to views (when a command has a view, render it instead of text)
 export const cliViews: Record<string, string> = {
   'tasks.list': 'TaskListView',
   'tasks.board': 'TaskBoardView',
@@ -366,12 +354,96 @@ export const cliViews: Record<string, string> = {
 };
 
 // ============================================
-// 4. SKILLS & RULES
+// 4. SKILLS (programmatic OR filesystem)
 // ============================================
-// Skills are loaded from: skills/*/SKILL.md
-// Rules are loaded from: rules/*.md
-// (No code exports needed - discovered from filesystem)
+// Option A: Export directly (takes precedence)
+export const skills: Skill[] = [
+  {
+    name: 'task-management',
+    description: 'Maintain an explicit plan and update tasks as work progresses.',
+    instructions: `
+## When to use this skill
+- Working on multi-step tasks
+- Progress needs to be visible
+
+## Key rules
+- Keep exactly one task in_progress at a time
+- Update status as you work
+    `,
+  },
+];
+
+// Option B: Let OmniDev discover from skills/*/SKILL.md (if skills not exported)
+
+// ============================================
+// 5. RULES (programmatic OR filesystem)
+// ============================================
+// Option A: Export directly
+export const rules: Rule[] = [
+  {
+    name: 'task-workflow',
+    content: `
+# Task Workflow Rules
+- Always check current tasks before creating new ones
+- Use clear, actionable titles
+- Complete tasks before starting new ones
+    `,
+  },
+];
+
+// Option B: Let OmniDev discover from rules/*.md (if rules not exported)
+
+// ============================================
+// 6. DOCS (programmatic OR filesystem)
+// ============================================
+// Option A: Export directly (can be dynamic!)
+export const docs: Doc[] = [
+  {
+    name: 'usage',
+    content: `# Tasks Usage\n\nUse \`tasks.create()\` to create a task...`,
+  },
+];
+
+// Option B: Async function for dynamic docs (fetch from API, generate, etc.)
+export async function getDocs(): Promise<Doc[]> {
+  // Could fetch from Notion, Confluence, or generate from code
+  return [
+    { name: 'api', content: generateApiReference() },
+  ];
+}
+
+// Option C: Let OmniDev discover from docs/*.md (if neither exported)
+
+// ============================================
+// 7. TYPE DEFINITIONS (programmatic OR filesystem)
+// ============================================
+// Option A: Export directly
+export const typeDefinitions = `
+export type Status = 'todo' | 'in_progress' | 'blocked' | 'done';
+export interface Task { id: string; title: string; status: Status; }
+export function create(title: string): Promise<string>;
+`;
+
+// Option B: Let OmniDev read from types.d.ts (if not exported)
 ```
+
+### Resolution Order
+
+OmniDev checks exports first, then falls back to filesystem:
+
+| Component | Check Export | Fallback to Filesystem |
+|-----------|--------------|------------------------|
+| Skills | `skills` array | `skills/*/SKILL.md` |
+| Rules | `rules` array | `rules/*.md` |
+| Docs | `docs` array or `getDocs()` | `docs/*.md` |
+| Types | `typeDefinitions` string | `types.d.ts` |
+
+**This means you can:**
+- Use markdown files (simple, static)
+- Export objects (programmatic, versioned with code)
+- Fetch from APIs (dynamic, external sources)
+- Generate at runtime (computed from code/state)
+- Mix and match (some from files, some programmatic)
 
 ---
 

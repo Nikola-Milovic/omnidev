@@ -435,16 +435,20 @@ transport = "stdio"
 
 ### Capability Exports Interface
 
-A capability's `index.ts` exports a unified interface:
+Since capabilities are Bun packages, **everything can be programmatic**. The `index.ts` is the single source of truth. Filesystem discovery (markdown files) is optional convenience.
 
 ```typescript
 // capabilities/tasks/index.ts
-import type { CapabilityExports, Rule } from '@omnidev/core';
+import type { Capability, Skill, Rule, Doc } from '@omnidev/core';
 
-// Re-export sandbox functions
+// ============================================
+// 1. SANDBOX TOOLS (functions LLMs can call)
+// ============================================
 export * from './tools/taskManager';
 
-// CLI command definitions (Stricli format)
+// ============================================
+// 2. CLI COMMANDS
+// ============================================
 export const cliCommands = {
   tasks: {
     description: 'Manage tasks',
@@ -455,17 +459,98 @@ export const cliCommands = {
   },
 };
 
-// OpenTUI views
+// ============================================
+// 3. TUI VIEWS
+// ============================================
 export { TaskListView } from './cli/views/TaskList';
-
-// Map commands to views
 export const cliViews = {
   'tasks.list': 'TaskListView',
 };
 
-// Note: Skills are loaded from skills/*/SKILL.md
-// Note: Rules are loaded from rules/*.md
+// ============================================
+// 4. SKILLS (programmatic - optional)
+// ============================================
+// Can export skills directly instead of using skills/*/SKILL.md
+export const skills: Skill[] = [
+  {
+    name: 'task-management',
+    description: 'Maintain an explicit plan and update tasks as work progresses.',
+    instructions: `
+## When to use this skill
+- Working on multi-step tasks
+- Progress needs to be visible
+
+## Key rules
+- Keep exactly one task in_progress at a time
+- Update status as you work
+    `,
+  },
+];
+
+// ============================================
+// 5. RULES (programmatic - optional)
+// ============================================
+// Can export rules directly instead of using rules/*.md
+export const rules: Rule[] = [
+  {
+    name: 'task-workflow',
+    content: `
+# Task Workflow Rules
+- Always check current tasks before creating new ones
+- Use clear, actionable titles
+- Complete tasks before starting new ones
+    `,
+  },
+];
+
+// ============================================
+// 6. DOCS (programmatic - optional)
+// ============================================
+// Can export docs directly, fetch from API, generate from code, etc.
+export const docs: Doc[] = [
+  {
+    name: 'api-reference',
+    content: generateApiDocs(), // Dynamic!
+  },
+];
+
+// Or fetch from external source
+export async function getDocs(): Promise<Doc[]> {
+  const response = await fetch('https://api.example.com/docs');
+  return response.json();
+}
+
+// ============================================
+// 7. TYPE DEFINITIONS (programmatic - optional)
+// ============================================
+// Can export type defs instead of using types.d.ts file
+export const typeDefinitions = `
+export type Status = 'todo' | 'in_progress' | 'blocked' | 'done';
+export interface Task { id: string; title: string; status: Status; }
+export function create(title: string): Promise<string>;
+export function list(status?: Status): Promise<Task[]>;
+`;
 ```
+
+### Programmatic vs Filesystem: Resolution Order
+
+OmniDev checks exports first, then falls back to filesystem:
+
+| Component | Programmatic Export | Filesystem Fallback |
+|-----------|---------------------|---------------------|
+| **Skills** | `export const skills: Skill[]` | `skills/*/SKILL.md` |
+| **Rules** | `export const rules: Rule[]` | `rules/*.md` |
+| **Docs** | `export const docs: Doc[]` or `getDocs()` | `docs/*.md` + `definition.md` |
+| **Types** | `export const typeDefinitions: string` | `types.d.ts` |
+| **Tools** | Named exports (functions) | — |
+| **CLI** | `export const cliCommands` | — |
+| **Views** | `export const cliViews` | — |
+
+**Why this matters:**
+- **Fetch from API**: Pull docs from Notion, Confluence, or your own service
+- **Generate dynamically**: Create API docs from JSDoc comments
+- **Conditional content**: Return different rules based on environment
+- **Compute at runtime**: Skills that adapt to project state
 
 ### Installation & Management
 

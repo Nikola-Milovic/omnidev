@@ -83,23 +83,54 @@ Capabilities **do not add MCP tools**. Instead, they add functions to the sandbo
 - Discover capabilities in `omni/capabilities/`
 - Parse `capability.toml` for metadata (including `[env]` declarations)
 - Dynamic `import()` of `index.ts`
-- Extract and register: `tools` (sandbox), `cliCommands`, `cliViews`
-- Discover: `skills/`, `rules/`, `docs/`
+- Extract programmatic exports (takes precedence): `skills`, `rules`, `docs`, `typeDefinitions`
+- Fallback to filesystem discovery: `skills/*/SKILL.md`, `rules/*.md`, `docs/*.md`, `types.d.ts`
+- Register: `tools` (sandbox), `cliCommands`, `cliViews`
 - Load environment from `.omni/.env` and process env
 
 **Type Generator:**
-- Generate `.d.ts` files from capability exports
-- Write to `.omni/types/capabilities.d.ts`
+- Use `typeDefinitions` export if available
+- Otherwise generate from `types.d.ts` file
+- Write combined types to `.omni/generated/types.d.ts`
 - Include in `omni_query` response when `include_types: true`
 
 **Types:**
-- `CapabilityConfig` (parsed from TOML)
-- `CapabilityExports` (what `index.ts` exports)
-- `CommandDefinition` (Stricli-compatible command shape)
-- `McpToolDefinition` (MCP SDK-compatible tool shape)
-- `Skill` (Agent Skills spec)
-- `Rule` (profile-aware rules)
-- `EnvDeclaration` (environment variable requirements)
+
+```typescript
+// Skill - agent behavior instruction
+interface Skill {
+  name: string;           // 1-64 chars, lowercase, hyphens ok
+  description: string;    // 1-1024 chars
+  instructions: string;   // Markdown content
+}
+
+// Rule - guideline or constraint
+interface Rule {
+  name: string;           // Identifier
+  content: string;        // Markdown content
+}
+
+// Doc - documentation/knowledge
+interface Doc {
+  name: string;           // Identifier
+  content: string;        // Markdown content
+}
+
+// CapabilityExports - what index.ts can export
+interface CapabilityExports {
+  // Programmatic (optional, takes precedence over filesystem)
+  skills?: Skill[];
+  rules?: Rule[];
+  docs?: Doc[];
+  getDocs?: () => Promise<Doc[]>;  // Async docs (fetch from API, etc.)
+  typeDefinitions?: string;
+  
+  // Required
+  cliCommands?: Record<string, CommandDefinition>;
+  cliViews?: Record<string, string>;
+  // Plus named function exports for sandbox tools
+}
+```
 
 ### 4. Built-in Capability: `tasks`
 
@@ -396,17 +427,33 @@ project-root/
    a. Parse capability.toml → CapabilityConfig (incl. [env] declarations)
    b. Validate required env vars are present
    c. await import(`${capPath}/index.ts`) → CapabilityExports
-   d. Register:
+   d. Extract from exports (programmatic takes precedence):
       - cliCommands → Stricli app
       - cliViews → View registry
-      - tools → Sandbox namespace
-      - skills → Skills registry  
-      - rules → Rules registry
-8. Generate to .omni/generated/ (rules.md, skills.md, types.d.ts)
+      - tools (named function exports) → Sandbox namespace
+      - skills (if exported) → Skills registry
+      - rules (if exported) → Rules registry
+      - docs (if exported or getDocs()) → Docs registry
+      - typeDefinitions (if exported) → Types registry
+   e. Fallback to filesystem discovery:
+      - skills/*/SKILL.md → Skills registry (if not exported)
+      - rules/*.md → Rules registry (if not exported)
+      - docs/*.md → Docs registry (if not exported)
+      - types.d.ts → Types registry (if not exported)
+8. Generate to .omni/generated/ + provider directories
 9. Start file watcher for hot reload
 10. Write PID to .omni/server.pid
 11. Ready to serve
 ```
+
+**Programmatic vs Filesystem:**
+
+| Component | Programmatic (precedence) | Filesystem (fallback) |
+|-----------|---------------------------|----------------------|
+| Skills | `export const skills: Skill[]` | `skills/*/SKILL.md` |
+| Rules | `export const rules: Rule[]` | `rules/*.md` |
+| Docs | `export const docs` or `getDocs()` | `docs/*.md` |
+| Types | `export const typeDefinitions` | `types.d.ts` |
 
 ### Hot Reload Mechanism
 

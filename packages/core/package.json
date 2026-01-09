@@ -9,5 +9,8 @@
 		"typecheck": "tsc --noEmit",
 		"build": "echo 'Build not needed for Bun runtime'"
 	},
-	"devDependencies": {}
+	"devDependencies": {},
+	"dependencies": {
+		"smol-toml": "^1.6.0"
+	}
 }

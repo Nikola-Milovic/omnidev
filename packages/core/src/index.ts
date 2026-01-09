@@ -14,5 +14,8 @@ export function getVersion(): string {
 // Export core types
 export * from './types';
 
+// Export config functionality
+export * from './config';
+
 // Export test utilities
 export * from './test-utils';

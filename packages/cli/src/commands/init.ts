@@ -8,6 +8,7 @@ import {
 	generateClaudeTemplate,
 	generateClaudeAppendSection,
 	writeCapabilitiesState,
+	writeProfiles,
 } from "@omnidev/core";
 import { promptForProvider } from "../prompts/provider.js";
 
@@ -34,6 +35,11 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	// Create .omni/capabilities.toml with no capabilities enabled
 	if (!existsSync(".omni/capabilities.toml")) {
 		await writeCapabilitiesState({ enabled: [], disabled: [] });
+	}
+
+	// Create .omni/profiles.toml with default profiles
+	if (!existsSync(".omni/profiles.toml")) {
+		await writeProfiles(defaultProfiles());
 	}
 
 	// Get provider selection
@@ -89,23 +95,36 @@ export const initCommand = buildCommand({
 function defaultConfig(): string {
 	return `# OmniDev Configuration
 # Main configuration for your OmniDev project
+#
+# This file controls:
+#   - Project name
+#   - Default profile (see profiles.toml for profile definitions)
+#
+# Other configuration files:
+#   - capabilities.toml   - Which capabilities are enabled
+#   - profiles.toml       - Profile definitions and capability overrides
+#   - provider.toml       - AI provider selection (claude/codex)
+#   - .gitignore         - Working files that are always ignored
 
 project = "my-project"
 default_profile = "default"
-
-[profiles.default]
-# Default profile - no additional capabilities enabled
-
-[profiles.planning]
-# Example profile for planning work
-enable = []
-disable = []
-
-[profiles.coding]
-# Example profile for coding work
-enable = []
-disable = []
 `;
+}
+
+function defaultProfiles() {
+	return {
+		profiles: {
+			default: {},
+			planning: {
+				enable: [],
+				disable: [],
+			},
+			coding: {
+				enable: [],
+				disable: [],
+			},
+		},
+	};
 }
 
 async function createProviderFiles(providers: Provider[]) {

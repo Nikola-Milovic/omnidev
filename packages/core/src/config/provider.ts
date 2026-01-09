@@ -19,6 +19,11 @@ export async function writeProviderConfig(config: ProviderConfig): Promise<void>
 
 	lines.push("# OmniDev Provider Configuration");
 	lines.push("# Selected AI provider(s) for this project");
+	lines.push("#");
+	lines.push("# This file controls which AI provider(s) you're using:");
+	lines.push("#   - claude: Generates .claude/claude.md instruction file");
+	lines.push("#   - codex:  Generates AGENTS.md instruction file");
+	lines.push("#   - both:   Generates both instruction files");
 	lines.push("");
 
 	if (config.providers && config.providers.length > 1) {

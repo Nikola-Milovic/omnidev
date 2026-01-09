@@ -27,11 +27,11 @@ describe("agents sync command", () => {
 
 	test("should create required directories", async () => {
 		// Create minimal config
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -43,11 +43,11 @@ enable = []`,
 
 	test("should generate rules.md with no capabilities", async () => {
 		// Create minimal config
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -60,7 +60,7 @@ enable = []`,
 
 	test("should sync skills to .claude/skills/", async () => {
 		// Create a test capability with a skill
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(join(capPath, "skills", "test-skill"), { recursive: true });
 
 		await Bun.write(
@@ -82,11 +82,11 @@ description: "A test skill"
 Do something useful.`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -100,7 +100,7 @@ enable = ["test-cap"]`,
 
 	test("should sync multiple skills", async () => {
 		// Create a test capability with multiple skills
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(join(capPath, "skills", "skill-one"), { recursive: true });
 		mkdirSync(join(capPath, "skills", "skill-two"), { recursive: true });
 
@@ -133,11 +133,11 @@ description: "Second skill"
 Second skill content.`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -148,7 +148,7 @@ enable = ["test-cap"]`,
 
 	test("should sync rules to .cursor/rules/", async () => {
 		// Create a test capability with a rule
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(join(capPath, "rules"), { recursive: true });
 
 		await Bun.write(
@@ -167,11 +167,11 @@ description = "A test capability"`,
 Always do X when Y.`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -184,7 +184,7 @@ enable = ["test-cap"]`,
 
 	test("should sync multiple rules", async () => {
 		// Create a test capability with multiple rules
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(join(capPath, "rules"), { recursive: true });
 
 		await Bun.write(
@@ -199,11 +199,11 @@ description = "A test capability"`,
 		await Bun.write(join(capPath, "rules", "rule-one.md"), "# Rule One\n\nContent one.");
 		await Bun.write(join(capPath, "rules", "rule-two.md"), "# Rule Two\n\nContent two.");
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -214,7 +214,7 @@ enable = ["test-cap"]`,
 
 	test("should include rules in rules.md", async () => {
 		// Create a test capability with a rule
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(join(capPath, "rules"), { recursive: true });
 
 		await Bun.write(
@@ -233,11 +233,11 @@ description = "A test capability"`,
 Follow this carefully.`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -250,7 +250,7 @@ enable = ["test-cap"]`,
 
 	test("should handle capabilities with no skills or rules", async () => {
 		// Create a test capability with no skills or rules
-		const capPath = "omni/capabilities/empty-cap";
+		const capPath = ".omni/capabilities/empty-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(
@@ -262,11 +262,11 @@ version = "1.0.0"
 description = "A capability with no content"`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["empty-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["empty-cap"]
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -286,11 +286,11 @@ enable = ["empty-cap"]`,
 
 	test("should overwrite existing generated files", async () => {
 		// Create initial config and run sync
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runAgentsSync();
@@ -309,8 +309,8 @@ enable = []`,
 
 	test("should respect profile-based capability filtering", async () => {
 		// Create two capabilities
-		const cap1Path = "omni/capabilities/cap-one";
-		const cap2Path = "omni/capabilities/cap-two";
+		const cap1Path = ".omni/capabilities/cap-one";
+		const cap2Path = ".omni/capabilities/cap-two";
 		mkdirSync(join(cap1Path, "skills", "skill-one"), { recursive: true });
 		mkdirSync(join(cap2Path, "skills", "skill-two"), { recursive: true });
 
@@ -356,11 +356,16 @@ Content two.`,
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-default_profile = "default"
-[capabilities]
-enable = ["cap-one"]
-[profiles.default]`,
+default_profile = "default"`,
 		);
+
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["cap-one"]
+disabled = []`,
+		);
+
+		await Bun.write(".omni/profiles.toml", `[profiles.default]`);
 
 		await runAgentsSync();
 
@@ -371,16 +376,16 @@ enable = ["cap-one"]
 
 	test("should handle capability loading errors gracefully", async () => {
 		// Create a capability with invalid config
-		const capPath = "omni/capabilities/invalid-cap";
+		const capPath = ".omni/capabilities/invalid-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(join(capPath, "capability.toml"), "invalid toml [[[");
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		// Should not throw

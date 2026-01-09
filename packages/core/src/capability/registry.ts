@@ -1,8 +1,9 @@
 import type { LoadedCapability, Skill, Rule, Doc } from "../types";
 import { discoverCapabilities, loadCapability } from "./loader";
 import { loadEnvironment } from "../config/env";
-import { resolveEnabledCapabilities, getActiveProfile } from "../config/profiles";
+import { resolveEnabledCapabilitiesFromState, getActiveProfile } from "../config/profiles";
 import { loadConfig } from "../config/loader";
+import { loadCapabilitiesState } from "../config/capabilities";
 
 /**
  * Registry of loaded capabilities with helper functions.
@@ -24,9 +25,14 @@ export interface CapabilityRegistry {
  */
 export async function buildCapabilityRegistry(): Promise<CapabilityRegistry> {
 	const config = await loadConfig();
+	const capabilitiesState = await loadCapabilitiesState();
 	const env = await loadEnvironment();
 	const activeProfile = await getActiveProfile();
-	const enabledIds = resolveEnabledCapabilities(config, activeProfile);
+	const enabledIds = await resolveEnabledCapabilitiesFromState(
+		capabilitiesState,
+		config,
+		activeProfile,
+	);
 
 	const capabilityPaths = await discoverCapabilities();
 	const capabilities = new Map<string, LoadedCapability>();

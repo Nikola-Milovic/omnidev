@@ -14,7 +14,7 @@ describe("types generate command", () => {
 		process.chdir(testDir);
 
 		// Create omni directory structure
-		mkdirSync("omni/capabilities", { recursive: true });
+		mkdirSync(".omni/capabilities", { recursive: true });
 		mkdirSync(".omni", { recursive: true });
 	});
 
@@ -27,11 +27,11 @@ describe("types generate command", () => {
 
 	test("should create required directory", async () => {
 		// Create minimal config
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -41,11 +41,11 @@ enable = []`,
 
 	test("should generate types.d.ts with no capabilities", async () => {
 		// Create minimal config
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -59,7 +59,7 @@ enable = []`,
 
 	test("should include type definitions from a capability", async () => {
 		// Create a test capability with types
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(
@@ -80,11 +80,11 @@ export interface TestInterface {
 }`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -99,7 +99,7 @@ enable = ["test-cap"]`,
 
 	test("should include type definitions from multiple capabilities", async () => {
 		// Create first capability
-		const cap1Path = "omni/capabilities/cap-one";
+		const cap1Path = ".omni/capabilities/cap-one";
 		mkdirSync(cap1Path, { recursive: true });
 
 		await Bun.write(
@@ -114,7 +114,7 @@ description = "First capability"`,
 		await Bun.write(join(cap1Path, "types.d.ts"), `export function functionOne(): void;`);
 
 		// Create second capability
-		const cap2Path = "omni/capabilities/cap-two";
+		const cap2Path = ".omni/capabilities/cap-two";
 		mkdirSync(cap2Path, { recursive: true });
 
 		await Bun.write(
@@ -128,11 +128,11 @@ description = "Second capability"`,
 
 		await Bun.write(join(cap2Path, "types.d.ts"), `export function functionTwo(): void;`);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["cap-one", "cap-two"]`,
+			".omni/capabilities.toml",
+			`enabled = ["cap-one", "cap-two"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -144,7 +144,7 @@ enable = ["cap-one", "cap-two"]`,
 
 	test("should handle capabilities without type definitions", async () => {
 		// Create a capability without types.d.ts
-		const capPath = "omni/capabilities/no-types-cap";
+		const capPath = ".omni/capabilities/no-types-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(
@@ -156,11 +156,11 @@ version = "1.0.0"
 description = "A capability without types"`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["no-types-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["no-types-cap"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -172,7 +172,7 @@ enable = ["no-types-cap"]`,
 
 	test("should handle mixed capabilities (some with types, some without)", async () => {
 		// Create capability with types
-		const cap1Path = "omni/capabilities/with-types";
+		const cap1Path = ".omni/capabilities/with-types";
 		mkdirSync(cap1Path, { recursive: true });
 
 		await Bun.write(
@@ -187,7 +187,7 @@ description = "Has types"`,
 		await Bun.write(join(cap1Path, "types.d.ts"), `export function myFunction(): void;`);
 
 		// Create capability without types
-		const cap2Path = "omni/capabilities/without-types";
+		const cap2Path = ".omni/capabilities/without-types";
 		mkdirSync(cap2Path, { recursive: true });
 
 		await Bun.write(
@@ -199,11 +199,11 @@ version = "1.0.0"
 description = "No types"`,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["with-types", "without-types"]`,
+			".omni/capabilities.toml",
+			`enabled = ["with-types", "without-types"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -215,11 +215,11 @@ enable = ["with-types", "without-types"]`,
 
 	test("should overwrite existing types.d.ts", async () => {
 		// Create initial config and run generate
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -238,7 +238,7 @@ enable = []`,
 
 	test("should respect profile-based capability filtering", async () => {
 		// Create two capabilities with different types
-		const cap1Path = "omni/capabilities/cap-one";
+		const cap1Path = ".omni/capabilities/cap-one";
 		mkdirSync(cap1Path, { recursive: true });
 
 		await Bun.write(
@@ -252,7 +252,7 @@ description = "First capability"`,
 
 		await Bun.write(join(cap1Path, "types.d.ts"), `export function capOneFunction(): void;`);
 
-		const cap2Path = "omni/capabilities/cap-two";
+		const cap2Path = ".omni/capabilities/cap-two";
 		mkdirSync(cap2Path, { recursive: true });
 
 		await Bun.write(
@@ -270,11 +270,16 @@ description = "Second capability"`,
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-default_profile = "default"
-[capabilities]
-enable = ["cap-one"]
-[profiles.default]`,
+default_profile = "default"`,
 		);
+
+		await Bun.write(
+			".omni/capabilities.toml",
+			`enabled = ["cap-one"]
+disabled = []`,
+		);
+
+		await Bun.write(".omni/profiles.toml", `[profiles.default]`);
 
 		await runTypesGenerate();
 
@@ -285,16 +290,16 @@ enable = ["cap-one"]
 
 	test("should handle capability loading errors gracefully", async () => {
 		// Create a capability with invalid config
-		const capPath = "omni/capabilities/invalid-cap";
+		const capPath = ".omni/capabilities/invalid-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(join(capPath, "capability.toml"), "invalid toml [[[");
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = []`,
+			".omni/capabilities.toml",
+			`enabled = []
+disabled = []`,
 		);
 
 		// Should not throw
@@ -305,7 +310,7 @@ enable = []`,
 	});
 
 	test("should trim whitespace from type definitions", async () => {
-		const capPath = "omni/capabilities/test-cap";
+		const capPath = ".omni/capabilities/test-cap";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(
@@ -327,11 +332,11 @@ export function testFunction(): void;
 `,
 		);
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["test-cap"]`,
+			".omni/capabilities.toml",
+			`enabled = ["test-cap"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();
@@ -343,7 +348,7 @@ enable = ["test-cap"]`,
 	});
 
 	test("should handle empty type definitions", async () => {
-		const capPath = "omni/capabilities/empty-types";
+		const capPath = ".omni/capabilities/empty-types";
 		mkdirSync(capPath, { recursive: true });
 
 		await Bun.write(
@@ -358,11 +363,11 @@ description = "Empty types file"`,
 		// Create empty types.d.ts file
 		await Bun.write(join(capPath, "types.d.ts"), "   \n\n   ");
 
+		await Bun.write(".omni/config.toml", `project = "test"`);
 		await Bun.write(
-			".omni/config.toml",
-			`project = "test"
-[capabilities]
-enable = ["empty-types"]`,
+			".omni/capabilities.toml",
+			`enabled = ["empty-types"]
+disabled = []`,
 		);
 
 		await runTypesGenerate();

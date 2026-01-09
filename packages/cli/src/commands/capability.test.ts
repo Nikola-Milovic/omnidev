@@ -231,8 +231,11 @@ description = "Task tracking"
 			".omni/config.toml",
 			`project = "test"
 default_profile = "coding"
-
-[profiles.coding]
+`,
+		);
+		await Bun.write(
+			".omni/profiles.toml",
+			`[profiles.coding]
 enable = ["tasks"]
 `,
 		);

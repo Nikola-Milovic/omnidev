@@ -20,12 +20,9 @@ describe("buildCapabilityRegistry", () => {
 		mkdirSync(capabilitiesDir, { recursive: true });
 		mkdirSync(omniDir, { recursive: true });
 
-		// Create default config
-		writeFileSync(
-			join(testDir, ".omni", "config.toml"),
-			`[capabilities]
-enable = ["cap1", "cap2"]`,
-		);
+		// Create default config files
+		writeFileSync(join(testDir, ".omni", "config.toml"), `project = "test"`);
+		writeFileSync(join(testDir, ".omni", "capabilities.toml"), `enabled = ["cap1", "cap2"]`);
 
 		// Change to test directory
 		process.chdir(testDir);
@@ -106,11 +103,7 @@ description = "Second capability"`,
 
 	test("filters out disabled capabilities", async () => {
 		// Update config to only enable cap1
-		writeFileSync(
-			join(".omni", "config.toml"),
-			`[capabilities]
-enable = ["cap1"]`,
-		);
+		writeFileSync(join(".omni", "capabilities.toml"), `enabled = ["cap1"]`);
 
 		// Create cap1 (enabled)
 		const cap1Path = join(".omni", "capabilities", "cap1");
@@ -147,10 +140,13 @@ description = "Disabled capability"`,
 		// Create base config enabling cap1
 		writeFileSync(
 			join(".omni", "config.toml"),
-			`[capabilities]
-enable = ["cap1"]
-
-[profiles.dev]
+			`project = "test"
+default_profile = "dev"`,
+		);
+		writeFileSync(join(".omni", "capabilities.toml"), `enabled = ["cap1"]`);
+		writeFileSync(
+			join(".omni", "profiles.toml"),
+			`[profiles.dev]
 enable = ["cap2"]`,
 		);
 

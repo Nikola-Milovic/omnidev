@@ -96,8 +96,11 @@ default_profile = "default"
 
 [capabilities]
 enable = ["tasks"]
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 
 [profiles.planning]
 enable = ["tasks", "planner"]
@@ -128,8 +131,11 @@ default_profile = "default"
 
 [capabilities]
 enable = ["tasks"]
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 
 [profiles.planning]
 enable = ["planner"]
@@ -155,8 +161,11 @@ default_profile = "default"
 
 [capabilities]
 enable = ["tasks"]
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 
 [profiles.planning]
 enable = ["planner"]
@@ -182,8 +191,11 @@ default_profile = "planning"
 
 [capabilities]
 enable = ["tasks"]
-
-[profiles.planning]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.planning]
 enable = ["planner"]
 `,
 			);
@@ -230,8 +242,11 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 `,
 			);
 
@@ -255,8 +270,11 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 
 [profiles.planning]
 enable = ["planner"]
@@ -280,8 +298,11 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-
-[profiles.planning]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.planning]
 `,
 			);
 
@@ -300,8 +321,11 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-
-[profiles.default]
+`,
+			);
+			await Bun.write(
+				".omni/profiles.toml",
+				`[profiles.default]
 [profiles.planning]
 [profiles.coding]
 `,

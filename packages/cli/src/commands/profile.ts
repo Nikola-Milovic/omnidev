@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import {
 	getActiveProfile,
 	loadConfig,
+	loadProfiles,
 	resolveEnabledCapabilities,
 	setActiveProfile,
 } from "@omnidev/core";
@@ -59,8 +60,9 @@ export async function runProfileList(): Promise<void> {
 			process.exit(1);
 		}
 
-		// Load config
+		// Load config and profiles
 		const config = await loadConfig();
+		const profilesConfig = await loadProfiles();
 
 		// Get active profile
 		const activeProfile = existsSync(".omni/active-profile")
@@ -68,13 +70,13 @@ export async function runProfileList(): Promise<void> {
 			: (config.default_profile ?? "default");
 
 		// Check if profiles exist
-		const profiles = config.profiles ?? {};
+		const profiles = profilesConfig.profiles ?? {};
 		const profileNames = Object.keys(profiles);
 
 		if (profileNames.length === 0) {
-			console.log("No profiles defined in config.toml");
+			console.log("No profiles defined in profiles.toml");
 			console.log("");
-			console.log("Using default capabilities from [capabilities] section");
+			console.log("Using default capabilities from capabilities.toml");
 			return;
 		}
 
@@ -125,13 +127,13 @@ export async function runProfileSet(profileName: string): Promise<void> {
 			process.exit(1);
 		}
 
-		// Load config
-		const config = await loadConfig();
+		// Load profiles
+		const profilesConfig = await loadProfiles();
 
 		// Validate profile exists
-		const profiles = config.profiles ?? {};
+		const profiles = profilesConfig.profiles ?? {};
 		if (!(profileName in profiles)) {
-			console.log(`✗ Profile "${profileName}" not found in config.toml`);
+			console.log(`✗ Profile "${profileName}" not found in profiles.toml`);
 			console.log("");
 			console.log("Available profiles:");
 			const profileNames = Object.keys(profiles);

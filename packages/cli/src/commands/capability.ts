@@ -17,7 +17,7 @@ export async function runCapabilityList(): Promise<void> {
 		const config = await loadConfig();
 		const capabilitiesState = await loadCapabilitiesState();
 		const activeProfile = await getActiveProfile();
-		const enabledIds = resolveEnabledCapabilitiesFromState(
+		const enabledIds = await resolveEnabledCapabilitiesFromState(
 			capabilitiesState,
 			config,
 			activeProfile,

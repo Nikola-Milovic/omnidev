@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { runProfileList, runProfileSet, runProfileCreate } from "./profile";
+import { runProfileList, runProfileSet } from "./profile";
 
 describe("profile commands", () => {
 	let testDir: string;
@@ -72,10 +72,7 @@ describe("profile commands", () => {
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-default_profile = "default"
-
-[capabilities]
-enable = ["tasks"]
+active_profile = "default"
 `,
 			);
 
@@ -92,21 +89,16 @@ enable = ["tasks"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-default_profile = "default"
+active_profile = "default"
 
-[capabilities]
-enable = ["tasks"]
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+[profiles.default]
+capabilities = []
 
 [profiles.planning]
-enable = ["tasks", "planner"]
+capabilities = ["tasks", "planner"]
 
 [profiles.coding]
-disable = ["planner"]
+capabilities = []
 `,
 			);
 
@@ -123,25 +115,18 @@ disable = ["planner"]
 		test("should show active profile with marker", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			mkdirSync(".omni", { recursive: true });
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-default_profile = "default"
+active_profile = "planning"
 
-[capabilities]
-enable = ["tasks"]
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+[profiles.default]
+capabilities = []
 
 [profiles.planning]
-enable = ["planner"]
+capabilities = ["planner"]
 `,
 			);
-			await Bun.write(".omni/active-profile", "planning");
 
 			await runProfileList();
 
@@ -157,19 +142,13 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-default_profile = "default"
+active_profile = "default"
 
-[capabilities]
-enable = ["tasks"]
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+[profiles.default]
+capabilities = []
 
 [profiles.planning]
-enable = ["planner"]
-disable = ["tasks"]
+capabilities = ["planner", "tasks"]
 `,
 			);
 
@@ -177,26 +156,19 @@ disable = ["tasks"]
 
 			expect(exitCode).toBeUndefined();
 			const output = consoleOutput.join("\n");
-			expect(output).toContain("Enable: planner");
-			expect(output).toContain("Disable: tasks");
+			expect(output).toContain("Capabilities: planner, tasks");
 		});
 
 		test("should use default_profile when no active profile", async () => {
-			// Create config with default_profile
+			// Create config with active_profile
 			mkdirSync(".omni", { recursive: true });
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-default_profile = "planning"
+active_profile = "planning"
 
-[capabilities]
-enable = ["tasks"]
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.planning]
-enable = ["planner"]
+[profiles.planning]
+capabilities = ["planner"]
 `,
 			);
 
@@ -242,11 +214,9 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+
+[profiles.default]
+capabilities = []
 `,
 			);
 
@@ -266,18 +236,16 @@ enable = ["planner"]
 		test("should set active profile", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			mkdirSync(".omni", { recursive: true });
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+active_profile = "default"
+
+[profiles.default]
+capabilities = []
 
 [profiles.planning]
-enable = ["planner"]
+capabilities = ["planner"]
 `,
 			);
 
@@ -286,23 +254,24 @@ enable = ["planner"]
 			expect(exitCode).toBeUndefined();
 			expect(consoleOutput.join("\n")).toContain("Active profile set to: planning");
 
-			// Verify file was written
-			const activeProfile = await Bun.file(".omni/active-profile").text();
-			expect(activeProfile.trim()).toBe("planning");
+			// Verify active_profile was updated in config.toml
+			const configContent = await Bun.file(".omni/config.toml").text();
+			expect(configContent).toContain('active_profile = "planning"');
 		});
 
 		test("should trigger agents sync after setting profile", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			mkdirSync(".omni", { recursive: true });
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.planning]
+active_profile = "default"
+
+[profiles.default]
+capabilities = []
+
+[profiles.planning]
+capabilities = []
 `,
 			);
 
@@ -311,8 +280,6 @@ enable = ["planner"]
 			expect(exitCode).toBeUndefined();
 			const output = consoleOutput.join("\n");
 			expect(output).toContain("Syncing agent configuration");
-			// Since agents sync doesn't exist yet, we expect the note
-			expect(output).toContain("agents sync not yet implemented");
 		});
 
 		test("should show list of available profiles when profile not found", async () => {
@@ -321,13 +288,15 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
+
+[profiles.default]
+capabilities = []
+
 [profiles.planning]
+capabilities = []
+
 [profiles.coding]
+capabilities = []
 `,
 			);
 
@@ -351,9 +320,6 @@ enable = ["planner"]
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-
-[capabilities]
-enable = ["tasks"]
 `,
 			);
 
@@ -382,138 +348,6 @@ enable = ["tasks"]
 
 			expect(exitCode).toBe(1);
 			expect(consoleErrors.join("\n")).toContain("Error setting profile");
-		});
-	});
-
-	describe("runProfileCreate", () => {
-		test("should show error when config file does not exist", async () => {
-			try {
-				await runProfileCreate("newprofile");
-			} catch {
-				// Expected to throw due to process.exit mock
-			}
-
-			expect(exitCode).toBe(1);
-			expect(consoleOutput.join("\n")).toContain("No config file found");
-			expect(consoleOutput.join("\n")).toContain("Run: omnidev init");
-		});
-
-		test("should create new profile with empty enable/disable lists", async () => {
-			// Create config
-			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
-				".omni/config.toml",
-				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
-`,
-			);
-
-			await runProfileCreate("newprofile");
-
-			expect(exitCode).toBeUndefined();
-			expect(consoleOutput.join("\n")).toContain("Created profile: newprofile");
-
-			// Verify file was written
-			const profilesContent = await Bun.file(".omni/profiles.toml").text();
-			expect(profilesContent).toContain("[profiles.newprofile]");
-			expect(profilesContent).toContain("enable = []");
-			expect(profilesContent).toContain("disable = []");
-		});
-
-		test("should show error when profile already exists", async () => {
-			// Create config with existing profile
-			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
-				".omni/config.toml",
-				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
-
-[profiles.existing]
-enable = ["tasks"]
-`,
-			);
-
-			try {
-				await runProfileCreate("existing");
-			} catch {
-				// Expected to throw due to process.exit mock
-			}
-
-			expect(exitCode).toBe(1);
-			const output = consoleOutput.join("\n");
-			expect(output).toContain('Profile "existing" already exists');
-			expect(output).toContain("dev profile list");
-		});
-
-		test("should show next steps after creating profile", async () => {
-			// Create config
-			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
-				".omni/config.toml",
-				`project = "test-project"
-`,
-			);
-			await Bun.write(
-				".omni/profiles.toml",
-				`[profiles.default]
-`,
-			);
-
-			await runProfileCreate("myprofile");
-
-			expect(exitCode).toBeUndefined();
-			const output = consoleOutput.join("\n");
-			expect(output).toContain("Next steps:");
-			expect(output).toContain("Edit .omni/profiles.toml");
-			expect(output).toContain("dev profile set myprofile");
-		});
-
-		test("should handle invalid profiles.toml gracefully", async () => {
-			// Create valid config but invalid profiles.toml
-			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
-				".omni/config.toml",
-				`project = "test-project"
-`,
-			);
-			await Bun.write(".omni/profiles.toml", "invalid toml [[[");
-
-			try {
-				await runProfileCreate("newprofile");
-			} catch {
-				// Expected to throw due to process.exit mock
-			}
-
-			expect(exitCode).toBe(1);
-			expect(consoleErrors.join("\n")).toContain("Error creating profile");
-		});
-
-		test("should create profile even when profiles.toml does not exist", async () => {
-			// Create config without profiles.toml
-			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
-				".omni/config.toml",
-				`project = "test-project"
-`,
-			);
-
-			await runProfileCreate("firstprofile");
-
-			expect(exitCode).toBeUndefined();
-			expect(consoleOutput.join("\n")).toContain("Created profile: firstprofile");
-
-			// Verify file was created
-			expect(existsSync(".omni/profiles.toml")).toBe(true);
-			const profilesContent = await Bun.file(".omni/profiles.toml").text();
-			expect(profilesContent).toContain("[profiles.firstprofile]");
 		});
 	});
 });

@@ -64,26 +64,17 @@ export interface Doc {
 
 // Config Types
 export interface ProfileConfig {
-	enable?: string[];
-	disable?: string[];
-}
-
-export interface CapabilitiesConfig {
-	enable?: string[];
-	disable?: string[];
-}
-
-export interface CapabilitiesState {
-	enabled?: string[];
-	disabled?: string[];
+	capabilities?: string[];
 }
 
 export interface OmniConfig {
 	project?: string;
-	default_profile?: string;
-	capabilities?: CapabilitiesConfig;
+	active_profile?: string;
 	env?: Record<string, string>;
 	profiles?: Record<string, ProfileConfig>;
+	providers?: {
+		enabled?: Provider[];
+	};
 }
 
 // Provider Types

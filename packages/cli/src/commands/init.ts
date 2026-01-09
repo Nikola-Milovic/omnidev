@@ -1,14 +1,13 @@
 import { buildCommand } from "@stricli/core";
-import { existsSync, mkdirSync, appendFileSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import type { Provider } from "@omnidev/core";
 import {
-	writeProviderConfig,
 	parseProviderFlag,
 	generateAgentsTemplate,
 	generateClaudeTemplate,
-	generateClaudeAppendSection,
-	writeCapabilitiesState,
-	writeProfiles,
+	generateInstructionsTemplate,
+	writeConfig,
+	syncAgentConfiguration,
 } from "@omnidev/core";
 import { promptForProvider } from "../prompts/provider.js";
 
@@ -18,28 +17,12 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	// Create .omni/ directory structure
 	mkdirSync(".omni", { recursive: true });
 	mkdirSync(".omni/capabilities", { recursive: true });
-	mkdirSync(".omni/generated", { recursive: true });
 	mkdirSync(".omni/state", { recursive: true });
 	mkdirSync(".omni/sandbox", { recursive: true });
-
-	// Create .omni/config.toml
-	if (!existsSync(".omni/config.toml")) {
-		await Bun.write(".omni/config.toml", defaultConfig());
-	}
 
 	// Create .omni/.gitignore for internal working files
 	if (!existsSync(".omni/.gitignore")) {
 		await Bun.write(".omni/.gitignore", internalGitignore());
-	}
-
-	// Create .omni/capabilities.toml with no capabilities enabled
-	if (!existsSync(".omni/capabilities.toml")) {
-		await writeCapabilitiesState({ enabled: [], disabled: [] });
-	}
-
-	// Create .omni/profiles.toml with default profiles
-	if (!existsSync(".omni/profiles.toml")) {
-		await writeProfiles(defaultProfiles());
 	}
 
 	// Get provider selection
@@ -50,22 +33,77 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 		providers = await promptForProvider();
 	}
 
-	// Save provider config
-	await writeProviderConfig({ providers });
+	// Create unified config.toml
+	if (!existsSync(".omni/config.toml")) {
+		await writeConfig({
+			project: "my-project",
+			active_profile: "default",
+			providers: {
+				enabled: providers,
+			},
+			profiles: {
+				default: {
+					capabilities: [],
+				},
+				planning: {
+					capabilities: [],
+				},
+				coding: {
+					capabilities: [],
+				},
+			},
+		});
+	}
+
+	// Create .omni/instructions.md
+	if (!existsSync(".omni/instructions.md")) {
+		await Bun.write(".omni/instructions.md", generateInstructionsTemplate());
+	}
 
 	// Create provider-specific files
-	await createProviderFiles(providers);
+	const fileStatus = await createProviderFiles(providers);
 
+	// Run initial sync
+	await syncAgentConfiguration({ silent: false });
+
+	console.log("");
 	console.log(`✓ OmniDev initialized for ${providers.join(" and ")}!`);
 	console.log("");
-	console.log("📝 Don't forget to add your project description to:");
-	for (const p of providers) {
-		if (p === "codex") {
-			console.log("   • AGENTS.md (Codex)");
-		} else if (p === "claude") {
-			console.log("   • .claude/claude.md (Claude)");
+
+	// Show appropriate message based on file status
+	const hasNewFiles = fileStatus.created.length > 0;
+	const hasExistingFiles = fileStatus.existing.length > 0;
+
+	if (hasNewFiles) {
+		console.log("📝 Don't forget to add your project description to:");
+		console.log("   • .omni/instructions.md");
+	}
+
+	if (hasExistingFiles) {
+		console.log("📝 Add this line to your existing file(s):");
+		for (const file of fileStatus.existing) {
+			console.log(`   • ${file}: @import .omni/instructions.md`);
 		}
 	}
+
+	console.log("");
+	console.log("🔌 Add OmniDev MCP Server to your AI provider:");
+	console.log("");
+	console.log("   For Development:");
+	console.log("   • Server URL: http://localhost:3000");
+	console.log("   • Run: omnidev serve");
+	console.log("");
+	console.log("   For Production:");
+	console.log("   • Command: npx @omnidev/server");
+	console.log("   • Or add to Claude Desktop config:");
+	console.log("     {");
+	console.log('       "mcpServers": {');
+	console.log('         "omnidev": {');
+	console.log('           "command": "npx",');
+	console.log('           "args": ["@omnidev/server"]');
+	console.log("         }");
+	console.log("       }");
+	console.log("     }");
 	console.log("");
 	console.log("📁 Sharing options:");
 	console.log("   • To share config with team: commit the .omni/ folder");
@@ -92,65 +130,33 @@ export const initCommand = buildCommand({
 	func: runInit,
 });
 
-function defaultConfig(): string {
-	return `# OmniDev Configuration
-# Main configuration for your OmniDev project
-#
-# This file controls:
-#   - Project name
-#   - Default profile (see profiles.toml for profile definitions)
-#
-# Other configuration files:
-#   - capabilities.toml   - Which capabilities are enabled
-#   - profiles.toml       - Profile definitions and capability overrides
-#   - provider.toml       - AI provider selection (claude/codex)
-#   - .gitignore         - Working files that are always ignored
+async function createProviderFiles(
+	providers: Provider[],
+): Promise<{ created: string[]; existing: string[] }> {
+	const created: string[] = [];
+	const existing: string[] = [];
 
-project = "my-project"
-default_profile = "default"
-`;
-}
-
-function defaultProfiles() {
-	return {
-		profiles: {
-			default: {},
-			planning: {
-				enable: [],
-				disable: [],
-			},
-			coding: {
-				enable: [],
-				disable: [],
-			},
-		},
-	};
-}
-
-async function createProviderFiles(providers: Provider[]) {
 	// Create AGENTS.md for Codex
 	if (providers.includes("codex")) {
 		if (!existsSync("AGENTS.md")) {
 			await Bun.write("AGENTS.md", generateAgentsTemplate());
-		}
-	}
-
-	// Create/append to .claude/claude.md for Claude
-	if (providers.includes("claude")) {
-		mkdirSync(".claude", { recursive: true });
-
-		if (!existsSync(".claude/claude.md")) {
-			// Create new file
-			await Bun.write(".claude/claude.md", generateClaudeTemplate());
+			created.push("AGENTS.md");
 		} else {
-			// Check if OmniDev section already exists
-			const existingContent = await Bun.file(".claude/claude.md").text();
-			if (!existingContent.includes("# OmniDev Configuration")) {
-				// Append OmniDev section
-				appendFileSync(".claude/claude.md", generateClaudeAppendSection());
-			}
+			existing.push("AGENTS.md");
 		}
 	}
+
+	// Create CLAUDE.md for Claude
+	if (providers.includes("claude")) {
+		if (!existsSync("CLAUDE.md")) {
+			await Bun.write("CLAUDE.md", generateClaudeTemplate());
+			created.push("CLAUDE.md");
+		} else {
+			existing.push("CLAUDE.md");
+		}
+	}
+
+	return { created, existing };
 }
 
 function internalGitignore(): string {
@@ -159,9 +165,6 @@ function internalGitignore(): string {
 
 # Secrets
 .env
-
-# Generated content (rebuilt on sync)
-generated/
 
 # Runtime state
 state/

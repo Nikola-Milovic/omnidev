@@ -39,12 +39,9 @@ describe("capability list command", () => {
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
+
+[profiles.default]
+capabilities = []
 `,
 		);
 
@@ -91,12 +88,9 @@ description = "Note management"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = ["tasks"]
-disabled = ["notes"]
+
+[profiles.default]
+capabilities = ["tasks"]
 `,
 		);
 
@@ -140,12 +134,9 @@ description = "Test"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = ["test-cap"]
-disabled = []
+
+[profiles.default]
+capabilities = ["test-cap"]
 `,
 		);
 
@@ -183,12 +174,9 @@ description = "Valid capability"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = ["valid", "invalid"]
-disabled = []
+
+[profiles.default]
+capabilities = ["valid", "invalid"]
 `,
 		);
 
@@ -230,22 +218,12 @@ description = "Task tracking"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-default_profile = "coding"
+active_profile = "coding"
+
+[profiles.coding]
+capabilities = ["tasks"]
 `,
 		);
-		await Bun.write(
-			".omni/profiles.toml",
-			`[profiles.coding]
-enable = ["tasks"]
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
-`,
-		);
-		await Bun.write(".omni/active-profile", "coding");
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -303,12 +281,9 @@ description = "${cap} capability"
 		await Bun.write(
 			".omni/config.toml",
 			`project = "test"
-`,
-		);
-		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = ["alpha", "beta", "gamma"]
-disabled = []
+
+[profiles.default]
+capabilities = ["alpha", "beta", "gamma"]
 `,
 		);
 
@@ -373,19 +348,21 @@ description = "Task tracking"
 		);
 
 		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
+			".omni/config.toml",
+			`project = "test"
+
+[profiles.default]
+capabilities = []
 `,
 		);
 
 		await runCapabilityEnable({}, "tasks");
 
-		const content = await Bun.file(".omni/capabilities.toml").text();
-		expect(content).toContain('enabled = ["tasks"]');
+		const content = await Bun.file(".omni/config.toml").text();
+		expect(content).toContain('capabilities = ["tasks"]');
 	});
 
-	test("removes capability from disabled when enabling", async () => {
+	test("adds capability to profile when enabling", async () => {
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
 		await Bun.write(
 			".omni/capabilities/tasks/capability.toml",
@@ -398,25 +375,28 @@ description = "Task tracking"
 		);
 
 		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = ["tasks"]
+			".omni/config.toml",
+			`project = "test"
+
+[profiles.default]
+capabilities = []
 `,
 		);
 
 		await runCapabilityEnable({}, "tasks");
 
-		const content = await Bun.file(".omni/capabilities.toml").text();
-		expect(content).toContain('enabled = ["tasks"]');
-		expect(content).toContain("disabled = []");
+		const content = await Bun.file(".omni/config.toml").text();
+		expect(content).toContain('capabilities = ["tasks"]');
 	});
 
 	test("exits with error if capability doesn't exist", async () => {
 		mkdirSync(".omni", { recursive: true });
 		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
+			".omni/config.toml",
+			`project = "test"
+
+[profiles.default]
+capabilities = []
 `,
 		);
 
@@ -470,31 +450,34 @@ describe("capability disable command", () => {
 	test("disables a capability", async () => {
 		mkdirSync(".omni", { recursive: true });
 		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = ["tasks"]
-disabled = []
+			".omni/config.toml",
+			`project = "test"
+
+[profiles.default]
+capabilities = ["tasks"]
 `,
 		);
 
 		await runCapabilityDisable({}, "tasks");
 
-		const content = await Bun.file(".omni/capabilities.toml").text();
-		expect(content).toContain("enabled = []");
-		expect(content).toContain('disabled = ["tasks"]');
+		const content = await Bun.file(".omni/config.toml").text();
+		expect(content).toContain("capabilities = []");
 	});
 
-	test("adds capability to disabled list", async () => {
+	test("removes capability from profile", async () => {
 		mkdirSync(".omni", { recursive: true });
 		await Bun.write(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
+			".omni/config.toml",
+			`project = "test"
+
+[profiles.default]
+capabilities = ["tasks", "notes"]
 `,
 		);
 
 		await runCapabilityDisable({}, "tasks");
 
-		const content = await Bun.file(".omni/capabilities.toml").text();
-		expect(content).toContain('disabled = ["tasks"]');
+		const content = await Bun.file(".omni/config.toml").text();
+		expect(content).toContain('capabilities = ["notes"]');
 	});
 });

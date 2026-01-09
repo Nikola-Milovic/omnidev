@@ -16,26 +16,16 @@ describe("doctor command", () => {
 		writeFileSync(
 			".omni/config.toml",
 			`project = "test"
-default_profile = "default"
-`,
-		);
-		writeFileSync(
-			".omni/provider.toml",
-			`claude = true
-codex = false
-`,
-		);
-		writeFileSync(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
-`,
-		);
-		writeFileSync(
-			".omni/profiles.toml",
-			`[default]
-enable = []
-disable = []
+active_profile = "default"
+
+[providers]
+enabled = ["claude"]
+
+[profiles.default]
+capabilities = []
+
+[profiles.coding]
+capabilities = []
 `,
 		);
 		writeFileSync(
@@ -173,97 +163,18 @@ sandbox/
 		expect(exitCalled).toBe(false);
 	});
 
-	test("should validate provider.toml exists", async () => {
-		mkdirSync(".omni", { recursive: true });
-		writeFileSync(
-			".omni/config.toml",
-			`project = "test"
-default_profile = "default"
-`,
-		);
-		// Missing provider.toml
-
-		await runDoctor();
-
-		expect(exitCalled).toBe(true);
-		expect(exitCode).toBe(1);
-	});
-
-	test("should validate capabilities.toml exists", async () => {
-		mkdirSync(".omni", { recursive: true });
-		writeFileSync(
-			".omni/config.toml",
-			`project = "test"
-default_profile = "default"
-`,
-		);
-		writeFileSync(
-			".omni/provider.toml",
-			`claude = true
-codex = false
-`,
-		);
-		// Missing capabilities.toml
-
-		await runDoctor();
-
-		expect(exitCalled).toBe(true);
-		expect(exitCode).toBe(1);
-	});
-
-	test("should validate profiles.toml exists", async () => {
-		mkdirSync(".omni", { recursive: true });
-		writeFileSync(
-			".omni/config.toml",
-			`project = "test"
-default_profile = "default"
-`,
-		);
-		writeFileSync(
-			".omni/provider.toml",
-			`claude = true
-codex = false
-`,
-		);
-		writeFileSync(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
-`,
-		);
-		// Missing profiles.toml
-
-		await runDoctor();
-
-		expect(exitCalled).toBe(true);
-		expect(exitCode).toBe(1);
-	});
-
 	test("should validate internal .gitignore exists", async () => {
 		mkdirSync(".omni", { recursive: true });
 		writeFileSync(
 			".omni/config.toml",
 			`project = "test"
-default_profile = "default"
-`,
-		);
-		writeFileSync(
-			".omni/provider.toml",
-			`claude = true
-codex = false
-`,
-		);
-		writeFileSync(
-			".omni/capabilities.toml",
-			`enabled = []
-disabled = []
-`,
-		);
-		writeFileSync(
-			".omni/profiles.toml",
-			`[default]
-enable = []
-disable = []
+active_profile = "default"
+
+[providers]
+enabled = ["claude"]
+
+[profiles.default]
+capabilities = []
 `,
 		);
 		// Missing .omni/.gitignore

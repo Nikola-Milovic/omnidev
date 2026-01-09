@@ -1,39 +1,36 @@
 /**
- * Template for .claude/claude.md (Claude provider)
+ * Template for CLAUDE.md (Claude provider)
+ * Creates a minimal file with reference to OmniDev instructions
  */
 export function generateClaudeTemplate(): string {
 	return `# Project Instructions
 
-## Project Description
-<!-- TODO: Add 2-3 sentences describing your project -->
-[Describe what this project does and its main purpose]
+<!-- Add your project-specific instructions here -->
 
-## Capabilities
+## OmniDev
 
-This project uses OmniDev for capability management. See the rules below for available capabilities.
-
-@import .omni/generated/rules.md
+@import .omni/instructions.md
 `;
 }
 
 /**
- * OmniDev section to append to existing claude.md
+ * Template for .omni/instructions.md
+ * Contains OmniDev-specific instructions and capability rules
  */
-export function generateClaudeAppendSection(): string {
-	return `
-
----
-
-# OmniDev Configuration
+export function generateInstructionsTemplate(): string {
+	return `# OmniDev Instructions
 
 ## Project Description
 <!-- TODO: Add 2-3 sentences describing your project -->
 [Describe what this project does and its main purpose]
 
+<!-- BEGIN OMNIDEV GENERATED CONTENT - DO NOT EDIT BELOW THIS LINE -->
+<!-- This section is automatically updated by 'omnidev agents sync' -->
+
 ## Capabilities
 
-This project uses OmniDev for capability management. See the rules below for available capabilities.
+No capabilities enabled yet. Run \`omnidev capability enable <name>\` to enable capabilities.
 
-@import .omni/generated/rules.md
+<!-- END OMNIDEV GENERATED CONTENT -->
 `;
 }

@@ -33,3 +33,80 @@ export async function loadRules(capabilityPath: string, capabilityId: string): P
 
 	return rules;
 }
+
+/**
+ * Write aggregated rules to .omni/instructions.md
+ * Updates the generated section between markers while preserving user content
+ * @param rules Array of rules from all enabled capabilities
+ */
+export async function writeRules(rules: Rule[]): Promise<void> {
+	const instructionsPath = ".omni/instructions.md";
+
+	// Generate rules content
+	const rulesContent = generateRulesContent(rules);
+
+	// Read existing content or create new file
+	let content: string;
+	if (existsSync(instructionsPath)) {
+		content = await Bun.file(instructionsPath).text();
+	} else {
+		// Create new file with basic template
+		content = `# OmniDev Instructions
+
+## Project Description
+<!-- TODO: Add 2-3 sentences describing your project -->
+[Describe what this project does and its main purpose]
+
+<!-- BEGIN OMNIDEV GENERATED CONTENT - DO NOT EDIT BELOW THIS LINE -->
+<!-- END OMNIDEV GENERATED CONTENT -->
+`;
+	}
+
+	// Replace content between markers
+	const beginMarker = "<!-- BEGIN OMNIDEV GENERATED CONTENT - DO NOT EDIT BELOW THIS LINE -->";
+	const endMarker = "<!-- END OMNIDEV GENERATED CONTENT -->";
+
+	const beginIndex = content.indexOf(beginMarker);
+	const endIndex = content.indexOf(endMarker);
+
+	if (beginIndex === -1 || endIndex === -1) {
+		// Markers not found, append to end
+		content += `\n\n${beginMarker}\n${rulesContent}\n${endMarker}\n`;
+	} else {
+		// Replace content between markers
+		content =
+			content.substring(0, beginIndex + beginMarker.length) +
+			"\n" +
+			rulesContent +
+			"\n" +
+			content.substring(endIndex);
+	}
+
+	await Bun.write(instructionsPath, content);
+}
+
+function generateRulesContent(rules: Rule[]): string {
+	if (rules.length === 0) {
+		return `<!-- This section is automatically updated when capabilities change -->
+
+## Capabilities
+
+No capabilities enabled yet. Run \`omnidev capability enable <name>\` to enable capabilities.`;
+	}
+
+	let content = `<!-- This section is automatically updated when capabilities change -->
+
+## Capabilities
+
+`;
+
+	for (const rule of rules) {
+		content += `### ${rule.name} (from ${rule.capabilityId})
+
+${rule.content}
+
+`;
+	}
+
+	return content.trim();
+}

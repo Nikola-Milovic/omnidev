@@ -35,10 +35,6 @@ describe("loadConfig", () => {
 	test("returns empty config when no files exist", async () => {
 		const config = await loadConfig();
 		expect(config).toEqual({
-			capabilities: {
-				enable: [],
-				disable: [],
-			},
 			env: {},
 			profiles: {},
 		});
@@ -50,17 +46,17 @@ describe("loadConfig", () => {
 			CONFIG_PATH,
 			`
 project = "my-project"
-default_profile = "dev"
+active_profile = "dev"
 
-[capabilities]
-enable = ["tasks", "git"]
+[profiles.dev]
+capabilities = ["tasks", "git"]
 `,
 		);
 
 		const config = await loadConfig();
 		expect(config.project).toBe("my-project");
-		expect(config.default_profile).toBe("dev");
-		expect(config.capabilities?.enable).toEqual(["tasks", "git"]);
+		expect(config.active_profile).toBe("dev");
+		expect(config.profiles?.dev?.capabilities).toEqual(["tasks", "git"]);
 	});
 
 	test("loads local config when only local config exists", async () => {
@@ -70,14 +66,14 @@ enable = ["tasks", "git"]
 			`
 project = "local-project"
 
-[capabilities]
-enable = ["local-only"]
+[profiles.default]
+capabilities = ["local-only"]
 `,
 		);
 
 		const config = await loadConfig();
 		expect(config.project).toBe("local-project");
-		expect(config.capabilities?.enable).toEqual(["local-only"]);
+		expect(config.profiles?.default?.capabilities).toEqual(["local-only"]);
 	});
 
 	test("merges main and local configs with local taking precedence", async () => {
@@ -88,11 +84,10 @@ enable = ["local-only"]
 			CONFIG_PATH,
 			`
 project = "main-project"
-default_profile = "production"
+active_profile = "production"
 
-[capabilities]
-enable = ["tasks"]
-disable = []
+[profiles.default]
+capabilities = ["tasks"]
 
 [env]
 API_URL = "https://main-api.com"
@@ -104,8 +99,8 @@ API_URL = "https://main-api.com"
 			`
 project = "local-override"
 
-[capabilities]
-enable = ["git"]
+[profiles.default]
+capabilities = ["git"]
 
 [env]
 API_URL = "http://localhost:3000"
@@ -118,60 +113,12 @@ DEBUG = "true"
 		// Local overrides should take precedence
 		expect(config.project).toBe("local-override");
 
-		// Capabilities should be merged (both main and local enable arrays)
-		expect(config.capabilities?.enable).toEqual(["tasks", "git"]);
+		// Profile capabilities from local should override main
+		expect(config.profiles?.default?.capabilities).toEqual(["git"]);
 
 		// Env should be merged with local taking precedence
 		expect(config.env?.API_URL).toBe("http://localhost:3000");
 		expect(config.env?.DEBUG).toBe("true");
-	});
-
-	test("merges capabilities enable arrays", async () => {
-		mkdirSync(".omni", { recursive: true });
-		mkdirSync(".omni", { recursive: true });
-
-		writeFileSync(
-			CONFIG_PATH,
-			`
-[capabilities]
-enable = ["tasks", "git"]
-`,
-		);
-
-		writeFileSync(
-			LOCAL_CONFIG,
-			`
-[capabilities]
-enable = ["local-capability"]
-`,
-		);
-
-		const config = await loadConfig();
-		expect(config.capabilities?.enable).toEqual(["tasks", "git", "local-capability"]);
-	});
-
-	test("merges capabilities disable arrays", async () => {
-		mkdirSync(".omni", { recursive: true });
-		mkdirSync(".omni", { recursive: true });
-
-		writeFileSync(
-			CONFIG_PATH,
-			`
-[capabilities]
-disable = ["experimental"]
-`,
-		);
-
-		writeFileSync(
-			LOCAL_CONFIG,
-			`
-[capabilities]
-disable = ["deprecated"]
-`,
-		);
-
-		const config = await loadConfig();
-		expect(config.capabilities?.disable).toEqual(["experimental", "deprecated"]);
 	});
 
 	test("merges profiles with local taking precedence", async () => {
@@ -182,10 +129,10 @@ disable = ["deprecated"]
 			CONFIG_PATH,
 			`
 [profiles.dev]
-enable = ["tasks"]
+capabilities = ["tasks"]
 
 [profiles.prod]
-enable = ["git"]
+capabilities = ["git"]
 `,
 		);
 
@@ -193,16 +140,16 @@ enable = ["git"]
 			LOCAL_CONFIG,
 			`
 [profiles.dev]
-enable = ["local-tasks"]
+capabilities = ["local-tasks"]
 `,
 		);
 
 		const config = await loadConfig();
-		expect(config.profiles?.dev?.enable).toEqual(["local-tasks"]);
-		expect(config.profiles?.prod?.enable).toEqual(["git"]);
+		expect(config.profiles?.dev?.capabilities).toEqual(["local-tasks"]);
+		expect(config.profiles?.prod?.capabilities).toEqual(["git"]);
 	});
 
-	test("handles empty capabilities sections gracefully", async () => {
+	test("handles empty profiles sections gracefully", async () => {
 		mkdirSync(".omni", { recursive: true });
 		writeFileSync(
 			CONFIG_PATH,
@@ -212,8 +159,7 @@ project = "test"
 		);
 
 		const config = await loadConfig();
-		expect(config.capabilities?.enable).toEqual([]);
-		expect(config.capabilities?.disable).toEqual([]);
+		expect(config.profiles).toEqual({});
 	});
 
 	test("handles invalid TOML in main config", async () => {
@@ -258,14 +204,14 @@ VAR3 = "local3"
 		expect(config.env?.VAR3).toBe("local3");
 	});
 
-	test("preserves default_profile from main when not in local", async () => {
+	test("preserves active_profile from main when not in local", async () => {
 		mkdirSync(".omni", { recursive: true });
 		mkdirSync(".omni", { recursive: true });
 
 		writeFileSync(
 			CONFIG_PATH,
 			`
-default_profile = "production"
+active_profile = "production"
 `,
 		);
 
@@ -277,28 +223,28 @@ project = "local"
 		);
 
 		const config = await loadConfig();
-		expect(config.default_profile).toBe("production");
+		expect(config.active_profile).toBe("production");
 	});
 
-	test("overrides default_profile with local value", async () => {
+	test("overrides active_profile with local value", async () => {
 		mkdirSync(".omni", { recursive: true });
 		mkdirSync(".omni", { recursive: true });
 
 		writeFileSync(
 			CONFIG_PATH,
 			`
-default_profile = "production"
+active_profile = "production"
 `,
 		);
 
 		writeFileSync(
 			LOCAL_CONFIG,
 			`
-default_profile = "development"
+active_profile = "development"
 `,
 		);
 
 		const config = await loadConfig();
-		expect(config.default_profile).toBe("development");
+		expect(config.active_profile).toBe("development");
 	});
 });

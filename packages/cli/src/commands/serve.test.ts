@@ -94,14 +94,14 @@ project = "test"
 		// Create config with profiles
 		writeFileSync(
 			".omni/config.toml",
-			`
-[capability]
-project = "test"
-default_profile = "default"
+			`project = "test"
+active_profile = "default"
 
 [profiles.default]
+capabilities = []
 
 [profiles.testing]
+capabilities = []
 `,
 		);
 
@@ -133,9 +133,9 @@ default_profile = "default"
 				// Ignore the error from startServer
 			});
 
-			// Check that active profile was written
-			const activeProfile = await Bun.file(".omni/active-profile").text();
-			expect(activeProfile.trim()).toBe("testing");
+			// Check that active profile was written in config.toml
+			const configContent = await Bun.file(".omni/config.toml").text();
+			expect(configContent).toContain('active_profile = "testing"');
 		} finally {
 			process.exit = originalExit;
 			// biome-ignore lint/suspicious/noExplicitAny: Restore original import

@@ -20,9 +20,6 @@ export async function runDoctor(): Promise<void> {
 		checkBunVersion(),
 		checkOmniLocalDir(),
 		checkConfig(),
-		checkProviderConfig(),
-		checkCapabilitiesConfig(),
-		checkProfilesConfig(),
 		checkInternalGitignore(),
 		checkCapabilitiesDir(),
 	];
@@ -131,93 +128,6 @@ async function checkConfig(): Promise<Check> {
 	}
 }
 
-async function checkProviderConfig(): Promise<Check> {
-	const providerPath = ".omni/provider.toml";
-	if (!existsSync(providerPath)) {
-		return {
-			name: "Provider Config",
-			passed: false,
-			message: "provider.toml not found",
-			fix: "Run: omnidev init",
-		};
-	}
-
-	try {
-		const { loadProviderConfig } = await import("@omnidev/core");
-		await loadProviderConfig();
-		return {
-			name: "Provider Config",
-			passed: true,
-			message: "Valid",
-		};
-	} catch (error) {
-		return {
-			name: "Provider Config",
-			passed: false,
-			message: `Invalid: ${error instanceof Error ? error.message : String(error)}`,
-			fix: "Check .omni/provider.toml syntax",
-		};
-	}
-}
-
-async function checkCapabilitiesConfig(): Promise<Check> {
-	const capabilitiesPath = ".omni/capabilities.toml";
-	if (!existsSync(capabilitiesPath)) {
-		return {
-			name: "Capabilities Config",
-			passed: false,
-			message: "capabilities.toml not found",
-			fix: "Run: omnidev init",
-		};
-	}
-
-	try {
-		const { loadCapabilitiesState } = await import("@omnidev/core");
-		await loadCapabilitiesState();
-		return {
-			name: "Capabilities Config",
-			passed: true,
-			message: "Valid",
-		};
-	} catch (error) {
-		return {
-			name: "Capabilities Config",
-			passed: false,
-			message: `Invalid: ${error instanceof Error ? error.message : String(error)}`,
-			fix: "Check .omni/capabilities.toml syntax",
-		};
-	}
-}
-
-async function checkProfilesConfig(): Promise<Check> {
-	const profilesPath = ".omni/profiles.toml";
-	if (!existsSync(profilesPath)) {
-		return {
-			name: "Profiles Config",
-			passed: false,
-			message: "profiles.toml not found",
-			fix: "Run: omnidev init",
-		};
-	}
-
-	try {
-		const { loadProfiles } = await import("@omnidev/core");
-		await loadProfiles();
-		return {
-			name: "Profiles Config",
-			passed: true,
-			message: "Valid",
-		};
-	} catch (error) {
-		return {
-			name: "Profiles Config",
-			passed: false,
-			message: `Invalid: ${error instanceof Error ? error.message : String(error)}`,
-			fix: "Check .omni/profiles.toml syntax",
-		};
-	}
-}
-
 async function checkInternalGitignore(): Promise<Check> {
 	const gitignorePath = ".omni/.gitignore";
 	if (!existsSync(gitignorePath)) {
@@ -225,7 +135,7 @@ async function checkInternalGitignore(): Promise<Check> {
 			name: "Internal .gitignore",
 			passed: false,
 			message: ".omni/.gitignore not found",
-			fix: "Run: omnidev init or omnidev agents sync",
+			fix: "Run: omnidev init",
 		};
 	}
 

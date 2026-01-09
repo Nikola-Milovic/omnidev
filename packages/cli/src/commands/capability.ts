@@ -1,12 +1,11 @@
 import { buildCommand, buildRouteMap } from "@stricli/core";
-import { discoverCapabilities, loadCapabilityConfig } from "@omnidev/core";
-import { loadConfig } from "@omnidev/core";
 import {
-	resolveEnabledCapabilitiesFromState,
-	getActiveProfile,
-	loadCapabilitiesState,
+	discoverCapabilities,
+	loadCapabilityConfig,
+	getEnabledCapabilities,
 	enableCapability,
 	disableCapability,
+	syncAgentConfiguration,
 } from "@omnidev/core";
 
 /**
@@ -14,15 +13,7 @@ import {
  */
 export async function runCapabilityList(): Promise<void> {
 	try {
-		const config = await loadConfig();
-		const capabilitiesState = await loadCapabilitiesState();
-		const activeProfile = await getActiveProfile();
-		const enabledIds = await resolveEnabledCapabilitiesFromState(
-			capabilitiesState,
-			config,
-			activeProfile,
-		);
-
+		const enabledIds = await getEnabledCapabilities();
 		const capabilityPaths = await discoverCapabilities();
 
 		if (capabilityPaths.length === 0) {
@@ -82,6 +73,10 @@ export async function runCapabilityEnable(
 
 		await enableCapability(name);
 		console.log(`✓ Enabled capability: ${name}`);
+		console.log("");
+
+		// Auto-sync agent configuration
+		await syncAgentConfiguration();
 	} catch (error) {
 		console.error("Error enabling capability:", error);
 		process.exit(1);
@@ -98,6 +93,10 @@ export async function runCapabilityDisable(
 	try {
 		await disableCapability(name);
 		console.log(`✓ Disabled capability: ${name}`);
+		console.log("");
+
+		// Auto-sync agent configuration
+		await syncAgentConfiguration();
 	} catch (error) {
 		console.error("Error disabling capability:", error);
 		process.exit(1);

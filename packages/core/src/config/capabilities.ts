@@ -1,82 +1,40 @@
-import { existsSync } from "node:fs";
-import { parse } from "smol-toml";
-import type { CapabilitiesState } from "../types/index.js";
 import { addCapabilityPatterns, removeCapabilityPatterns } from "../gitignore/manager.js";
 import { discoverCapabilities, loadCapability } from "../capability/loader.js";
-
-const CAPABILITIES_PATH = ".omni/capabilities.toml";
+import { loadConfig, writeConfig } from "./loader.js";
+import { getActiveProfile } from "./profiles.js";
 
 /**
- * Load capabilities state from .omni/capabilities.toml
- * @returns CapabilitiesState with enabled/disabled capability IDs
+ * Get enabled capabilities for the active profile
+ * @returns Array of enabled capability IDs
  */
-export async function loadCapabilitiesState(): Promise<CapabilitiesState> {
-	if (!existsSync(CAPABILITIES_PATH)) {
-		return { enabled: [], disabled: [] };
-	}
-
-	const content = await Bun.file(CAPABILITIES_PATH).text();
-	try {
-		const parsed = parse(content) as CapabilitiesState;
-		return {
-			enabled: parsed.enabled ?? [],
-			disabled: parsed.disabled ?? [],
-		};
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		throw new Error(`Invalid TOML in ${CAPABILITIES_PATH}: ${message}`);
-	}
+export async function getEnabledCapabilities(): Promise<string[]> {
+	const config = await loadConfig();
+	const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
+	const profile = config.profiles?.[activeProfile];
+	return profile?.capabilities ?? [];
 }
 
 /**
- * Write capabilities state to .omni/capabilities.toml
- * @param state - The capabilities state to write
- */
-export async function writeCapabilitiesState(state: CapabilitiesState): Promise<void> {
-	const content = generateCapabilitiesStateToml(state);
-	await Bun.write(CAPABILITIES_PATH, content);
-}
-
-/**
- * Generate TOML content for capabilities state
- * @param state - The capabilities state
- * @returns TOML string
- */
-function generateCapabilitiesStateToml(state: CapabilitiesState): string {
-	const enabled = state.enabled ?? [];
-	const disabled = state.disabled ?? [];
-
-	return `# OmniDev Capabilities State
-# This file tracks which capabilities are currently enabled or disabled.
-# Use 'dev capability enable <name>' and 'dev capability disable <name>' to modify.
-
-# Enabled capabilities
-enabled = [${enabled.map((id) => `"${id}"`).join(", ")}]
-
-# Explicitly disabled capabilities (overrides profile)
-disabled = [${disabled.map((id) => `"${id}"`).join(", ")}]
-`;
-}
-
-/**
- * Enable a capability by adding it to the enabled list and removing from disabled
+ * Enable a capability by adding it to the active profile's capabilities list
  * Also adds the capability's gitignore patterns to .omni/.gitignore if present
  * @param capabilityId - The ID of the capability to enable
  */
 export async function enableCapability(capabilityId: string): Promise<void> {
-	const state = await loadCapabilitiesState();
+	const config = await loadConfig();
+	const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
-	const enabledSet = new Set(state.enabled ?? []);
-	const disabledSet = new Set(state.disabled ?? []);
+	if (!config.profiles) {
+		config.profiles = {};
+	}
+	if (!config.profiles[activeProfile]) {
+		config.profiles[activeProfile] = { capabilities: [] };
+	}
 
-	// Add to enabled, remove from disabled
-	enabledSet.add(capabilityId);
-	disabledSet.delete(capabilityId);
+	const capabilities = new Set(config.profiles[activeProfile].capabilities ?? []);
+	capabilities.add(capabilityId);
+	config.profiles[activeProfile].capabilities = Array.from(capabilities);
 
-	await writeCapabilitiesState({
-		enabled: Array.from(enabledSet),
-		disabled: Array.from(disabledSet),
-	});
+	await writeConfig(config);
 
 	// Add gitignore patterns if the capability exports them
 	try {
@@ -96,24 +54,23 @@ export async function enableCapability(capabilityId: string): Promise<void> {
 }
 
 /**
- * Disable a capability by adding it to the disabled list and removing from enabled
+ * Disable a capability by removing it from the active profile's capabilities list
  * Also removes the capability's gitignore patterns from .omni/.gitignore
  * @param capabilityId - The ID of the capability to disable
  */
 export async function disableCapability(capabilityId: string): Promise<void> {
-	const state = await loadCapabilitiesState();
+	const config = await loadConfig();
+	const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
-	const enabledSet = new Set(state.enabled ?? []);
-	const disabledSet = new Set(state.disabled ?? []);
+	if (!config.profiles?.[activeProfile]) {
+		return; // Nothing to disable
+	}
 
-	// Remove from enabled, add to disabled
-	enabledSet.delete(capabilityId);
-	disabledSet.add(capabilityId);
+	const capabilities = new Set(config.profiles[activeProfile].capabilities ?? []);
+	capabilities.delete(capabilityId);
+	config.profiles[activeProfile].capabilities = Array.from(capabilities);
 
-	await writeCapabilitiesState({
-		enabled: Array.from(enabledSet),
-		disabled: Array.from(disabledSet),
-	});
+	await writeConfig(config);
 
 	// Remove gitignore patterns
 	try {

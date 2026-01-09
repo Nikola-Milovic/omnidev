@@ -2,25 +2,22 @@ import { describe, test, expect } from "bun:test";
 import { generateAgentsTemplate } from "./agents";
 
 describe("generateAgentsTemplate", () => {
-	test("generates AGENTS.md template with project description placeholder", () => {
+	test("generates AGENTS.md template with reference to instructions", () => {
 		const template = generateAgentsTemplate();
 
 		expect(template).toContain("# Project Instructions");
-		expect(template).toContain("## Project Description");
-		expect(template).toContain("<!-- TODO: Add 2-3 sentences describing your project -->");
-		expect(template).toContain("[Describe what this project does and its main purpose]");
+		expect(template).toContain("@import .omni/instructions.md");
 	});
 
-	test("references .omni/generated/rules.md", () => {
+	test("includes placeholder for project-specific instructions", () => {
 		const template = generateAgentsTemplate();
 
-		expect(template).toContain("## Capabilities");
-		expect(template).toContain("@import .omni/generated/rules.md");
+		expect(template).toContain("<!-- Add your project-specific instructions here -->");
 	});
 
-	test("includes information about OmniDev", () => {
+	test("includes OmniDev section", () => {
 		const template = generateAgentsTemplate();
 
-		expect(template).toContain("OmniDev");
+		expect(template).toContain("## OmniDev");
 	});
 });

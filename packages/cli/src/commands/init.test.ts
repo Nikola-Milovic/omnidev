@@ -35,57 +35,48 @@ describe("init command", () => {
 
 		const content = readFileSync(".omni/config.toml", "utf-8");
 		expect(content).toContain('project = "my-project"');
-		expect(content).toContain('default_profile = "default"');
-		// profiles should NOT be in config.toml anymore (moved to profiles.toml)
-		expect(content).not.toContain("[profiles.default]");
-		// capabilities should NOT be in config.toml anymore
-		expect(content).not.toContain("[capabilities]");
-		// should have documentation comments
-		expect(content).toContain("# OmniDev Configuration");
-		expect(content).toContain("profiles.toml");
-	});
-
-	test("creates .omni/capabilities.toml with empty state", async () => {
-		await runInit({}, "claude");
-
-		expect(existsSync(".omni/capabilities.toml")).toBe(true);
-
-		const content = readFileSync(".omni/capabilities.toml", "utf-8");
-		expect(content).toContain("# OmniDev Capabilities State");
-		expect(content).toContain("enabled = []");
-		expect(content).toContain("disabled = []");
-	});
-
-	test("creates .omni/profiles.toml with default profiles", async () => {
-		await runInit({}, "claude");
-
-		expect(existsSync(".omni/profiles.toml")).toBe(true);
-
-		const content = readFileSync(".omni/profiles.toml", "utf-8");
-		expect(content).toContain("# OmniDev Profiles");
+		expect(content).toContain('active_profile = "default"');
+		// profiles should be in config.toml
 		expect(content).toContain("[profiles.default]");
 		expect(content).toContain("[profiles.planning]");
 		expect(content).toContain("[profiles.coding]");
-		// Should have documentation comments
-		expect(content).toContain("Define different capability configurations");
+		// providers should be in config.toml
+		expect(content).toContain("[providers]");
+		// should have documentation comments
+		expect(content).toContain("# OmniDev Configuration");
+	});
+
+	test("does not create separate capabilities.toml file", async () => {
+		await runInit({}, "claude");
+
+		// All config is unified in config.toml
+		expect(existsSync(".omni/capabilities.toml")).toBe(false);
+	});
+
+	test("does not create separate profiles.toml file", async () => {
+		await runInit({}, "claude");
+
+		// Profiles are in config.toml
+		expect(existsSync(".omni/profiles.toml")).toBe(false);
 	});
 
 	test("creates .omni/ directory with subdirectories", async () => {
 		await runInit({}, "claude");
 
 		expect(existsSync(".omni")).toBe(true);
-		expect(existsSync(".omni/generated")).toBe(true);
 		expect(existsSync(".omni/state")).toBe(true);
 		expect(existsSync(".omni/sandbox")).toBe(true);
 	});
 
-	test("creates .omni/provider.toml with selected provider", async () => {
+	test("does not create separate provider.toml file", async () => {
 		await runInit({}, "claude");
 
-		expect(existsSync(".omni/provider.toml")).toBe(true);
+		// Providers are in config.toml
+		expect(existsSync(".omni/provider.toml")).toBe(false);
 
-		const content = readFileSync(".omni/provider.toml", "utf-8");
-		expect(content).toContain('provider = "claude"');
+		// Verify provider is in config.toml instead
+		const content = readFileSync(".omni/config.toml", "utf-8");
+		expect(content).toContain('enabled = ["claude"]');
 	});
 
 	test("creates AGENTS.md for Codex provider", async () => {
@@ -95,9 +86,20 @@ describe("init command", () => {
 
 		const content = readFileSync("AGENTS.md", "utf-8");
 		expect(content).toContain("# Project Instructions");
+		expect(content).toContain("@import .omni/instructions.md");
+	});
+
+	test("creates .omni/instructions.md", async () => {
+		await runInit({}, "codex");
+
+		expect(existsSync(".omni/instructions.md")).toBe(true);
+
+		const content = readFileSync(".omni/instructions.md", "utf-8");
+		expect(content).toContain("# OmniDev Instructions");
 		expect(content).toContain("## Project Description");
 		expect(content).toContain("<!-- TODO: Add 2-3 sentences describing your project -->");
-		expect(content).toContain("@import .omni/generated/rules.md");
+		expect(content).toContain("## Capabilities");
+		expect(content).toContain("No capabilities enabled yet");
 	});
 
 	test("does not create AGENTS.md for Claude provider", async () => {
@@ -106,61 +108,55 @@ describe("init command", () => {
 		expect(existsSync("AGENTS.md")).toBe(false);
 	});
 
-	test("creates .claude/claude.md for Claude provider", async () => {
+	test("creates CLAUDE.md for Claude provider", async () => {
 		await runInit({}, "claude");
 
-		expect(existsSync(".claude")).toBe(true);
-		expect(existsSync(".claude/claude.md")).toBe(true);
+		expect(existsSync("CLAUDE.md")).toBe(true);
 
-		const content = readFileSync(".claude/claude.md", "utf-8");
+		const content = readFileSync("CLAUDE.md", "utf-8");
 		expect(content).toContain("# Project Instructions");
-		expect(content).toContain("## Project Description");
-		expect(content).toContain("<!-- TODO: Add 2-3 sentences describing your project -->");
-		expect(content).toContain("@import .omni/generated/rules.md");
+		expect(content).toContain("@import .omni/instructions.md");
 	});
 
-	test("does not create .claude/claude.md for Codex provider", async () => {
+	test("does not create CLAUDE.md for Codex provider", async () => {
 		await runInit({}, "codex");
 
-		expect(existsSync(".claude")).toBe(false);
+		expect(existsSync("CLAUDE.md")).toBe(false);
 	});
 
-	test("creates both AGENTS.md and claude.md for 'both' providers", async () => {
+	test("creates both AGENTS.md and CLAUDE.md for 'both' providers", async () => {
 		await runInit({}, "both");
 
 		expect(existsSync("AGENTS.md")).toBe(true);
-		expect(existsSync(".claude/claude.md")).toBe(true);
+		expect(existsSync("CLAUDE.md")).toBe(true);
 
 		const agentsContent = readFileSync("AGENTS.md", "utf-8");
 		expect(agentsContent).toContain("# Project Instructions");
+		expect(agentsContent).toContain("@import .omni/instructions.md");
 
-		const claudeContent = readFileSync(".claude/claude.md", "utf-8");
+		const claudeContent = readFileSync("CLAUDE.md", "utf-8");
 		expect(claudeContent).toContain("# Project Instructions");
+		expect(claudeContent).toContain("@import .omni/instructions.md");
 	});
 
-	test("appends to existing .claude/claude.md", async () => {
-		mkdirSync(".claude", { recursive: true });
-		await Bun.write(".claude/claude.md", "# My Existing Config\n\nExisting content here.\n");
+	test("does not modify existing CLAUDE.md", async () => {
+		const existingContent = "# My Existing Config\n\nExisting content here.\n";
+		await Bun.write("CLAUDE.md", existingContent);
 
 		await runInit({}, "claude");
 
-		const content = readFileSync(".claude/claude.md", "utf-8");
-		expect(content).toContain("# My Existing Config");
-		expect(content).toContain("Existing content here");
-		expect(content).toContain("---");
-		expect(content).toContain("# OmniDev Configuration");
-		expect(content).toContain("## Project Description");
+		const content = readFileSync("CLAUDE.md", "utf-8");
+		expect(content).toBe(existingContent);
 	});
 
-	test("does not duplicate OmniDev section when appending to claude.md", async () => {
-		mkdirSync(".claude", { recursive: true });
-		await Bun.write(".claude/claude.md", "# My Config\n\n---\n\n# OmniDev Configuration\n");
+	test("does not modify existing AGENTS.md", async () => {
+		const existingContent = "# My Existing Agents\n\nExisting content here.\n";
+		await Bun.write("AGENTS.md", existingContent);
 
-		await runInit({}, "claude");
+		await runInit({}, "codex");
 
-		const content = readFileSync(".claude/claude.md", "utf-8");
-		const matches = content.match(/# OmniDev Configuration/g);
-		expect(matches?.length).toBe(1);
+		const content = readFileSync("AGENTS.md", "utf-8");
+		expect(content).toBe(existingContent);
 	});
 
 	test("creates .omni/.gitignore with internal patterns", async () => {
@@ -171,7 +167,6 @@ describe("init command", () => {
 		const content = readFileSync(".omni/.gitignore", "utf-8");
 		expect(content).toContain("# OmniDev working files - always ignored");
 		expect(content).toContain(".env");
-		expect(content).toContain("generated/");
 		expect(content).toContain("state/");
 		expect(content).toContain("sandbox/");
 		expect(content).toContain("*.log");
@@ -202,7 +197,7 @@ describe("init command", () => {
 
 		expect(existsSync(".omni/config.toml")).toBe(true);
 		expect(existsSync(".omni")).toBe(true);
-		expect(existsSync(".claude/claude.md")).toBe(true);
+		expect(existsSync("CLAUDE.md")).toBe(true);
 
 		// Should not create AGENTS.md for Claude
 		expect(existsSync("AGENTS.md")).toBe(false);
@@ -236,7 +231,6 @@ describe("init command", () => {
 
 		expect(existsSync(".omni/capabilities")).toBe(true);
 		expect(existsSync(".omni")).toBe(true);
-		expect(existsSync(".omni/generated")).toBe(true);
 		expect(existsSync(".omni/state")).toBe(true);
 		expect(existsSync(".omni/sandbox")).toBe(true);
 	});
@@ -244,18 +238,18 @@ describe("init command", () => {
 	test("accepts provider via positional parameter", async () => {
 		await runInit({}, "codex");
 
-		expect(existsSync(".omni/provider.toml")).toBe(true);
+		expect(existsSync(".omni/provider.toml")).toBe(false);
 
-		const content = readFileSync(".omni/provider.toml", "utf-8");
-		expect(content).toContain('provider = "codex"');
+		const content = readFileSync(".omni/config.toml", "utf-8");
+		expect(content).toContain('enabled = ["codex"]');
 	});
 
 	test("accepts 'both' as provider parameter", async () => {
 		await runInit({}, "both");
 
-		expect(existsSync(".omni/provider.toml")).toBe(true);
+		expect(existsSync(".omni/provider.toml")).toBe(false);
 
-		const content = readFileSync(".omni/provider.toml", "utf-8");
-		expect(content).toContain('providers = ["claude", "codex"]');
+		const content = readFileSync(".omni/config.toml", "utf-8");
+		expect(content).toContain('enabled = ["claude", "codex"]');
 	});
 });

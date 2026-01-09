@@ -20,9 +20,16 @@ describe("buildCapabilityRegistry", () => {
 		mkdirSync(capabilitiesDir, { recursive: true });
 		mkdirSync(omniDir, { recursive: true });
 
-		// Create default config files
-		writeFileSync(join(testDir, ".omni", "config.toml"), `project = "test"`);
-		writeFileSync(join(testDir, ".omni", "capabilities.toml"), `enabled = ["cap1", "cap2"]`);
+		// Create default config with profiles
+		writeFileSync(
+			join(testDir, ".omni", "config.toml"),
+			`project = "test"
+active_profile = "default"
+
+[profiles.default]
+capabilities = ["cap1", "cap2"]
+`,
+		);
 
 		// Change to test directory
 		process.chdir(testDir);
@@ -103,7 +110,15 @@ description = "Second capability"`,
 
 	test("filters out disabled capabilities", async () => {
 		// Update config to only enable cap1
-		writeFileSync(join(".omni", "capabilities.toml"), `enabled = ["cap1"]`);
+		writeFileSync(
+			join(".omni", "config.toml"),
+			`project = "test"
+active_profile = "default"
+
+[profiles.default]
+capabilities = ["cap1"]
+`,
+		);
 
 		// Create cap1 (enabled)
 		const cap1Path = join(".omni", "capabilities", "cap1");
@@ -137,21 +152,19 @@ description = "Disabled capability"`,
 	});
 
 	test("respects active profile configuration", async () => {
-		// Create base config enabling cap1
+		// Create config with dev profile that enables both cap1 and cap2
 		writeFileSync(
 			join(".omni", "config.toml"),
 			`project = "test"
-default_profile = "dev"`,
-		);
-		writeFileSync(join(".omni", "capabilities.toml"), `enabled = ["cap1"]`);
-		writeFileSync(
-			join(".omni", "profiles.toml"),
-			`[profiles.dev]
-enable = ["cap2"]`,
-		);
+active_profile = "dev"
 
-		// Set active profile to dev
-		writeFileSync(join(".omni", "active-profile"), "dev");
+[profiles.default]
+capabilities = ["cap1"]
+
+[profiles.dev]
+capabilities = ["cap1", "cap2"]
+`,
+		);
 
 		// Create cap1
 		const cap1Path = join(".omni", "capabilities", "cap1");
@@ -179,7 +192,7 @@ description = "Profile capability"`,
 
 		const registry = await buildCapabilityRegistry();
 
-		// Should have both cap1 and cap2
+		// Should have both cap1 and cap2 since dev profile is active
 		expect(registry.capabilities.size).toBe(2);
 		expect(registry.getCapability("cap1")).toBeDefined();
 		expect(registry.getCapability("cap2")).toBeDefined();

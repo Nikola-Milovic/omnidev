@@ -29,3 +29,6 @@ export * from "./templates/claude";
 
 // Export gitignore management
 export * from "./gitignore/manager";
+
+// Export sync functionality
+export * from "./sync";

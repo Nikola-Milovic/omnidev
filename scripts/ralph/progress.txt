@@ -301,4 +301,5 @@ Files changed:
 - Documenting both usage modes (Team vs Personal) helps users make informed decisions about sharing
 - Configuration file documentation should include both examples AND comments explaining purpose
 - US-060 actually included what PRD-012 called "US-061" requirements (usage mode docs) in the README
+- US-061 was already complete from US-053 (init output reminder) and US-060 (README docs)
 ---

@@ -186,8 +186,8 @@
 				"Tests pass"
 			],
 			"priority": 3,
-			"passes": false,
-			"notes": "PRD-012"
+			"passes": true,
+			"notes": "PRD-012 - Completed with US-060"
 		}
 	]
 }

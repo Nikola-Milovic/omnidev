@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { discoverCapabilities, loadCapabilityConfig } from './loader';
+import { discoverCapabilities, loadCapabilityConfig, loadCapability } from './loader';
 
 describe('discoverCapabilities', () => {
 	const testDir = 'test-capabilities-discovery';
@@ -397,5 +397,422 @@ tools = ["tool1", "tool2"]`,
 		expect(config.exports?.functions).toEqual(['fn1', 'fn2']);
 		expect(config.env).toHaveLength(2);
 		expect(config.mcp?.tools).toEqual(['tool1', 'tool2']);
+	});
+});
+
+describe('loadCapability', () => {
+	const testDir = 'test-load-capability';
+	const capabilitiesDir = join(testDir, 'omni', 'capabilities');
+	let originalCwd: string;
+
+	beforeEach(() => {
+		// Save current working directory
+		originalCwd = process.cwd();
+
+		// Create test directory structure
+		if (existsSync(testDir)) {
+			rmSync(testDir, { recursive: true, force: true });
+		}
+		mkdirSync(capabilitiesDir, { recursive: true });
+
+		// Change to test directory
+		process.chdir(testDir);
+	});
+
+	afterEach(() => {
+		// Restore working directory
+		process.chdir(originalCwd);
+
+		// Cleanup
+		if (existsSync(testDir)) {
+			rmSync(testDir, { recursive: true, force: true });
+		}
+	});
+
+	test('loads capability with minimal config (no optional fields)', async () => {
+		const capPath = join('omni', 'capabilities', 'minimal-cap');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "minimal-cap"
+name = "Minimal Capability"
+version = "1.0.0"
+description = "A minimal capability"`,
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.id).toBe('minimal-cap');
+		expect(capability.path).toBe(capPath);
+		expect(capability.config.capability.name).toBe('Minimal Capability');
+		expect(capability.skills).toEqual([]);
+		expect(capability.rules).toEqual([]);
+		expect(capability.docs).toEqual([]);
+		expect(capability.typeDefinitions).toBeUndefined();
+		expect(capability.exports).toEqual({});
+	});
+
+	test('loads capability with skills from filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'with-skills');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "with-skills"
+name = "With Skills"
+version = "1.0.0"
+description = "Has skills"`,
+		);
+
+		// Create a skill
+		const skillPath = join(capPath, 'skills', 'test-skill');
+		mkdirSync(skillPath, { recursive: true });
+		writeFileSync(
+			join(skillPath, 'SKILL.md'),
+			`---
+name: test-skill
+description: A test skill
+---
+Do something useful`,
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.skills).toHaveLength(1);
+		expect(capability.skills[0]?.name).toBe('test-skill');
+		expect(capability.skills[0]?.description).toBe('A test skill');
+		expect(capability.skills[0]?.instructions).toBe('Do something useful');
+		expect(capability.skills[0]?.capabilityId).toBe('with-skills');
+	});
+
+	test('loads capability with rules from filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'with-rules');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "with-rules"
+name = "With Rules"
+version = "1.0.0"
+description = "Has rules"`,
+		);
+
+		// Create rules
+		const rulesPath = join(capPath, 'rules');
+		mkdirSync(rulesPath, { recursive: true });
+		writeFileSync(join(rulesPath, 'rule-1.md'), 'Rule 1 content');
+		writeFileSync(join(rulesPath, 'rule-2.md'), 'Rule 2 content');
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.rules).toHaveLength(2);
+		expect(capability.rules.find((r) => r.name === 'rule-1')).toBeDefined();
+		expect(capability.rules.find((r) => r.name === 'rule-2')).toBeDefined();
+	});
+
+	test('loads capability with docs from filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'with-docs');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "with-docs"
+name = "With Docs"
+version = "1.0.0"
+description = "Has docs"`,
+		);
+
+		// Create definition.md
+		writeFileSync(join(capPath, 'definition.md'), '# Definition');
+
+		// Create docs
+		const docsPath = join(capPath, 'docs');
+		mkdirSync(docsPath, { recursive: true });
+		writeFileSync(join(docsPath, 'guide.md'), '# Guide');
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.docs).toHaveLength(2);
+		expect(capability.docs.find((d) => d.name === 'definition')).toBeDefined();
+		expect(capability.docs.find((d) => d.name === 'guide')).toBeDefined();
+	});
+
+	test('loads capability with type definitions from filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'with-types');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "with-types"
+name = "With Types"
+version = "1.0.0"
+description = "Has type definitions"`,
+		);
+
+		// Create types.d.ts
+		writeFileSync(join(capPath, 'types.d.ts'), 'export function doSomething(): void;');
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.typeDefinitions).toBe('export function doSomething(): void;');
+	});
+
+	test('loads capability with exports from index.ts', async () => {
+		const capPath = join('omni', 'capabilities', 'with-exports');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "with-exports"
+name = "With Exports"
+version = "1.0.0"
+description = "Has exports"`,
+		);
+
+		// Create index.ts with exports
+		writeFileSync(join(capPath, 'index.ts'), 'export function myFunction() { return "hello"; }');
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.exports).toBeDefined();
+		expect(typeof capability.exports.myFunction).toBe('function');
+	});
+
+	test('validates environment variables when config has env requirements', async () => {
+		const capPath = join('omni', 'capabilities', 'needs-env');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "needs-env"
+name = "Needs Env"
+version = "1.0.0"
+description = "Requires env vars"
+
+[env.API_KEY]
+required = true`,
+		);
+
+		// Should throw when required env var is missing
+		expect(async () => await loadCapability(capPath, {})).toThrow();
+
+		// Should succeed when env var is provided
+		const capability = await loadCapability(capPath, { API_KEY: 'test-key' });
+		expect(capability.id).toBe('needs-env');
+	});
+
+	test('programmatic skills take precedence over filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'programmatic-skills');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "programmatic-skills"
+name = "Programmatic Skills"
+version = "1.0.0"
+description = "Has programmatic skills"`,
+		);
+
+		// Create filesystem skill
+		const skillPath = join(capPath, 'skills', 'fs-skill');
+		mkdirSync(skillPath, { recursive: true });
+		writeFileSync(
+			join(skillPath, 'SKILL.md'),
+			`---
+name: fs-skill
+description: Filesystem skill
+---
+From filesystem`,
+		);
+
+		// Create index.ts with programmatic skills
+		writeFileSync(
+			join(capPath, 'index.ts'),
+			`export const skills = [
+  {
+    name: 'programmatic-skill',
+    description: 'Programmatic skill',
+    instructions: 'From code',
+    capabilityId: 'programmatic-skills'
+  }
+];`,
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		// Should have programmatic skills, not filesystem ones
+		expect(capability.skills).toHaveLength(1);
+		expect(capability.skills[0]?.name).toBe('programmatic-skill');
+		expect(capability.skills[0]?.instructions).toBe('From code');
+	});
+
+	test('programmatic rules take precedence over filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'programmatic-rules');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "programmatic-rules"
+name = "Programmatic Rules"
+version = "1.0.0"
+description = "Has programmatic rules"`,
+		);
+
+		// Create filesystem rule
+		const rulesPath = join(capPath, 'rules');
+		mkdirSync(rulesPath, { recursive: true });
+		writeFileSync(join(rulesPath, 'fs-rule.md'), 'From filesystem');
+
+		// Create index.ts with programmatic rules
+		writeFileSync(
+			join(capPath, 'index.ts'),
+			`export const rules = [
+  {
+    name: 'programmatic-rule',
+    content: 'From code',
+    capabilityId: 'programmatic-rules'
+  }
+];`,
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		// Should have programmatic rules, not filesystem ones
+		expect(capability.rules).toHaveLength(1);
+		expect(capability.rules[0]?.name).toBe('programmatic-rule');
+		expect(capability.rules[0]?.content).toBe('From code');
+	});
+
+	test('programmatic docs take precedence over filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'programmatic-docs');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "programmatic-docs"
+name = "Programmatic Docs"
+version = "1.0.0"
+description = "Has programmatic docs"`,
+		);
+
+		// Create filesystem doc
+		writeFileSync(join(capPath, 'definition.md'), 'From filesystem');
+
+		// Create index.ts with programmatic docs
+		writeFileSync(
+			join(capPath, 'index.ts'),
+			`export const docs = [
+  {
+    name: 'programmatic-doc',
+    content: 'From code',
+    capabilityId: 'programmatic-docs'
+  }
+];`,
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		// Should have programmatic docs, not filesystem ones
+		expect(capability.docs).toHaveLength(1);
+		expect(capability.docs[0]?.name).toBe('programmatic-doc');
+		expect(capability.docs[0]?.content).toBe('From code');
+	});
+
+	test('programmatic type definitions take precedence over filesystem', async () => {
+		const capPath = join('omni', 'capabilities', 'programmatic-types');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "programmatic-types"
+name = "Programmatic Types"
+version = "1.0.0"
+description = "Has programmatic type definitions"`,
+		);
+
+		// Create filesystem types
+		writeFileSync(join(capPath, 'types.d.ts'), 'export type Foo = string;');
+
+		// Create index.ts with programmatic type definitions
+		writeFileSync(
+			join(capPath, 'index.ts'),
+			'export const typeDefinitions = "export type Bar = number;";',
+		);
+
+		const capability = await loadCapability(capPath, {});
+
+		// Should have programmatic type definitions, not filesystem ones
+		expect(capability.typeDefinitions).toBe('export type Bar = number;');
+	});
+
+	test('throws error when index.ts has import errors', async () => {
+		const capPath = join('omni', 'capabilities', 'bad-import');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "bad-import"
+name = "Bad Import"
+version = "1.0.0"
+description = "Has import errors"`,
+		);
+
+		// Create index.ts with syntax error
+		writeFileSync(join(capPath, 'index.ts'), 'export const foo = bar; // bar is undefined');
+
+		// Should throw when trying to import
+		expect(async () => await loadCapability(capPath, {})).toThrow();
+	});
+
+	test('loads complete capability with all features', async () => {
+		const capPath = join('omni', 'capabilities', 'complete');
+		mkdirSync(capPath, { recursive: true });
+		writeFileSync(
+			join(capPath, 'capability.toml'),
+			`[capability]
+id = "complete"
+name = "Complete Capability"
+version = "2.0.0"
+description = "Has everything"`,
+		);
+
+		// Create skills
+		const skillPath = join(capPath, 'skills', 'skill1');
+		mkdirSync(skillPath, { recursive: true });
+		writeFileSync(
+			join(skillPath, 'SKILL.md'),
+			`---
+name: skill1
+description: First skill
+---
+Skill instructions`,
+		);
+
+		// Create rules
+		const rulesPath = join(capPath, 'rules');
+		mkdirSync(rulesPath, { recursive: true });
+		writeFileSync(join(rulesPath, 'rule1.md'), 'Rule content');
+
+		// Create docs
+		writeFileSync(join(capPath, 'definition.md'), '# Definition');
+		const docsPath = join(capPath, 'docs');
+		mkdirSync(docsPath, { recursive: true });
+		writeFileSync(join(docsPath, 'guide.md'), '# Guide');
+
+		// Create types
+		writeFileSync(join(capPath, 'types.d.ts'), 'export type T = string;');
+
+		// Create exports
+		writeFileSync(join(capPath, 'index.ts'), 'export function helper() { return 42; }');
+
+		const capability = await loadCapability(capPath, {});
+
+		expect(capability.id).toBe('complete');
+		expect(capability.skills).toHaveLength(1);
+		expect(capability.rules).toHaveLength(1);
+		expect(capability.docs).toHaveLength(2);
+		expect(capability.typeDefinitions).toBe('export type T = string;');
+		expect(typeof capability.exports.helper).toBe('function');
 	});
 });

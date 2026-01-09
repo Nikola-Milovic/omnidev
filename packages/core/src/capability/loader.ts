@@ -1,7 +1,11 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import type { CapabilityConfig } from '../types';
+import { validateEnv } from '../config/env';
 import { parseCapabilityConfig } from '../config/parser';
+import type { CapabilityConfig, LoadedCapability } from '../types';
+import { loadDocs } from './docs';
+import { loadRules } from './rules';
+import { loadSkills } from './skills';
 
 const CAPABILITIES_DIR = 'omni/capabilities';
 
@@ -79,4 +83,116 @@ export async function loadCapabilityConfig(capabilityPath: string): Promise<Capa
 	}
 
 	return config;
+}
+
+/**
+ * Dynamically imports capability exports from index.ts.
+ * Returns an empty object if index.ts doesn't exist.
+ *
+ * @param capabilityPath - Path to the capability directory
+ * @returns Exported module or empty object
+ * @throws Error if import fails
+ */
+async function importCapabilityExports(capabilityPath: string): Promise<Record<string, unknown>> {
+	const indexPath = join(capabilityPath, 'index.ts');
+
+	if (!existsSync(indexPath)) {
+		return {};
+	}
+
+	try {
+		const absolutePath = join(process.cwd(), indexPath);
+		const module = await import(absolutePath);
+		return module;
+	} catch (error) {
+		throw new Error(`Failed to import capability at ${capabilityPath}: ${error}`);
+	}
+}
+
+/**
+ * Loads type definitions from types.d.ts if it exists.
+ *
+ * @param capabilityPath - Path to the capability directory
+ * @returns Type definitions as string or undefined
+ */
+async function loadTypeDefinitions(capabilityPath: string): Promise<string | undefined> {
+	const typesPath = join(capabilityPath, 'types.d.ts');
+
+	if (!existsSync(typesPath)) {
+		return undefined;
+	}
+
+	return Bun.file(typesPath).text();
+}
+
+/**
+ * Loads a complete capability including config, skills, rules, docs, and exports.
+ * Validates environment requirements before loading.
+ *
+ * @param capabilityPath - Path to the capability directory
+ * @param env - Environment variables to validate against
+ * @returns Fully loaded capability
+ * @throws Error if validation fails or loading errors occur
+ */
+export async function loadCapability(
+	capabilityPath: string,
+	env: Record<string, string>,
+): Promise<LoadedCapability> {
+	const config = await loadCapabilityConfig(capabilityPath);
+	const id = config.capability.id;
+
+	// Validate environment
+	if (config.env) {
+		validateEnv(config.env, env, id);
+	}
+
+	// Load content - programmatic takes precedence
+	const exports = await importCapabilityExports(capabilityPath);
+
+	// Check if exports contains programmatic skills/rules/docs
+	// biome-ignore lint/suspicious/noExplicitAny: Dynamic module exports need runtime type checking
+	const exportsAny = exports as any;
+
+	const skills =
+		'skills' in exports && Array.isArray(exportsAny.skills)
+			? (exportsAny.skills as LoadedCapability['skills'])
+			: await loadSkills(capabilityPath, id);
+
+	const rules =
+		'rules' in exports && Array.isArray(exportsAny.rules)
+			? (exportsAny.rules as LoadedCapability['rules'])
+			: await loadRules(capabilityPath, id);
+
+	const docs =
+		'docs' in exports && Array.isArray(exportsAny.docs)
+			? (exportsAny.docs as LoadedCapability['docs'])
+			: await loadDocs(capabilityPath, id);
+
+	const typeDefinitionsFromExports =
+		'typeDefinitions' in exports && typeof exportsAny.typeDefinitions === 'string'
+			? (exportsAny.typeDefinitions as string)
+			: undefined;
+
+	const typeDefinitions =
+		typeDefinitionsFromExports !== undefined
+			? typeDefinitionsFromExports
+			: await loadTypeDefinitions(capabilityPath);
+
+	// Build result object with explicit handling for optional typeDefinitions
+	const result: LoadedCapability = {
+		id,
+		path: capabilityPath,
+		config,
+		skills,
+		rules,
+		docs,
+		exports,
+	};
+
+	// Only add typeDefinitions if it exists
+	if (typeDefinitions !== undefined) {
+		result.typeDefinitions = typeDefinitions;
+	}
+
+	return result;
 }

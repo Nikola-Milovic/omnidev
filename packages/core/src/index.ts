@@ -10,3 +10,6 @@ export const version = '0.1.0';
 export function getVersion(): string {
 	return version;
 }
+
+// Export test utilities
+export * from './test-utils';

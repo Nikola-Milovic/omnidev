@@ -33,7 +33,7 @@
 				"Tests pass"
 			],
 			"priority": 1,
-			"passes": false,
+			"passes": true,
 			"notes": "PRD-010"
 		},
 		{
@@ -65,8 +65,8 @@
 				"Tests pass"
 			],
 			"priority": 2,
-			"passes": false,
-			"notes": "PRD-010"
+			"passes": true,
+			"notes": "PRD-010 - Completed with US-052"
 		},
 		{
 			"id": "US-055",

@@ -77,3 +77,33 @@ Files changed:
 - Tests must pass provider parameter to avoid interactive prompts
 - Template literals preferred over string concatenation (lint rule)
 ---
+## 2026-01-09 16:15 - US-052 & US-054
+- Implemented provider-specific file generation during initialization
+- Created template functions in packages/core/src/templates/ for AGENTS.md and claude.md
+- AGENTS.md generated for Codex provider (uppercase filename at project root)
+- claude.md generated for Claude provider in .claude/ directory
+- Append logic for existing .claude/claude.md files with duplicate detection
+- Both files include prominent project description placeholder with TODO comments
+- Files reference .omni/generated/rules.md via @import directive
+- Updated init output messages to remind users about project description
+- Added sharing options message about .omni folder (team vs personal use)
+- All tests pass (439 passing tests)
+- Quality checks pass (typecheck, lint, format)
+
+Files changed:
+- packages/core/src/templates/agents.ts - Template for AGENTS.md (Codex)
+- packages/core/src/templates/claude.ts - Template and append section for claude.md
+- packages/core/src/templates/agents.test.ts - Tests for AGENTS.md template
+- packages/core/src/templates/claude.test.ts - Tests for claude.md template
+- packages/core/src/index.ts - Export template functions
+- packages/cli/src/commands/init.ts - Provider-specific file generation logic
+- packages/cli/src/commands/init.test.ts - Updated tests for new behavior
+
+**Learnings for future iterations:**
+- Provider-specific file generation enables multi-provider support cleanly
+- Append logic should check for existing sections to avoid duplication
+- Using template functions in core package keeps CLI logic clean
+- Test both creation and append scenarios for flexible file handling
+- Output messages should guide users on both configuration and usage options
+- US-054 (Project Description Placeholder) was completed as part of US-052
+---

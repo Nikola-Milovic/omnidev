@@ -11,5 +11,8 @@ export function getVersion(): string {
 	return version;
 }
 
+// Export core types
+export * from './types';
+
 // Export test utilities
 export * from './test-utils';

@@ -1,0 +1,50 @@
+## Codebase Patterns
+
+### General
+- Use Bun runtime for all operations (not Node.js)
+- Use `bun run` instead of `npm run` / `pnpm` / `yarn`
+- Use `bun add` / `bun add -d` for dependencies
+- Use `Bun.file().text()` for async file reading
+- Use `Bun.write()` for file writing
+- Use `existsSync` from 'fs' for file existence checks
+
+### TypeScript
+- Use strict TypeScript (no `any` types, use `unknown` if needed)
+- Use ES modules (`"type": "module"`)
+- Target ES2022 or later
+- Use `moduleResolution: "bundler"`
+
+### Monorepo
+- Packages in `packages/` (core, cli, mcp)
+- Capabilities in `capabilities/` (tasks)
+- Workspace dependencies use `workspace:*` protocol
+- Common dependencies hoisted to root
+
+### Testing
+- Use Bun's built-in test runner
+- Import from `bun:test` (describe, test, expect, beforeEach, afterEach)
+- Test files named `*.test.ts` next to source files
+- Aim for 70%+ coverage
+
+### Code Quality
+- Biome for linting and formatting
+- Lefthook for git hooks
+- Run `bun run check` before commits (typecheck + lint + format:check)
+
+### MCP
+- Use @modelcontextprotocol/sdk
+- stdio transport for communication
+- Log to stderr (stdout is for MCP protocol)
+
+### Capabilities
+- capability.toml for metadata
+- index.ts as entry point
+- skills/*/SKILL.md for skills (YAML frontmatter + markdown)
+- rules/*.md for rules
+- types.d.ts for LLM type definitions
+
+---
+
+## Progress Log
+
+Started: Fri Jan 9 2026

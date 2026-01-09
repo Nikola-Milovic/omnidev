@@ -1,0 +1,18 @@
+# Bun configuration for OmniDev monorepo
+
+[install]
+# Enable peer dependency management
+peer = true
+
+# Hoist dependencies to root node_modules
+auto = "auto"
+
+[test]
+# Test file patterns - automatically discovers **/*.test.ts
+
+# Coverage settings
+coverage = true
+coverageThreshold = 0
+coverageSkipTestFiles = true
+# Exclude type definitions from coverage
+coverageIgnore = ["**/*.d.ts", "**/*.test.ts"]

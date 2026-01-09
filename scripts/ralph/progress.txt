@@ -972,3 +972,34 @@ Files changed:
 - State functions throw descriptive errors for missing PRDs/stories with helpful messages
 ---
 
+## [2026-01-09 21:45] - US-040
+- Implemented Ralph sync hook for OmniDev capability system
+- Added SyncConfig and CliConfig interfaces to CapabilityConfig types
+- Created capabilities/ralph/sync.ts with sync function
+- Sync creates .omni/ralph/ directory structure (prds/, completed-prds/)
+- Sync creates default config.toml with agent configurations (claude, codex, amp)
+- Sync updates .gitignore with .omni/ralph/ entry
+- Updated agents sync command to discover and call capability sync hooks
+- Created comprehensive test suite with 10 tests (100% coverage on sync module)
+- All 369 tests pass with 95.87% overall coverage
+- All quality checks pass (typecheck + lint + format)
+
+Files changed:
+- packages/core/src/types/index.ts (added SyncConfig and CliConfig interfaces)
+- capabilities/ralph/sync.ts (created with sync function)
+- capabilities/ralph/sync.test.ts (created with 10 tests)
+- capabilities/ralph/index.ts (exported sync function)
+- packages/cli/src/commands/agents.ts (added sync hook invocation)
+- scripts/ralph/prd.json (marked US-040 as passing)
+
+**Learnings for future iterations:**
+- Sync hooks are called by iterating through capabilities and checking config.sync?.on_sync
+- Sync functions are called by looking up the function name in capability.exports
+- Use mkdirSync with recursive: true for idempotent directory creation
+- Check existsSync before creating default config to avoid overwriting
+- .gitignore updates should check for existing entry to prevent duplicates
+- Sync hook implementation should be idempotent - safe to run multiple times
+- Test isolation requires changing process.cwd() in beforeEach/afterEach
+- All tests must clean up temporary directories in afterEach to avoid pollution
+---
+

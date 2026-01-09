@@ -303,3 +303,46 @@ Files changed:
 - US-060 actually included what PRD-012 called "US-061" requirements (usage mode docs) in the README
 - US-061 was already complete from US-053 (init output reminder) and US-060 (README docs)
 ---
+## 2026-01-09 23:00 - US-059
+- Implemented automatic migration from old omni/ structure to new .omni/ structure
+- Created comprehensive migration module (packages/core/src/config/migration.ts):
+  - hasOldStructure() - Detects old omni/ folder with config.toml
+  - hasNewStructure() - Detects new .omni/ folder with config.toml
+  - getMigrationSummary() - Returns list of migration actions
+  - migrateStructure() - Performs complete migration:
+    * Copies config.toml from omni/ to .omni/
+    * Recursively copies capabilities/ directory
+    * Copies any other files and directories
+    * Deletes old omni/ folder after successful migration
+- Updated init command with migration detection:
+  - Checks for old structure before initialization
+  - Prompts user with clear migration summary showing all actions
+  - Requires user confirmation before proceeding
+  - Handles migration errors gracefully with clear error messages
+  - Allows user to cancel migration and exit
+- Added 16 comprehensive tests covering all migration scenarios:
+  - Structure detection tests (old and new)
+  - Migration summary generation tests
+  - Successful migration tests for various file types
+  - Error handling tests (no old structure, new structure exists)
+  - All tests use isolated test directories
+- All tests pass (521/521 passing tests, +16 from previous)
+- Quality checks pass (typecheck, lint, format)
+
+Files changed:
+- packages/core/src/config/migration.ts - New migration module
+- packages/core/src/config/migration.test.ts - Comprehensive test suite
+- packages/core/src/config/index.ts - Export migration functions
+- packages/cli/src/commands/init.ts - Migration detection and prompting
+- scripts/ralph/prd.json - Marked US-059 as passes: true
+
+**Learnings for future iterations:**
+- Migration utilities should be in core package for reusability
+- Always provide clear summary of what will happen before destructive operations
+- Recursive directory copying should preserve complete directory structures
+- Use isolated test directories for file system operations (prevents test interference)
+- Error handling should distinguish between "no old structure" vs "new structure exists"
+- Migration should be atomic - either complete successfully or fail cleanly
+- User prompts should default to "yes" for expected workflows but still require confirmation
+- The @inquirer/prompts package provides a good confirmation dialog
+---

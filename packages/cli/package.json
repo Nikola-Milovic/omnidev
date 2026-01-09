@@ -13,7 +13,8 @@
 		"build": "echo 'Build not needed for Bun runtime'"
 	},
 	"dependencies": {
-		"@omnidev/core": "workspace:*"
+		"@omnidev/core": "workspace:*",
+		"@stricli/core": "^1.2.5"
 	},
 	"devDependencies": {}
 }

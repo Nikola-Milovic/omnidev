@@ -23,6 +23,7 @@
       },
       "dependencies": {
         "@omnidev/core": "workspace:*",
+        "@stricli/core": "^1.2.5",
       },
     },
     "packages/core": {
@@ -64,6 +65,8 @@
     "@omnidev/core": ["@omnidev/core@workspace:packages/core"],
 
     "@omnidev/mcp": ["@omnidev/mcp@workspace:packages/mcp"],
+
+    "@stricli/core": ["@stricli/core@1.2.5", "", {}, "sha512-+afyztQW7fwWkqmU2WQZbdc3LjnZThWYdtE0l+hykZ1Rvy7YGxZSvsVCS/wZ/2BNv117pQ9TU1GZZRIcPnB4tw=="],
 
     "@types/bun": ["@types/bun@1.3.5", "", { "dependencies": { "bun-types": "1.3.5" } }, "sha512-RnygCqNrd3srIPEWBd5LFeUYG7plCoH2Yw9WaZGyNmdTEei+gWaHqydbaIRkIkcbXwhBT94q78QljxN0Sk838w=="],
 

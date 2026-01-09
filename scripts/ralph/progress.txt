@@ -239,3 +239,33 @@ Files changed:
 - Making resolveEnabledCapabilitiesFromState async allows it to load from separate file
 - Comprehensive comments in config files help users understand the system
 ---
+## 2026-01-09 21:00 - US-057
+- Implemented profile create command to complete profile management system
+- Added `dev profile create <name>` command to CLI
+- New profiles are created with empty enable/disable lists in profiles.toml
+- Command validates that profile doesn't already exist before creating
+- Provides helpful next steps after profile creation
+- Added 6 comprehensive tests for profile create command
+- Profile management now fully functional with all required features:
+  - Profile creation: `dev profile create <name>`
+  - Profile listing with active indicator: `dev profile list`
+  - Profile switching: `dev profile set <name>`
+  - Active profile storage in `.omni/active-profile`
+  - Profile definitions in `.omni/profiles.toml`
+  - Profile-based capability resolution integrated in capability registry
+- All tests pass (500/500 tests passing)
+- Quality checks pass (typecheck, lint, format)
+
+Files changed:
+- packages/cli/src/commands/profile.ts - Added createCommand, runProfileCreate function
+- packages/cli/src/commands/profile.test.ts - Added 6 new tests for profile create
+
+**Learnings for future iterations:**
+- Profile management was mostly complete - only needed to add the create command
+- The profile list, set, and active profile resolution were already implemented in US-058
+- The setProfile() helper from profiles-loader.ts made implementation simple
+- Testing edge cases like duplicate profiles and missing files is important
+- When testing error handling, ensure the test creates conditions that will actually trigger the error path
+- Profile system uses `.omni/active-profile` file for persistence (not in config.toml)
+- Active profile resolution is already integrated in buildCapabilityRegistry()
+---

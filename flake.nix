@@ -24,6 +24,9 @@
 
           # Git (for git safety layer)
           git
+
+          # JSON processing
+          jq
         ];
       in
       { devShell = pkgs.mkShell { buildInputs = devDeps; }; });

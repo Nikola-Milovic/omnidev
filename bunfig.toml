@@ -1,0 +1,14 @@
+# Bun configuration for OmniDev monorepo
+
+[install]
+# Enable peer dependency management
+peer = true
+
+# Hoist dependencies to root node_modules
+auto = "auto"
+
+[test]
+# Test file patterns
+preload = []
+coverage = true
+coverageThreshold = 70

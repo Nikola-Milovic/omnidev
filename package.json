@@ -1,0 +1,19 @@
+{
+  "name": "omnidev",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "capabilities/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bun run --filter '*' build",
+    "clean": "rm -rf packages/*/dist capabilities/*/dist"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.17",
+    "typescript": "^5.7.2"
+  }
+}

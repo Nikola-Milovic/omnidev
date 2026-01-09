@@ -8,16 +8,23 @@
 set -e
 
 MAX_ITERATIONS=${1:-10}
-AGENT=${2:-amp}
+AGENT=${2:-claude}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRD_FILE="$SCRIPT_DIR/prd.json"
 PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 ARCHIVE_DIR="$SCRIPT_DIR/archive"
 LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
 
+# Check for jq dependency
+if ! command -v jq &> /dev/null; then
+  echo "❌ jq is required but not installed."
+  echo "   Install it with: brew install jq (macOS) or apt install jq (Linux)"
+  exit 1
+fi
+
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
+  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" || echo "")
   LAST_BRANCH=$(cat "$LAST_BRANCH_FILE" 2>/dev/null || echo "")
 
   if [ -n "$CURRENT_BRANCH" ] && [ -n "$LAST_BRANCH" ] && [ "$CURRENT_BRANCH" != "$LAST_BRANCH" ]; then
@@ -42,7 +49,7 @@ fi
 
 # Track current branch
 if [ -f "$PRD_FILE" ]; then
-  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || echo "")
+  CURRENT_BRANCH=$(jq -r '.branchName // empty' "$PRD_FILE" || echo "")
   if [ -n "$CURRENT_BRANCH" ]; then
     echo "$CURRENT_BRANCH" > "$LAST_BRANCH_FILE"
   fi
@@ -63,8 +70,8 @@ if [ ! -f "$PRD_FILE" ]; then
 fi
 
 # Check for remaining stories
-REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
-if [ "$REMAINING" -eq 0 ]; then
+REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE")
+if [ -z "$REMAINING" ] || [ "$REMAINING" -eq 0 ]; then
   echo "✅ All user stories are complete!"
   exit 0
 fi
@@ -110,8 +117,8 @@ run_agent() {
 
 for i in $(seq 1 $MAX_ITERATIONS); do
   # Check remaining stories
-  REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
-  if [ "$REMAINING" -eq 0 ]; then
+  REMAINING=$(jq '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE")
+  if [ -z "$REMAINING" ] || [ "$REMAINING" -eq 0 ]; then
     echo ""
     echo "✅ All user stories complete!"
     echo "   Finished at iteration $i of $MAX_ITERATIONS"

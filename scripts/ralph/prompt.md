@@ -1,6 +1,8 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent working on the Nutribox project.
+You are an autonomous coding agent working on the OmniDev project.
+
+OmniDev is a meta-MCP that exposes only 2 tools to LLMs (omni_query, omni_execute) while providing unlimited power through a capabilities system.
 
 ## Your Task
 
@@ -10,36 +12,29 @@ You are an autonomous coding agent working on the Nutribox project.
 4. Pick the **highest priority** user story where `passes: false`
 5. **Read the linked task file** (`taskFile` field) for full context - this contains:
    - Detailed requirements and system behaviors
-   - User journeys and UX guidelines
-   - API contracts and data models
-   - Touchpoints (files to modify)
-   - Edge cases
+   - Technical implementation details
+   - Code examples and patterns
+   - Touchpoints (files to create/modify)
+   - Acceptance criteria
 6. Implement the story's `scope` (may be full task or a specific section)
-7. Run quality checks: `pnpm typecheck && pnpm lint:check && pnpm format:check`
-8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-9. Update the PRD to set `passes: true` for the completed story
-10. Append your progress to `scripts/ralph/progress.txt`
+7. Run quality checks: `bun run check` (runs typecheck + lint + format:check)
+8. Run tests: `bun test`
+9. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
+10. Update the PRD to set `passes: true` for the completed story
+11. Append your progress to `scripts/ralph/progress.txt`
 
 ## Critical: Read the Task File!
 
 The PRD story is just an overview. The `taskFile` contains the real requirements:
-- **Summary**: What needs to be done
-- **User Journey**: How users interact with the feature
-- **UX Guidelines**: Design and interaction patterns
-- **System Behaviors**: How the system should work
-- **Data & Contracts**: API endpoints, types, schema
-- **Acceptance Criteria**: What "done" means
-- **Touchpoints**: Files you'll need to modify
+- **Introduction**: What needs to be done and why
+- **Goals**: What we're trying to achieve
+- **User Stories**: Detailed acceptance criteria
+- **Functional Requirements**: Specific behaviors
+- **Technical Considerations**: Code examples and patterns
+- **Touchpoints**: Files you'll need to create/modify
+- **Dependencies**: What needs to exist first
 
 The `scope` field tells you which part of the task to implement in this story.
-
-## Project Context
-
-Read these for additional context:
-- `AGENT.md` — Agent workflow overview
-- `docs/technical.md` — Architecture overview
-- `docs/db.md` — Database patterns
-- `docs/orpc.md` — API patterns
 
 ## Progress Report Format
 
@@ -61,39 +56,43 @@ If you discover a **reusable pattern**, add it to `## Codebase Patterns` at the 
 
 ```
 ## Codebase Patterns
-- Example: Use `sql<number>` template for aggregations
-- Example: Always use `IF NOT EXISTS` for migrations
+- Example: Use `Bun.file().text()` for async file reading
+- Example: Always use `existsSync` from 'fs' for file checks
 ```
 
 ## Running Commands
 
 ```bash
-pnpm typecheck        # TypeScript check
-pnpm lint:check       # Biome lint
-pnpm format:check     # Biome format
-pnpm test             # Run tests
+# Quality checks (run before every commit)
+bun run typecheck     # TypeScript check
+bun run lint          # Biome lint check
+bun run format:check  # Biome format check
+bun run check         # All of the above
 
 # Auto-fix
-pnpm format           # Fix formatting
-pnpm lint:fix         # Fix lint issues
+bun run format        # Fix formatting
+bun run lint:fix      # Fix lint issues
 
-# Database
-just db-migrate       # Apply schema changes
-just db-schema        # Regenerate Kysely types
-just db-seed          # Reset seed data
+# Testing
+bun test              # Run all tests
+bun test --coverage   # Run with coverage report
+
+# Installing dependencies
+bun install           # Install all workspace dependencies
+bun add <pkg>         # Add to current package
+bun add -d <pkg>      # Add as dev dependency
 ```
 
-## Browser Testing (Required for Frontend Stories)
+## Technology Stack
 
-For any story that changes UI, you MUST verify it works using Playwrighter MCP:
-
-1. Start dev server if not running: `pnpm dev`
-2. Use `mcp_playwrighter_execute` to run Playwright commands
-3. Navigate to the relevant page
-4. Verify the UI changes work as expected
-5. Use `mcp_playwrighter_reset` to clean up if needed
-
-**A frontend story is NOT complete until browser verification passes.**
+- **Runtime**: Bun (not Node.js)
+- **Language**: TypeScript (strict mode)
+- **Packages**: ESM only (`"type": "module"`)
+- **Monorepo**: Bun workspaces
+- **Linting**: Biome
+- **Testing**: Bun's built-in test runner
+- **CLI**: Stricli
+- **MCP**: @modelcontextprotocol/sdk
 
 ## Stop Condition
 
@@ -108,6 +107,9 @@ If there are still stories with `passes: false`, end your response normally.
 
 - Work on ONE story per iteration
 - **Always read the task file first** - it has the details you need
+- Use `bun` not `npm`, `yarn`, or `pnpm`
 - Commit frequently with descriptive messages
-- Keep CI green
-- Do NOT use type escape hatches (`any`, `as unknown`)
+- Keep quality checks green
+- Do NOT use type escape hatches (`any`, `as unknown`) - use proper types
+- Run `bun install` after creating package.json files
+- Aim for 70%+ test coverage on new code

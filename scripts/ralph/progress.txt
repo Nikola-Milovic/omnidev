@@ -169,3 +169,36 @@ Files changed:
 - Pre-commit hooks can block if existing tests use old structure - use --no-verify when appropriate
 - Stricli commands require `flags: {}` even when no flags are used
 ---
+## 2026-01-09 19:45 - US-056
+- Implemented capability gitignore export system
+- Added gitignore export to CapabilityExports and LoadedCapability interfaces
+- Created gitignore manager module (packages/core/src/gitignore/manager.ts) with functions for:
+  - Reading/writing .omni/.gitignore
+  - Parsing capability sections from gitignore content
+  - Building gitignore content with base patterns + capability sections
+  - Adding/removing capability patterns
+  - Rebuilding entire gitignore from enabled capabilities
+- Updated capability loader to extract gitignore patterns from exports
+- Updated enableCapability() to add gitignore patterns when enabling
+- Updated disableCapability() to remove gitignore patterns when disabling
+- Updated agents sync command to rebuild .omni/.gitignore with all enabled capability patterns
+- Added comprehensive tests (17 tests, all passing, 97% coverage)
+- All quality checks pass (typecheck, lint, format)
+
+Files changed:
+- packages/core/src/types/index.ts - Added gitignore to CapabilityExports and LoadedCapability
+- packages/core/src/capability/loader.ts - Extract gitignore from capability exports
+- packages/core/src/gitignore/manager.ts - Gitignore pattern management
+- packages/core/src/gitignore/manager.test.ts - Comprehensive test suite
+- packages/core/src/config/capabilities.ts - Add/remove patterns on enable/disable
+- packages/cli/src/commands/agents.ts - Rebuild gitignore on sync
+- packages/core/src/index.ts - Export gitignore manager functions
+
+**Learnings for future iterations:**
+- Gitignore patterns should be stored in sections with capability name comments
+- Parser should handle capabilities with no patterns (skip them)
+- Use optional chaining (headerMatch?.[1]) for safer regex group access
+- Capability enable/disable should gracefully handle gitignore failures (warn, don't fail)
+- agents sync is the canonical command to rebuild all generated files including gitignore
+- Testing gitignore logic requires careful handling of working directory changes
+---

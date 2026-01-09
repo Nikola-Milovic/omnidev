@@ -1,32 +1,32 @@
-import { buildCommand, buildRouteMap } from '@stricli/core';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Rule } from '@omnidev/core';
+import { buildCommand, buildRouteMap } from "@stricli/core";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import type { Rule } from "@omnidev/core";
 
 export async function runAgentsSync(): Promise<void> {
-	const { buildCapabilityRegistry } = await import('@omnidev/core');
+	const { buildCapabilityRegistry } = await import("@omnidev/core");
 
-	console.log('Syncing agent configuration...');
+	console.log("Syncing agent configuration...");
 
 	const registry = await buildCapabilityRegistry();
 	const skills = registry.getAllSkills();
 	const rules = registry.getAllRules();
 
 	// Ensure directories exist
-	mkdirSync('.omni/generated', { recursive: true });
-	mkdirSync('.claude/skills', { recursive: true });
-	mkdirSync('.cursor/rules', { recursive: true });
+	mkdirSync(".omni/generated", { recursive: true });
+	mkdirSync(".claude/skills", { recursive: true });
+	mkdirSync(".cursor/rules", { recursive: true });
 
 	// Generate .omni/generated/rules.md
 	const rulesContent = generateRulesMarkdown(rules);
-	await Bun.write('.omni/generated/rules.md', rulesContent);
+	await Bun.write(".omni/generated/rules.md", rulesContent);
 
 	// Write skills to .claude/skills/
 	for (const skill of skills) {
 		const skillDir = `.claude/skills/${skill.name}`;
 		mkdirSync(skillDir, { recursive: true });
 		await Bun.write(
-			join(skillDir, 'SKILL.md'),
+			join(skillDir, "SKILL.md"),
 			`---
 name: ${skill.name}
 description: "${skill.description}"
@@ -41,8 +41,8 @@ ${skill.instructions}`,
 		await Bun.write(`.cursor/rules/omnidev-${rule.name}.mdc`, rule.content);
 	}
 
-	console.log('✓ Generated:');
-	console.log('  - .omni/generated/rules.md');
+	console.log("✓ Generated:");
+	console.log("  - .omni/generated/rules.md");
 	console.log(`  - .claude/skills/ (${skills.length} skills)`);
 	console.log(`  - .cursor/rules/ (${rules.length} rules)`);
 }
@@ -72,13 +72,13 @@ export const agentsRoutes = buildRouteMap({
 	routes: {
 		sync: buildCommand({
 			docs: {
-				brief: 'Sync agent configuration to all providers',
+				brief: "Sync agent configuration to all providers",
 			},
 			parameters: {},
 			func: runAgentsSync,
 		}),
 	},
 	docs: {
-		brief: 'Manage agent configuration',
+		brief: "Manage agent configuration",
 	},
 });

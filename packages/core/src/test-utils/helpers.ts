@@ -2,7 +2,7 @@
  * Helper functions for testing
  */
 
-import { expect } from 'bun:test';
+import { expect } from "bun:test";
 
 /**
  * Expects an async function to throw an error
@@ -27,7 +27,7 @@ export async function expectToThrowAsync(
 	expect(threw).toBe(true);
 
 	if (errorMatch && caughtError) {
-		if (typeof errorMatch === 'string') {
+		if (typeof errorMatch === "string") {
 			expect(caughtError.message).toContain(errorMatch);
 		} else {
 			expect(caughtError.message).toMatch(errorMatch);
@@ -90,11 +90,11 @@ export function createSpy<TArgs extends unknown[], TReturn>(
 		reset: () => void;
 	};
 
-	Object.defineProperty(spy, 'calls', {
+	Object.defineProperty(spy, "calls", {
 		get: () => calls,
 	});
 
-	Object.defineProperty(spy, 'callCount', {
+	Object.defineProperty(spy, "callCount", {
 		get: () => calls.length,
 	});
 
@@ -115,11 +115,11 @@ export function createMockFn<T>(...returnValues: T[]): () => T {
 
 	return () => {
 		if (callIndex >= returnValues.length) {
-			throw new Error('Mock function called more times than return values provided');
+			throw new Error("Mock function called more times than return values provided");
 		}
 		const value = returnValues[callIndex++];
 		if (value === undefined) {
-			throw new Error('Mock function returned undefined');
+			throw new Error("Mock function returned undefined");
 		}
 		return value;
 	};
@@ -139,7 +139,7 @@ export function createDeferredPromise<T>() {
 	});
 
 	if (!resolveRef || !rejectRef) {
-		throw new Error('Promise executor did not initialize resolve/reject');
+		throw new Error("Promise executor did not initialize resolve/reject");
 	}
 
 	return {
@@ -165,15 +165,15 @@ export async function captureConsole<T>(
 	const originalWarn = console.warn;
 
 	console.log = (...args: unknown[]) => {
-		stdout.push(args.map(String).join(' '));
+		stdout.push(args.map(String).join(" "));
 	};
 
 	console.error = (...args: unknown[]) => {
-		stderr.push(args.map(String).join(' '));
+		stderr.push(args.map(String).join(" "));
 	};
 
 	console.warn = (...args: unknown[]) => {
-		stderr.push(args.map(String).join(' '));
+		stderr.push(args.map(String).join(" "));
 	};
 
 	try {

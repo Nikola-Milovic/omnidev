@@ -8,9 +8,9 @@
 export interface Task {
 	id: string;
 	title: string;
-	status: 'pending' | 'in_progress' | 'completed' | 'blocked';
+	status: "pending" | "in_progress" | "completed" | "blocked";
 	createdAt: string;
 }
 
-export const capabilityId = 'tasks';
-export const capabilityVersion = '0.1.0';
+export const capabilityId = "tasks";
+export const capabilityVersion = "0.1.0";

@@ -1,39 +1,39 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { validateEnv } from '../config/env';
-import { parseCapabilityConfig } from '../config/parser';
-import type { CapabilityConfig, LoadedCapability } from '../types';
-import { loadDocs } from './docs';
-import { loadRules } from './rules';
-import { loadSkills } from './skills';
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { validateEnv } from "../config/env";
+import { parseCapabilityConfig } from "../config/parser";
+import type { CapabilityConfig, LoadedCapability } from "../types";
+import { loadDocs } from "./docs";
+import { loadRules } from "./rules";
+import { loadSkills } from "./skills";
 
-const CAPABILITIES_DIR = 'omni/capabilities';
+const CAPABILITIES_DIR = "omni/capabilities";
 
 /**
  * Reserved capability names that cannot be used.
  * These are common package names that might conflict with imports.
  */
 const RESERVED_NAMES = [
-	'fs',
-	'path',
-	'http',
-	'https',
-	'crypto',
-	'os',
-	'child_process',
-	'stream',
-	'buffer',
-	'util',
-	'events',
-	'net',
-	'url',
-	'querystring',
-	'react',
-	'vue',
-	'lodash',
-	'axios',
-	'express',
-	'typescript',
+	"fs",
+	"path",
+	"http",
+	"https",
+	"crypto",
+	"os",
+	"child_process",
+	"stream",
+	"buffer",
+	"util",
+	"events",
+	"net",
+	"url",
+	"querystring",
+	"react",
+	"vue",
+	"lodash",
+	"axios",
+	"express",
+	"typescript",
 ];
 
 /**
@@ -52,7 +52,7 @@ export async function discoverCapabilities(): Promise<string[]> {
 
 	for (const entry of entries) {
 		if (entry.isDirectory()) {
-			const configPath = join(CAPABILITIES_DIR, entry.name, 'capability.toml');
+			const configPath = join(CAPABILITIES_DIR, entry.name, "capability.toml");
 			if (existsSync(configPath)) {
 				capabilities.push(join(CAPABILITIES_DIR, entry.name));
 			}
@@ -71,7 +71,7 @@ export async function discoverCapabilities(): Promise<string[]> {
  * @throws Error if the config is invalid or uses a reserved name
  */
 export async function loadCapabilityConfig(capabilityPath: string): Promise<CapabilityConfig> {
-	const configPath = join(capabilityPath, 'capability.toml');
+	const configPath = join(capabilityPath, "capability.toml");
 	const content = await Bun.file(configPath).text();
 	const config = parseCapabilityConfig(content);
 
@@ -94,7 +94,7 @@ export async function loadCapabilityConfig(capabilityPath: string): Promise<Capa
  * @throws Error if import fails
  */
 async function importCapabilityExports(capabilityPath: string): Promise<Record<string, unknown>> {
-	const indexPath = join(capabilityPath, 'index.ts');
+	const indexPath = join(capabilityPath, "index.ts");
 
 	if (!existsSync(indexPath)) {
 		return {};
@@ -116,7 +116,7 @@ async function importCapabilityExports(capabilityPath: string): Promise<Record<s
  * @returns Type definitions as string or undefined
  */
 async function loadTypeDefinitions(capabilityPath: string): Promise<string | undefined> {
-	const typesPath = join(capabilityPath, 'types.d.ts');
+	const typesPath = join(capabilityPath, "types.d.ts");
 
 	if (!existsSync(typesPath)) {
 		return undefined;
@@ -154,22 +154,22 @@ export async function loadCapability(
 	const exportsAny = exports as any;
 
 	const skills =
-		'skills' in exports && Array.isArray(exportsAny.skills)
-			? (exportsAny.skills as LoadedCapability['skills'])
+		"skills" in exports && Array.isArray(exportsAny.skills)
+			? (exportsAny.skills as LoadedCapability["skills"])
 			: await loadSkills(capabilityPath, id);
 
 	const rules =
-		'rules' in exports && Array.isArray(exportsAny.rules)
-			? (exportsAny.rules as LoadedCapability['rules'])
+		"rules" in exports && Array.isArray(exportsAny.rules)
+			? (exportsAny.rules as LoadedCapability["rules"])
 			: await loadRules(capabilityPath, id);
 
 	const docs =
-		'docs' in exports && Array.isArray(exportsAny.docs)
-			? (exportsAny.docs as LoadedCapability['docs'])
+		"docs" in exports && Array.isArray(exportsAny.docs)
+			? (exportsAny.docs as LoadedCapability["docs"])
 			: await loadDocs(capabilityPath, id);
 
 	const typeDefinitionsFromExports =
-		'typeDefinitions' in exports && typeof exportsAny.typeDefinitions === 'string'
+		"typeDefinitions" in exports && typeof exportsAny.typeDefinitions === "string"
 			? (exportsAny.typeDefinitions as string)
 			: undefined;
 

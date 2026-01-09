@@ -1,7 +1,7 @@
-import { existsSync } from 'node:fs';
-import type { OmniConfig } from '../types/index.js';
+import { existsSync } from "node:fs";
+import type { OmniConfig } from "../types/index.js";
 
-const ACTIVE_PROFILE_FILE = '.omni/active-profile';
+const ACTIVE_PROFILE_FILE = ".omni/active-profile";
 
 /**
  * Gets the name of the currently active profile.
@@ -42,7 +42,7 @@ export function resolveEnabledCapabilities(
 	// Determine which profile to use
 	const profile = profileName
 		? config.profiles?.[profileName]
-		: config.profiles?.[config.default_profile ?? 'default'];
+		: config.profiles?.[config.default_profile ?? "default"];
 
 	// Apply profile if it exists
 	if (profile) {

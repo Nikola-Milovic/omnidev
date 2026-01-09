@@ -1,5 +1,5 @@
-import { parse } from 'smol-toml';
-import type { CapabilityConfig, OmniConfig } from '../types';
+import { parse } from "smol-toml";
+import type { CapabilityConfig, OmniConfig } from "../types";
 
 /**
  * Parse a TOML string into an OmniConfig object
@@ -21,22 +21,22 @@ export function parseOmniConfig(tomlContent: string): OmniConfig {
  */
 function validateCapabilityConfig(parsed: Record<string, unknown>): void {
 	// biome-ignore lint/complexity/useLiteralKeys: TypeScript strict mode requires bracket notation for index signatures
-	const cap = parsed['capability'];
-	if (typeof cap !== 'object' || cap === null) {
-		throw new Error('capability.id is required in capability.toml');
+	const cap = parsed["capability"];
+	if (typeof cap !== "object" || cap === null) {
+		throw new Error("capability.id is required in capability.toml");
 	}
 	const capability = cap as Record<string, unknown>;
 	// biome-ignore lint/complexity/useLiteralKeys: TypeScript strict mode requires bracket notation for index signatures
-	if (typeof capability['id'] !== 'string') {
-		throw new Error('capability.id is required in capability.toml');
+	if (typeof capability["id"] !== "string") {
+		throw new Error("capability.id is required in capability.toml");
 	}
 	// biome-ignore lint/complexity/useLiteralKeys: TypeScript strict mode requires bracket notation for index signatures
-	if (typeof capability['name'] !== 'string') {
-		throw new Error('capability.name is required in capability.toml');
+	if (typeof capability["name"] !== "string") {
+		throw new Error("capability.name is required in capability.toml");
 	}
 	// biome-ignore lint/complexity/useLiteralKeys: TypeScript strict mode requires bracket notation for index signatures
-	if (typeof capability['version'] !== 'string') {
-		throw new Error('capability.version is required in capability.toml');
+	if (typeof capability["version"] !== "string") {
+		throw new Error("capability.version is required in capability.toml");
 	}
 }
 

@@ -4,7 +4,7 @@
  * Searches across capabilities, skills, and docs. Returns type definitions when requested.
  */
 
-import type { CapabilityRegistry } from '@omnidev/core';
+import type { CapabilityRegistry } from "@omnidev/core";
 
 interface QueryArgs {
 	query?: string;
@@ -23,7 +23,7 @@ export async function handleOmniQuery(
 	registry: CapabilityRegistry,
 	args: unknown,
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
-	const { query = '', limit = 10, include_types = false } = (args as QueryArgs) || {};
+	const { query = "", limit = 10, include_types = false } = (args as QueryArgs) || {};
 
 	const results: string[] = [];
 
@@ -64,20 +64,20 @@ export async function handleOmniQuery(
 				doc.name.toLowerCase().includes(queryLower) ||
 				doc.content.toLowerCase().includes(queryLower)
 			) {
-				const snippet = doc.content.slice(0, 100).replace(/\n/g, ' ');
+				const snippet = doc.content.slice(0, 100).replace(/\n/g, " ");
 				results.push(`[doc:${doc.capabilityId}/${doc.name}] ${snippet}...`);
 			}
 		}
 	}
 
 	// Add type definitions if requested
-	let typeDefinitions = '';
+	let typeDefinitions = "";
 	if (include_types || !query.trim()) {
 		typeDefinitions = generateTypeDefinitions(registry);
 	}
 
 	const limitedResults = results.slice(0, limit);
-	let response = limitedResults.join('\n');
+	let response = limitedResults.join("\n");
 
 	if (typeDefinitions) {
 		response += `\n\n--- Type Definitions ---\n\n${typeDefinitions}`;
@@ -86,7 +86,7 @@ export async function handleOmniQuery(
 	return {
 		content: [
 			{
-				type: 'text',
+				type: "text",
 				text: response,
 			},
 		],
@@ -100,7 +100,7 @@ export async function handleOmniQuery(
  * @returns TypeScript type definitions as string
  */
 function generateTypeDefinitions(registry: CapabilityRegistry): string {
-	let dts = '// Auto-generated type definitions for enabled capabilities\n\n';
+	let dts = "// Auto-generated type definitions for enabled capabilities\n\n";
 
 	for (const cap of registry.getAllCapabilities()) {
 		const moduleName = cap.config.exports?.module ?? cap.id;
@@ -109,15 +109,15 @@ function generateTypeDefinitions(registry: CapabilityRegistry): string {
 		if (cap.typeDefinitions) {
 			// Indent each line
 			const indented = cap.typeDefinitions
-				.split('\n')
+				.split("\n")
 				.map((line) => `  ${line}`)
-				.join('\n');
+				.join("\n");
 			dts += indented;
 		} else {
-			dts += '  // No type definitions available\n';
+			dts += "  // No type definitions available\n";
 		}
 
-		dts += '\n}\n\n';
+		dts += "\n}\n\n";
 	}
 
 	return dts;

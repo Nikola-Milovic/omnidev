@@ -1,6 +1,6 @@
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
-import type { CapabilityRegistry } from '@omnidev/core';
+import { spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import type { CapabilityRegistry } from "@omnidev/core";
 
 interface ExecuteArgs {
 	code?: string;
@@ -18,12 +18,12 @@ export async function handleOmniExecute(_registry: CapabilityRegistry, args: unk
 	const { code } = (args as ExecuteArgs) || {};
 
 	if (!code) {
-		throw new Error('code is required');
+		throw new Error("code is required");
 	}
 
 	// Write code to sandbox
-	mkdirSync('.omni/sandbox', { recursive: true });
-	await Bun.write('.omni/sandbox/main.ts', code);
+	mkdirSync(".omni/sandbox", { recursive: true });
+	await Bun.write(".omni/sandbox/main.ts", code);
 
 	// Execute with Bun
 	const result = await executeCode();
@@ -46,7 +46,7 @@ export async function handleOmniExecute(_registry: CapabilityRegistry, args: unk
 	return {
 		content: [
 			{
-				type: 'text',
+				type: "text",
 				text: JSON.stringify(response, null, 2),
 			},
 		],
@@ -59,7 +59,7 @@ async function executeCode(): Promise<{
 	stderr: string;
 }> {
 	return new Promise((resolve) => {
-		const proc = spawn('bun', ['run', '.omni/sandbox/main.ts'], {
+		const proc = spawn("bun", ["run", ".omni/sandbox/main.ts"], {
 			cwd: process.cwd(),
 			env: {
 				...process.env,
@@ -67,18 +67,18 @@ async function executeCode(): Promise<{
 			},
 		});
 
-		let stdout = '';
-		let stderr = '';
+		let stdout = "";
+		let stderr = "";
 
-		proc.stdout.on('data', (data) => {
+		proc.stdout.on("data", (data) => {
 			stdout += data.toString();
 		});
 
-		proc.stderr.on('data', (data) => {
+		proc.stderr.on("data", (data) => {
 			stderr += data.toString();
 		});
 
-		proc.on('close', (code) => {
+		proc.on("close", (code) => {
 			resolve({
 				exitCode: code ?? 1,
 				stdout,
@@ -94,13 +94,13 @@ async function getGitDiffStats(): Promise<{
 	deletions: number;
 }> {
 	try {
-		const proc = Bun.spawn(['git', 'diff', '--name-only']);
+		const proc = Bun.spawn(["git", "diff", "--name-only"]);
 		const output = await new Response(proc.stdout).text();
 
-		const files = output.trim().split('\n').filter(Boolean);
+		const files = output.trim().split("\n").filter(Boolean);
 
 		// Get numeric stats
-		const statProc = Bun.spawn(['git', 'diff', '--shortstat']);
+		const statProc = Bun.spawn(["git", "diff", "--shortstat"]);
 		const statOutput = await new Response(statProc.stdout).text();
 
 		const insertMatch = statOutput.match(/(\d+) insertion/);

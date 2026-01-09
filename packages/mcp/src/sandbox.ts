@@ -1,10 +1,10 @@
-import { mkdir, readdir, rm, symlink } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import type { LoadedCapability } from '@omnidev/core';
+import { mkdir, readdir, rm, symlink } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import type { LoadedCapability } from "@omnidev/core";
 
-const SANDBOX_DIR = '.omni/sandbox';
-const SANDBOX_NODE_MODULES = '.omni/sandbox/node_modules';
+const SANDBOX_DIR = ".omni/sandbox";
+const SANDBOX_NODE_MODULES = ".omni/sandbox/node_modules";
 
 /**
  * Sets up the sandbox environment by creating symlinks to enabled capabilities.
@@ -30,12 +30,12 @@ export async function setupSandbox(capabilities: LoadedCapability[]): Promise<vo
 	for (const cap of capabilities) {
 		const moduleName = cap.config.exports?.module ?? cap.id;
 		const linkPath = join(SANDBOX_NODE_MODULES, moduleName);
-		const targetPath = join('../../..', cap.path);
+		const targetPath = join("../../..", cap.path);
 
 		try {
-			await symlink(targetPath, linkPath, 'dir');
+			await symlink(targetPath, linkPath, "dir");
 		} catch (e) {
-			if ((e as NodeJS.ErrnoException).code !== 'EEXIST') {
+			if ((e as NodeJS.ErrnoException).code !== "EEXIST") {
 				console.error(`Failed to symlink ${moduleName}:`, e);
 			}
 		}

@@ -42,9 +42,9 @@ export interface MockRule {
  */
 export function createMockCapability(overrides: Partial<MockCapability> = {}): MockCapability {
 	return {
-		id: 'test-capability',
-		name: 'Test Capability',
-		version: '1.0.0',
+		id: "test-capability",
+		name: "Test Capability",
+		version: "1.0.0",
 		enabled: true,
 		metadata: {},
 		...overrides,
@@ -58,7 +58,7 @@ export function createMockCapability(overrides: Partial<MockCapability> = {}): M
  */
 export function createMockConfig(overrides: Partial<MockConfig> = {}): MockConfig {
 	return {
-		project: 'test-project',
+		project: "test-project",
 		capabilities: {
 			enable: [],
 			disable: [],
@@ -76,10 +76,10 @@ export function createMockConfig(overrides: Partial<MockConfig> = {}): MockConfi
  */
 export function createMockSkill(overrides: Partial<MockSkill> = {}): MockSkill {
 	return {
-		id: 'test-skill',
-		name: 'Test Skill',
-		description: 'A test skill for unit testing',
-		instructions: 'Test instructions',
+		id: "test-skill",
+		name: "Test Skill",
+		description: "A test skill for unit testing",
+		instructions: "Test instructions",
 		triggers: [],
 		...overrides,
 	};
@@ -92,9 +92,9 @@ export function createMockSkill(overrides: Partial<MockSkill> = {}): MockSkill {
  */
 export function createMockRule(overrides: Partial<MockRule> = {}): MockRule {
 	return {
-		id: 'test-rule',
-		name: 'Test Rule',
-		content: '# Test Rule\n\nTest rule content',
+		id: "test-rule",
+		name: "Test Rule",
+		content: "# Test Rule\n\nTest rule content",
 		priority: 1,
 		...overrides,
 	};

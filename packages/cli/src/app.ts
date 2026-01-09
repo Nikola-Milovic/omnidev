@@ -1,11 +1,11 @@
-import { buildApplication, buildRouteMap } from '@stricli/core';
-import { doctorCommand } from './commands/doctor';
-import { initCommand } from './commands/init';
-import { serveCommand } from './commands/serve';
-import { capabilityRoutes } from './commands/capability';
-import { profileRoutes } from './commands/profile';
-import { agentsRoutes } from './commands/agents';
-import { typesRoutes } from './commands/types';
+import { buildApplication, buildRouteMap } from "@stricli/core";
+import { doctorCommand } from "./commands/doctor";
+import { initCommand } from "./commands/init";
+import { serveCommand } from "./commands/serve";
+import { capabilityRoutes } from "./commands/capability";
+import { profileRoutes } from "./commands/profile";
+import { agentsRoutes } from "./commands/agents";
+import { typesRoutes } from "./commands/types";
 
 const app = buildApplication(
 	buildRouteMap({
@@ -19,13 +19,13 @@ const app = buildApplication(
 			types: typesRoutes,
 		},
 		docs: {
-			brief: 'OmniDev commands',
+			brief: "OmniDev commands",
 		},
 	}),
 	{
-		name: 'omnidev',
+		name: "omnidev",
 		versionInfo: {
-			currentVersion: '0.1.0',
+			currentVersion: "0.1.0",
 		},
 	},
 );

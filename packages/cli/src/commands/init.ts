@@ -1,23 +1,23 @@
-import { buildCommand } from '@stricli/core';
-import { existsSync, mkdirSync, appendFileSync } from 'node:fs';
+import { buildCommand } from "@stricli/core";
+import { existsSync, mkdirSync, appendFileSync } from "node:fs";
 
 export async function runInit() {
-	console.log('Initializing OmniDev...');
+	console.log("Initializing OmniDev...");
 
 	// Create omni/ directory
-	mkdirSync('omni', { recursive: true });
-	mkdirSync('omni/capabilities', { recursive: true });
+	mkdirSync("omni", { recursive: true });
+	mkdirSync("omni/capabilities", { recursive: true });
 
 	// Create config.toml
-	if (!existsSync('omni/config.toml')) {
-		await Bun.write('omni/config.toml', defaultConfig());
+	if (!existsSync("omni/config.toml")) {
+		await Bun.write("omni/config.toml", defaultConfig());
 	}
 
 	// Create .omni/ directory
-	mkdirSync('.omni', { recursive: true });
-	mkdirSync('.omni/generated', { recursive: true });
-	mkdirSync('.omni/state', { recursive: true });
-	mkdirSync('.omni/sandbox', { recursive: true });
+	mkdirSync(".omni", { recursive: true });
+	mkdirSync(".omni/generated", { recursive: true });
+	mkdirSync(".omni/state", { recursive: true });
+	mkdirSync(".omni/sandbox", { recursive: true });
 
 	// Create reference files
 	await createReferenceFiles();
@@ -25,18 +25,18 @@ export async function runInit() {
 	// Update .gitignore
 	await updateGitignore();
 
-	console.log('✓ OmniDev initialized!');
-	console.log('');
-	console.log('Next steps:');
-	console.log('  1. Edit omni/config.toml to configure capabilities');
-	console.log('  2. Run: omnidev capability list');
-	console.log('  3. Run: omnidev agents sync');
+	console.log("✓ OmniDev initialized!");
+	console.log("");
+	console.log("Next steps:");
+	console.log("  1. Edit omni/config.toml to configure capabilities");
+	console.log("  2. Run: omnidev capability list");
+	console.log("  3. Run: omnidev agents sync");
 }
 
 export const initCommand = buildCommand({
 	parameters: {},
 	docs: {
-		brief: 'Initialize OmniDev in the current project',
+		brief: "Initialize OmniDev in the current project",
 	},
 	func: runInit,
 });
@@ -65,9 +65,9 @@ disable = []
 
 async function createReferenceFiles() {
 	// agents.md
-	if (!existsSync('agents.md')) {
+	if (!existsSync("agents.md")) {
 		await Bun.write(
-			'agents.md',
+			"agents.md",
 			`# Agent Configuration
 
 > Managed by OmniDev. Do not edit directly.
@@ -79,10 +79,10 @@ See: .omni/generated/rules.md for current rules.
 	}
 
 	// .claude/claude.md
-	mkdirSync('.claude', { recursive: true });
-	if (!existsSync('.claude/claude.md')) {
+	mkdirSync(".claude", { recursive: true });
+	if (!existsSync(".claude/claude.md")) {
 		await Bun.write(
-			'.claude/claude.md',
+			".claude/claude.md",
 			`# Claude Code Configuration
 
 > Managed by OmniDev.
@@ -96,7 +96,7 @@ See: .omni/generated/rules.md for current rules.
 }
 
 async function updateGitignore() {
-	const gitignorePath = '.gitignore';
+	const gitignorePath = ".gitignore";
 	const omnidevEntries = `
 # OmniDev - local state and generated content
 .omni/
@@ -108,7 +108,7 @@ async function updateGitignore() {
 
 	if (existsSync(gitignorePath)) {
 		const content = await Bun.file(gitignorePath).text();
-		if (!content.includes('.omni/')) {
+		if (!content.includes(".omni/")) {
 			appendFileSync(gitignorePath, omnidevEntries);
 		}
 	} else {

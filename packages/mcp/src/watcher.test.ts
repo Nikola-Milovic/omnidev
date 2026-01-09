@@ -2,12 +2,12 @@
  * Tests for file watcher functionality
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, rmSync } from 'node:fs';
-import { startWatcher } from './watcher.js';
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { mkdirSync, rmSync } from "node:fs";
+import { startWatcher } from "./watcher.js";
 
-describe('startWatcher', () => {
-	const TEST_DIR = '.test-watcher';
+describe("startWatcher", () => {
+	const TEST_DIR = ".test-watcher";
 	const originalCwd = process.cwd();
 
 	beforeEach(() => {
@@ -18,7 +18,7 @@ describe('startWatcher', () => {
 
 		// Write initial config files
 		Bun.write(`${TEST_DIR}/omni/config.toml`, '[capability]\nid = "test"');
-		Bun.write(`${TEST_DIR}/.omni/active-profile`, 'default');
+		Bun.write(`${TEST_DIR}/.omni/active-profile`, "default");
 
 		// Change to test directory
 		process.chdir(TEST_DIR);
@@ -32,7 +32,7 @@ describe('startWatcher', () => {
 		rmSync(TEST_DIR, { recursive: true, force: true });
 	});
 
-	test('starts watcher without errors', () => {
+	test("starts watcher without errors", () => {
 		const onReload = async () => {
 			// No-op
 		};
@@ -41,7 +41,7 @@ describe('startWatcher', () => {
 		expect(() => startWatcher(onReload)).not.toThrow();
 	});
 
-	test('handles missing watch paths gracefully', () => {
+	test("handles missing watch paths gracefully", () => {
 		// Create minimal test directory without all watched paths
 		process.chdir(originalCwd);
 		rmSync(TEST_DIR, { recursive: true, force: true });
@@ -56,7 +56,7 @@ describe('startWatcher', () => {
 		expect(() => startWatcher(onReload)).not.toThrow();
 	});
 
-	test('onReload callback is called asynchronously', async () => {
+	test("onReload callback is called asynchronously", async () => {
 		let callbackCalled = false;
 		const onReload = async () => {
 			callbackCalled = true;
@@ -65,17 +65,17 @@ describe('startWatcher', () => {
 		startWatcher(onReload);
 
 		// Modify config file to trigger watcher
-		await Bun.write('omni/config.toml', '[capability]\nid = "changed"');
+		await Bun.write("omni/config.toml", '[capability]\nid = "changed"');
 
 		// Wait for file system event + debounce (500ms) + buffer
 		await new Promise((resolve) => setTimeout(resolve, 800));
 
 		// Callback may or may not be called depending on FS event timing
 		// Just verify the watcher was set up without errors
-		expect(typeof callbackCalled).toBe('boolean');
+		expect(typeof callbackCalled).toBe("boolean");
 	});
 
-	test('debounce timer delays callback execution', async () => {
+	test("debounce timer delays callback execution", async () => {
 		const callTimestamps: number[] = [];
 		const onReload = async () => {
 			callTimestamps.push(Date.now());
@@ -86,11 +86,11 @@ describe('startWatcher', () => {
 		const startTime = Date.now();
 
 		// Make multiple rapid changes
-		await Bun.write('omni/config.toml', '[capability]\nid = "change1"');
+		await Bun.write("omni/config.toml", '[capability]\nid = "change1"');
 		await new Promise((resolve) => setTimeout(resolve, 100));
-		await Bun.write('omni/config.toml', '[capability]\nid = "change2"');
+		await Bun.write("omni/config.toml", '[capability]\nid = "change2"');
 		await new Promise((resolve) => setTimeout(resolve, 100));
-		await Bun.write('omni/config.toml', '[capability]\nid = "change3"');
+		await Bun.write("omni/config.toml", '[capability]\nid = "change3"');
 
 		// Wait for debounce (500ms from last change) + buffer
 		await new Promise((resolve) => setTimeout(resolve, 800));
@@ -103,7 +103,7 @@ describe('startWatcher', () => {
 		}
 	});
 
-	test('watcher is configured for all required paths', () => {
+	test("watcher is configured for all required paths", () => {
 		let watcherInitialized = false;
 		const onReload = async () => {
 			watcherInitialized = true;

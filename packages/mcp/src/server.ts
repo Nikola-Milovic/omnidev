@@ -4,15 +4,15 @@
  * Provides omni_query and omni_execute tools to LLMs via Model Context Protocol
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { buildCapabilityRegistry } from '@omnidev/core';
-import { handleOmniQuery } from './tools/query.js';
-import { handleOmniExecute } from './tools/execute.js';
-import { setupSandbox } from './sandbox.js';
-import { startWatcher } from './watcher.js';
-import { mkdirSync } from 'node:fs';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { buildCapabilityRegistry } from "@omnidev/core";
+import { handleOmniQuery } from "./tools/query.js";
+import { handleOmniExecute } from "./tools/execute.js";
+import { setupSandbox } from "./sandbox.js";
+import { startWatcher } from "./watcher.js";
+import { mkdirSync } from "node:fs";
 
 /**
  * Start the MCP server with stdio transport
@@ -24,8 +24,8 @@ export async function startServer(): Promise<void> {
 	// Create MCP server instance
 	const server = new Server(
 		{
-			name: 'omnidev',
-			version: '0.1.0',
+			name: "omnidev",
+			version: "0.1.0",
 		},
 		{
 			capabilities: {
@@ -39,40 +39,40 @@ export async function startServer(): Promise<void> {
 		return {
 			tools: [
 				{
-					name: 'omni_query',
+					name: "omni_query",
 					description:
-						'Search capabilities, docs, and skills. Returns type definitions when include_types is true.',
+						"Search capabilities, docs, and skills. Returns type definitions when include_types is true.",
 					inputSchema: {
-						type: 'object',
+						type: "object",
 						properties: {
 							query: {
-								type: 'string',
-								description: 'Search query. Empty returns summary of enabled capabilities.',
+								type: "string",
+								description: "Search query. Empty returns summary of enabled capabilities.",
 							},
 							limit: {
-								type: 'number',
-								description: 'Maximum results to return (default: 10)',
+								type: "number",
+								description: "Maximum results to return (default: 10)",
 							},
 							include_types: {
-								type: 'boolean',
-								description: 'Include TypeScript type definitions in response',
+								type: "boolean",
+								description: "Include TypeScript type definitions in response",
 							},
 						},
 					},
 				},
 				{
-					name: 'omni_execute',
-					description: 'Execute TypeScript code in the sandbox with access to capability modules.',
+					name: "omni_execute",
+					description: "Execute TypeScript code in the sandbox with access to capability modules.",
 					inputSchema: {
-						type: 'object',
+						type: "object",
 						properties: {
 							code: {
-								type: 'string',
+								type: "string",
 								description:
-									'Full TypeScript file contents with export async function main(): Promise<number>',
+									"Full TypeScript file contents with export async function main(): Promise<number>",
 							},
 						},
-						required: ['code'],
+						required: ["code"],
 					},
 				},
 			],
@@ -85,9 +85,9 @@ export async function startServer(): Promise<void> {
 
 		try {
 			switch (name) {
-				case 'omni_query':
+				case "omni_query":
 					return await handleOmniQuery(registry, args);
-				case 'omni_execute':
+				case "omni_execute":
 					return await handleOmniExecute(registry, args);
 				default:
 					throw new Error(`Unknown tool: ${name}`);
@@ -96,7 +96,7 @@ export async function startServer(): Promise<void> {
 			return {
 				content: [
 					{
-						type: 'text',
+						type: "text",
 						text: `Error: ${error instanceof Error ? error.message : String(error)}`,
 					},
 				],
@@ -109,21 +109,21 @@ export async function startServer(): Promise<void> {
 	await setupSandbox(registry.getAllCapabilities());
 
 	// Write PID file
-	mkdirSync('.omni', { recursive: true });
-	await Bun.write('.omni/server.pid', process.pid.toString());
+	mkdirSync(".omni", { recursive: true });
+	await Bun.write(".omni/server.pid", process.pid.toString());
 
 	// Start file watcher for hot reload
 	startWatcher(async () => {
-		console.error('[omnidev] Reloading capabilities...');
+		console.error("[omnidev] Reloading capabilities...");
 		registry = await buildCapabilityRegistry();
 		await setupSandbox(registry.getAllCapabilities());
 	});
 
 	// Handle shutdown
 	const shutdown = async () => {
-		console.error('[omnidev] Shutting down...');
+		console.error("[omnidev] Shutting down...");
 		try {
-			const pidFile = Bun.file('.omni/server.pid');
+			const pidFile = Bun.file(".omni/server.pid");
 			await pidFile.delete();
 		} catch {
 			// Ignore errors if file doesn't exist
@@ -131,12 +131,12 @@ export async function startServer(): Promise<void> {
 		process.exit(0);
 	};
 
-	process.on('SIGINT', shutdown);
-	process.on('SIGTERM', shutdown);
+	process.on("SIGINT", shutdown);
+	process.on("SIGTERM", shutdown);
 
 	// Start MCP server with stdio transport
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
 
-	console.error('[omnidev] MCP server started');
+	console.error("[omnidev] MCP server started");
 }

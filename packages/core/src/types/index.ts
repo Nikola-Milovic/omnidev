@@ -28,7 +28,7 @@ export interface McpConfig {
 	args?: string[];
 	env?: Record<string, string>;
 	cwd?: string;
-	transport?: 'stdio' | 'sse';
+	transport?: "stdio" | "sse";
 }
 
 // Content Types

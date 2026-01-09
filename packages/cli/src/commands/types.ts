@@ -1,16 +1,16 @@
-import { buildCommand, buildRouteMap } from '@stricli/core';
-import { mkdirSync } from 'node:fs';
+import { buildCommand, buildRouteMap } from "@stricli/core";
+import { mkdirSync } from "node:fs";
 
 export async function runTypesGenerate(): Promise<void> {
-	const { buildCapabilityRegistry } = await import('@omnidev/core');
+	const { buildCapabilityRegistry } = await import("@omnidev/core");
 
-	console.log('Generating type definitions...');
+	console.log("Generating type definitions...");
 
 	const registry = await buildCapabilityRegistry();
 	const capabilities = registry.getAllCapabilities();
 
 	// Ensure directory exists
-	mkdirSync('.omni/generated', { recursive: true });
+	mkdirSync(".omni/generated", { recursive: true });
 
 	// Collect all type definitions from enabled capabilities
 	const typeDefinitions = capabilities
@@ -19,10 +19,10 @@ export async function runTypesGenerate(): Promise<void> {
 
 	// Generate .omni/generated/types.d.ts
 	const typesContent = generateTypesFile(typeDefinitions);
-	await Bun.write('.omni/generated/types.d.ts', typesContent);
+	await Bun.write(".omni/generated/types.d.ts", typesContent);
 
-	console.log('✓ Generated:');
-	console.log('  - .omni/generated/types.d.ts');
+	console.log("✓ Generated:");
+	console.log("  - .omni/generated/types.d.ts");
 	console.log(`  - ${typeDefinitions.length} capability type definitions included`);
 }
 
@@ -34,7 +34,7 @@ function generateTypesFile(typeDefinitions: string[]): string {
 `;
 
 	if (typeDefinitions.length === 0) {
-		content += '// No type definitions available from enabled capabilities\n';
+		content += "// No type definitions available from enabled capabilities\n";
 	} else {
 		for (const typeDef of typeDefinitions) {
 			content += `${typeDef.trim()}\n\n`;
@@ -48,13 +48,13 @@ export const typesRoutes = buildRouteMap({
 	routes: {
 		generate: buildCommand({
 			docs: {
-				brief: 'Generate type definitions from enabled capabilities',
+				brief: "Generate type definitions from enabled capabilities",
 			},
 			parameters: {},
 			func: runTypesGenerate,
 		}),
 	},
 	docs: {
-		brief: 'Manage type definitions',
+		brief: "Manage type definitions",
 	},
 });

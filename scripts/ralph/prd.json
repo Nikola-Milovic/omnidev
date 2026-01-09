@@ -607,14 +607,15 @@
 		},
 		{
 			"id": "US-038",
-			"title": "Create tasks capability structure",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "Capability structure only",
+			"title": "Create Ralph capability structure",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "Capability structure only (capability.toml, package.json, index.ts, types.d.ts, definition.md)",
 			"acceptanceCriteria": [
-				"capability.toml with metadata exists",
-				"package.json with dependencies exists",
-				"index.ts entry point exists",
-				"definition.md with description exists",
+				"capabilities/ralph/capability.toml exists with metadata",
+				"capabilities/ralph/package.json exists",
+				"capabilities/ralph/index.ts exists with placeholder exports",
+				"capabilities/ralph/types.d.ts exists with Story, PRD interfaces",
+				"capabilities/ralph/definition.md exists with description",
 				"Capability discovered by loader",
 				"Typecheck passes"
 			],
@@ -624,15 +625,16 @@
 		},
 		{
 			"id": "US-039",
-			"title": "Implement task data model and storage",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "Types and storage only",
+			"title": "Implement Ralph state management",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "State management only (PRD, story, progress operations in index.ts)",
 			"acceptanceCriteria": [
-				"Task, Status, Plan interfaces defined",
-				"loadStore reads from .omni/state/tasks.json",
-				"saveStore writes to file",
-				"File created if doesn't exist",
-				"Tests cover storage scenarios",
+				"listPRDs, getPRD, createPRD, updatePRD, archivePRD functions work",
+				"getNextStory, markStoryPassed, markStoryFailed functions work",
+				"appendProgress, getProgress, getPatterns functions work",
+				"getActivePRD, setActivePRD functions work",
+				"State persisted to .omni/ralph/",
+				"Tests cover state operations",
 				"Typecheck passes"
 			],
 			"priority": 39,
@@ -641,14 +643,15 @@
 		},
 		{
 			"id": "US-040",
-			"title": "Implement task sandbox tools",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "Sandbox tools only",
+			"title": "Implement Ralph sync hook",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "Sync hook only (creates directory structure, default config)",
 			"acceptanceCriteria": [
-				"create, list, get, update, complete functions work",
-				"planGet, planSet functions work",
-				"All functions exported from index.ts",
-				"Tests cover all tools",
+				"Sync creates .omni/ralph/ directory structure",
+				"Sync creates .omni/ralph/prds/ and .omni/ralph/completed-prds/",
+				"Sync creates default config.toml if not exists",
+				"Sync updates .gitignore with .omni/ralph/",
+				"omnidev agents sync triggers Ralph sync",
 				"Typecheck passes"
 			],
 			"priority": 40,
@@ -657,14 +660,15 @@
 		},
 		{
 			"id": "US-041",
-			"title": "Create task CLI commands",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "CLI commands only",
+			"title": "Implement Ralph CLI commands (core)",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "Core CLI commands only (init, start, stop, status)",
 			"acceptanceCriteria": [
-				"omnidev tasks list shows tasks",
-				"omnidev tasks add creates task",
-				"omnidev tasks show displays task details",
-				"omnidev tasks start/complete/block change status",
+				"omnidev ralph init creates .omni/ralph/ structure",
+				"omnidev ralph start spawns agent and runs iterations",
+				"omnidev ralph start accepts --agent, --iterations, --prd flags",
+				"omnidev ralph stop gracefully stops orchestration",
+				"omnidev ralph status shows active PRD and story progress",
 				"Typecheck passes"
 			],
 			"priority": 41,
@@ -673,14 +677,15 @@
 		},
 		{
 			"id": "US-042",
-			"title": "Create task skill and rules",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "Skill and rules files only",
+			"title": "Implement Ralph CLI commands (management)",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "Management CLI commands (prd, story, spec, log, patterns subcommands)",
 			"acceptanceCriteria": [
-				"skills/task-management/SKILL.md exists with proper format",
-				"rules/task-workflow.md exists",
-				"Skill discovered by capability loader",
-				"Rules discovered by capability loader",
+				"omnidev ralph prd list/create/select/view/archive/delete work",
+				"omnidev ralph story list/pass/reset/add work",
+				"omnidev ralph spec list/create/view work",
+				"omnidev ralph log shows progress log",
+				"omnidev ralph patterns extracts codebase patterns",
 				"Typecheck passes"
 			],
 			"priority": 42,
@@ -689,14 +694,16 @@
 		},
 		{
 			"id": "US-043",
-			"title": "Create task type definitions",
-			"taskFile": "scripts/ralph/tasks/prd-008-tasks-capability.md",
-			"scope": "Type definitions file only",
+			"title": "Create Ralph skills and rules",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
+			"scope": "Skills and rules files only",
 			"acceptanceCriteria": [
-				"types.d.ts file exists in capability",
-				"All exported functions have type signatures",
-				"All interfaces documented",
-				"Types included in omni_query response",
+				"skills/prd-creation/SKILL.md exists with PRD generation guidance",
+				"skills/ralph-orchestration/SKILL.md exists with iteration workflow",
+				"rules/prd-structure.md exists with PRD format rules",
+				"rules/iteration-workflow.md exists with iteration behavior rules",
+				"docs/agent-prompt.md exists with prompt template",
+				"Skills and rules discovered by loader",
 				"Typecheck passes"
 			],
 			"priority": 43,
@@ -706,7 +713,7 @@
 		{
 			"id": "US-044",
 			"title": "End-to-end integration verification",
-			"taskFile": "scripts/ralph/tasks/prd-001-bun-monorepo-setup.md",
+			"taskFile": "scripts/ralph/tasks/prd-009-ralph-capability.md",
 			"scope": "Full integration test",
 			"acceptanceCriteria": [
 				"bun install works from root",
@@ -714,13 +721,15 @@
 				"bun test passes with 70%+ coverage",
 				"omnidev init creates correct structure",
 				"omnidev doctor shows all green",
-				"omnidev capability list shows tasks capability",
-				"omnidev agents sync generates files",
+				"omnidev capability list shows ralph capability",
+				"omnidev agents sync triggers ralph sync hook",
+				"omnidev ralph init creates .omni/ralph/ structure",
+				"omnidev ralph prd create works interactively",
 				"Typecheck passes"
 			],
 			"priority": 44,
 			"passes": false,
-			"notes": "Final verification story - run all checks"
+			"notes": "Final verification story - run all checks including Ralph CLI"
 		}
 	]
 }

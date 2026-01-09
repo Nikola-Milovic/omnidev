@@ -1,7 +1,7 @@
-import { existsSync } from 'node:fs';
-import type { EnvDeclaration } from '../types';
+import { existsSync } from "node:fs";
+import type { EnvDeclaration } from "../types";
 
-const ENV_FILE = '.omni/.env';
+const ENV_FILE = ".omni/.env";
 
 /**
  * Load environment variables from .omni/.env file and merge with process.env.
@@ -15,11 +15,11 @@ export async function loadEnvironment(): Promise<Record<string, string>> {
 	// Load from .omni/.env
 	if (existsSync(ENV_FILE)) {
 		const content = await Bun.file(ENV_FILE).text();
-		for (const line of content.split('\n')) {
+		for (const line of content.split("\n")) {
 			const trimmed = line.trim();
 			// Skip empty lines and comments
-			if (trimmed && !trimmed.startsWith('#')) {
-				const eqIndex = trimmed.indexOf('=');
+			if (trimmed && !trimmed.startsWith("#")) {
+				const eqIndex = trimmed.indexOf("=");
 				if (eqIndex > 0) {
 					const key = trimmed.slice(0, eqIndex).trim();
 					const value = trimmed.slice(eqIndex + 1).trim();
@@ -73,8 +73,8 @@ export function validateEnv(
 
 	if (missing.length > 0) {
 		throw new Error(
-			`Missing required environment variable${missing.length > 1 ? 's' : ''} for capability "${capabilityId}": ${missing.join(', ')}. ` +
-				`Set ${missing.length > 1 ? 'them' : 'it'} in .omni/.env or as environment variable${missing.length > 1 ? 's' : ''}.`,
+			`Missing required environment variable${missing.length > 1 ? "s" : ""} for capability "${capabilityId}": ${missing.join(", ")}. ` +
+				`Set ${missing.length > 1 ? "them" : "it"} in .omni/.env or as environment variable${missing.length > 1 ? "s" : ""}.`,
 		);
 	}
 }

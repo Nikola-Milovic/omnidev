@@ -1,9 +1,9 @@
-import { existsSync } from 'node:fs';
-import type { OmniConfig } from '../types';
-import { parseOmniConfig } from './parser';
+import { existsSync } from "node:fs";
+import type { OmniConfig } from "../types";
+import { parseOmniConfig } from "./parser";
 
-const TEAM_CONFIG = 'omni/config.toml';
-const LOCAL_CONFIG = '.omni/config.local.toml';
+const TEAM_CONFIG = "omni/config.toml";
+const LOCAL_CONFIG = ".omni/config.local.toml";
 
 /**
  * Deep merge two config objects, with override taking precedence

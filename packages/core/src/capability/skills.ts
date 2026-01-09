@@ -1,6 +1,6 @@
-import { readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import type { Skill } from '../types';
+import { readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import type { Skill } from "../types";
 
 interface SkillFrontmatter {
 	name: string;
@@ -8,7 +8,7 @@ interface SkillFrontmatter {
 }
 
 export async function loadSkills(capabilityPath: string, capabilityId: string): Promise<Skill[]> {
-	const skillsDir = join(capabilityPath, 'skills');
+	const skillsDir = join(capabilityPath, "skills");
 
 	if (!existsSync(skillsDir)) {
 		return [];
@@ -19,7 +19,7 @@ export async function loadSkills(capabilityPath: string, capabilityId: string): 
 
 	for (const entry of entries) {
 		if (entry.isDirectory()) {
-			const skillPath = join(skillsDir, entry.name, 'SKILL.md');
+			const skillPath = join(skillsDir, entry.name, "SKILL.md");
 			if (existsSync(skillPath)) {
 				const skill = await parseSkillFile(skillPath, capabilityId);
 				skills.push(skill);
@@ -64,7 +64,7 @@ async function parseSkillFile(filePath: string, capabilityId: string): Promise<S
 function parseYamlFrontmatter(yaml: string): SkillFrontmatter {
 	const result: Record<string, string> = {};
 
-	for (const line of yaml.split('\n')) {
+	for (const line of yaml.split("\n")) {
 		const match = line.match(/^(\w+):\s*"?([^"]*)"?\s*$/);
 		if (match) {
 			const key = match[1];

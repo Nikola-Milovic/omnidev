@@ -1,8 +1,8 @@
-import { describe, expect, test } from 'bun:test';
-import { parseCapabilityConfig, parseOmniConfig } from './parser';
+import { describe, expect, test } from "bun:test";
+import { parseCapabilityConfig, parseOmniConfig } from "./parser";
 
-describe('parseOmniConfig', () => {
-	test('parses valid TOML with all fields', () => {
+describe("parseOmniConfig", () => {
+	test("parses valid TOML with all fields", () => {
 		const toml = `
 project = "my-project"
 default_profile = "dev"
@@ -25,34 +25,34 @@ disable = ["debug"]
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.project).toBe('my-project');
-		expect(config.default_profile).toBe('dev');
-		expect(config.capabilities?.enable).toEqual(['tasks', 'git']);
-		expect(config.capabilities?.disable).toEqual(['docker']);
-		expect(config.env?.API_URL).toBe('https://api.example.com');
-		expect(config.profiles?.dev?.enable).toEqual(['debug']);
-		expect(config.profiles?.prod?.disable).toEqual(['debug']);
+		expect(config.project).toBe("my-project");
+		expect(config.default_profile).toBe("dev");
+		expect(config.capabilities?.enable).toEqual(["tasks", "git"]);
+		expect(config.capabilities?.disable).toEqual(["docker"]);
+		expect(config.env?.API_URL).toBe("https://api.example.com");
+		expect(config.profiles?.dev?.enable).toEqual(["debug"]);
+		expect(config.profiles?.prod?.disable).toEqual(["debug"]);
 	});
 
-	test('parses minimal TOML', () => {
+	test("parses minimal TOML", () => {
 		const toml = `
 project = "minimal"
 		`;
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.project).toBe('minimal');
+		expect(config.project).toBe("minimal");
 		expect(config.capabilities).toBeUndefined();
 		expect(config.profiles).toBeUndefined();
 	});
 
-	test('parses empty TOML', () => {
-		const config = parseOmniConfig('');
+	test("parses empty TOML", () => {
+		const config = parseOmniConfig("");
 
 		expect(config).toEqual({});
 	});
 
-	test('parses TOML with arrays', () => {
+	test("parses TOML with arrays", () => {
 		const toml = `
 [capabilities]
 enable = ["cap1", "cap2", "cap3"]
@@ -60,10 +60,10 @@ enable = ["cap1", "cap2", "cap3"]
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.capabilities?.enable).toEqual(['cap1', 'cap2', 'cap3']);
+		expect(config.capabilities?.enable).toEqual(["cap1", "cap2", "cap3"]);
 	});
 
-	test('parses TOML with nested tables', () => {
+	test("parses TOML with nested tables", () => {
 		const toml = `
 [profiles.dev]
 enable = ["debug"]
@@ -74,11 +74,11 @@ disable = ["debug"]
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.profiles?.dev?.enable).toEqual(['debug']);
-		expect(config.profiles?.prod?.disable).toEqual(['debug']);
+		expect(config.profiles?.dev?.enable).toEqual(["debug"]);
+		expect(config.profiles?.prod?.disable).toEqual(["debug"]);
 	});
 
-	test('throws error for invalid TOML syntax', () => {
+	test("throws error for invalid TOML syntax", () => {
 		const toml = `
 project = "test
 [invalid
@@ -87,7 +87,7 @@ project = "test
 		expect(() => parseOmniConfig(toml)).toThrow(/Invalid TOML in config:/);
 	});
 
-	test('throws error for duplicate keys', () => {
+	test("throws error for duplicate keys", () => {
 		const toml = `
 project = "test"
 project = "duplicate"
@@ -96,7 +96,7 @@ project = "duplicate"
 		expect(() => parseOmniConfig(toml)).toThrow(/Invalid TOML in config:/);
 	});
 
-	test('handles boolean values', () => {
+	test("handles boolean values", () => {
 		const toml = `
 [capabilities]
 debug = true
@@ -109,7 +109,7 @@ production = false
 		expect((config.capabilities as Record<string, unknown>)?.production).toBe(false);
 	});
 
-	test('handles numeric values', () => {
+	test("handles numeric values", () => {
 		const toml = `
 timeout = 30
 max_retries = 5
@@ -122,8 +122,8 @@ max_retries = 5
 	});
 });
 
-describe('parseCapabilityConfig', () => {
-	test('parses valid capability.toml with all required fields', () => {
+describe("parseCapabilityConfig", () => {
+	test("parses valid capability.toml with all required fields", () => {
 		const toml = `
 [capability]
 id = "tasks"
@@ -134,13 +134,13 @@ description = "Manage tasks and workflows"
 
 		const config = parseCapabilityConfig(toml);
 
-		expect(config.capability.id).toBe('tasks');
-		expect(config.capability.name).toBe('Task Management');
-		expect(config.capability.version).toBe('1.0.0');
-		expect(config.capability.description).toBe('Manage tasks and workflows');
+		expect(config.capability.id).toBe("tasks");
+		expect(config.capability.name).toBe("Task Management");
+		expect(config.capability.version).toBe("1.0.0");
+		expect(config.capability.description).toBe("Manage tasks and workflows");
 	});
 
-	test('parses capability with exports', () => {
+	test("parses capability with exports", () => {
 		const toml = `
 [capability]
 id = "tasks"
@@ -154,10 +154,10 @@ module = "index.ts"
 
 		const config = parseCapabilityConfig(toml);
 
-		expect(config.exports?.module).toBe('index.ts');
+		expect(config.exports?.module).toBe("index.ts");
 	});
 
-	test('parses capability with env declarations', () => {
+	test("parses capability with env declarations", () => {
 		const toml = `
 [capability]
 id = "api"
@@ -179,11 +179,11 @@ default = "https://api.example.com"
 		expect(config.env?.API_KEY).toEqual({ required: true, secret: true });
 		expect(config.env?.API_URL).toEqual({
 			required: false,
-			default: 'https://api.example.com',
+			default: "https://api.example.com",
 		});
 	});
 
-	test('parses capability with MCP config', () => {
+	test("parses capability with MCP config", () => {
 		const toml = `
 [capability]
 id = "custom"
@@ -202,13 +202,13 @@ PORT = "3000"
 
 		const config = parseCapabilityConfig(toml);
 
-		expect(config.mcp?.command).toBe('node');
-		expect(config.mcp?.args).toEqual(['server.js']);
-		expect(config.mcp?.transport).toBe('stdio');
-		expect(config.mcp?.env?.PORT).toBe('3000');
+		expect(config.mcp?.command).toBe("node");
+		expect(config.mcp?.args).toEqual(["server.js"]);
+		expect(config.mcp?.transport).toBe("stdio");
+		expect(config.mcp?.env?.PORT).toBe("3000");
 	});
 
-	test('throws error when capability.id is missing', () => {
+	test("throws error when capability.id is missing", () => {
 		const toml = `
 [capability]
 name = "Test"
@@ -220,7 +220,7 @@ version = "1.0.0"
 		);
 	});
 
-	test('throws error when capability.name is missing', () => {
+	test("throws error when capability.name is missing", () => {
 		const toml = `
 [capability]
 id = "test"
@@ -232,7 +232,7 @@ version = "1.0.0"
 		);
 	});
 
-	test('throws error when capability.version is missing', () => {
+	test("throws error when capability.version is missing", () => {
 		const toml = `
 [capability]
 id = "test"
@@ -244,7 +244,7 @@ name = "Test"
 		);
 	});
 
-	test('throws error when capability table is missing', () => {
+	test("throws error when capability table is missing", () => {
 		const toml = `
 project = "test"
 		`;
@@ -254,7 +254,7 @@ project = "test"
 		);
 	});
 
-	test('throws error for invalid TOML syntax', () => {
+	test("throws error for invalid TOML syntax", () => {
 		const toml = `
 [capability
 id = "test"
@@ -263,7 +263,7 @@ id = "test"
 		expect(() => parseCapabilityConfig(toml)).toThrow(/Invalid capability.toml:/);
 	});
 
-	test('handles empty env declarations', () => {
+	test("handles empty env declarations", () => {
 		const toml = `
 [capability]
 id = "test"

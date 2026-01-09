@@ -5,20 +5,20 @@
  * used across the CLI and MCP server packages.
  */
 
-export const version = '0.1.0';
+export const version = "0.1.0";
 
 export function getVersion(): string {
 	return version;
 }
 
 // Export core types
-export * from './types';
+export * from "./types";
 
 // Export config functionality
-export * from './config';
+export * from "./config";
 
 // Export test utilities
-export * from './test-utils';
+export * from "./test-utils";
 
 // Export capability system
-export * from './capability';
+export * from "./capability";

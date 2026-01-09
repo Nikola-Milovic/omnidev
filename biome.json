@@ -1,8 +1,18 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"linter": {
 		"enabled": true,
+		"domains": {
+			"react": "recommended",
+			"test": "recommended",
+			"project": "recommended"
+		},
 		"rules": {
 			"recommended": true,
 			"correctness": {
@@ -10,11 +20,13 @@
 				"noUnusedVariables": "error"
 			},
 			"suspicious": {
-				"noExplicitAny": "error"
+				"noExplicitAny": "error",
+				"noDoubleEquals": "error"
 			},
 			"style": {
-				"noNonNullAssertion": "warn",
-				"useConst": "error"
+				"noNonNullAssertion": "error",
+				"useConst": "error",
+				"useTemplate": "error"
 			}
 		}
 	},
@@ -27,10 +39,19 @@
 	"javascript": {
 		"formatter": {
 			"semicolons": "always",
-			"quoteStyle": "single"
+			"quoteStyle": "double"
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/node_modules", "!**/dist", "!**/.omni", "!**/*.generated.*"]
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/.omni",
+			"!**/.agent/settings.local.json",
+			"!**/*.generated.*",
+			"!**/.direnv"
+		]
 	}
 }

@@ -2,6 +2,7 @@ import { buildApplication, buildRouteMap } from '@stricli/core';
 import { doctorCommand } from './commands/doctor';
 import { initCommand } from './commands/init';
 import { capabilityRoutes } from './commands/capability';
+import { profileRoutes } from './commands/profile';
 
 const app = buildApplication(
 	buildRouteMap({
@@ -9,6 +10,7 @@ const app = buildApplication(
 			init: initCommand,
 			doctor: doctorCommand,
 			capability: capabilityRoutes,
+			profile: profileRoutes,
 		},
 		docs: {
 			brief: 'OmniDev commands',

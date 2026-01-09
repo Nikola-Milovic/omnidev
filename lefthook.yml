@@ -10,3 +10,6 @@ pre-commit:
     format:
       glob: "*.{ts,tsx,js,jsx,json,md}"
       run: bun run format:check
+    test:
+      glob: "*.{ts,tsx}"
+      run: bun test --bail

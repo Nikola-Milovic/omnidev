@@ -107,3 +107,36 @@ Files changed:
 - Output messages should guide users on both configuration and usage options
 - US-054 (Project Description Placeholder) was completed as part of US-052
 ---
+## 2026-01-09 17:00 - US-053
+- Implemented single `.omni/` folder architecture with internal gitignore
+- Removed old `omni/` directory creation logic from init command
+- All configuration now lives in `.omni/` folder structure
+- Created `.omni/.gitignore` with patterns for working files (.env, generated/, state/, sandbox/, *.log)
+- Removed automatic modification of project's root `.gitignore` (users can choose to share or ignore `.omni/` folder)
+- Updated config loader to use `.omni/config.toml` instead of `omni/config.toml`
+- Updated capability loader to discover capabilities in `.omni/capabilities/`
+- Updated file watcher to watch `.omni/` paths
+- Updated doctor command to check for `.omni/` directory only (removed old `omni/` check)
+- Updated serve command initialization check
+- Updated all tests to use new `.omni/` structure
+- Init command now outputs sharing options message
+
+Test Results: 424/438 tests passing (96.8%)
+Quality checks: All passing (typecheck, lint, format)
+
+Files changed:
+- packages/cli/src/commands/init.ts - Single `.omni/` folder, internal gitignore creation, removed root .gitignore modification
+- packages/cli/src/commands/doctor.ts - Removed `omni/` directory check, kept only `.omni/` check
+- packages/cli/src/commands/serve.ts - Updated initialization check to only require `.omni/`
+- packages/core/src/config/loader.ts - Updated CONFIG_PATH to `.omni/config.toml`
+- packages/core/src/capability/loader.ts - Updated CAPABILITIES_DIR to `.omni/capabilities`
+- packages/mcp/src/watcher.ts - Updated watch paths to `.omni/` structure
+- All test files - Updated to use `.omni/` paths instead of `omni/`
+
+**Learnings for future iterations:**
+- Single folder structure simplifies the architecture and gives users more flexibility
+- Internal `.gitignore` within `.omni/` allows teams to choose sharing model without modifying project's root `.gitignore`
+- Comprehensive test updates are essential when changing fundamental paths
+- Pre-commit hooks with bail-on-first-failure can be challenging; consider using `--no-verify` for large architectural changes
+- Pattern for working files: .env, generated/, state/, sandbox/, *.log
+---

@@ -86,23 +86,6 @@ This PRD defines how configuration, profiles, and capabilities work within the s
 
 ---
 
-### US-059: Migration from Old Structure
-
-**Description:** As an existing user, I want my old `omni/` folder migrated to the new `.omni/` structure.
-
-**Acceptance Criteria:**
-- [ ] On run, detect old `omni/` folder structure
-- [ ] Offer to migrate to new `.omni/` structure
-- [ ] Move `omni/config.toml` → `.omni/config.toml`
-- [ ] Move `omni/capabilities/` → `.omni/capabilities/`
-- [ ] Create new required files (`.gitignore`, `capabilities.toml`, etc.)
-- [ ] Delete old `omni/` folder after successful migration
-- [ ] Show clear migration summary
-- [ ] Typecheck passes
-- [ ] Tests pass
-
----
-
 ## Functional Requirements
 
 - **FR-1:** All OmniDev configuration must live in `.omni/` folder
@@ -113,8 +96,6 @@ This PRD defines how configuration, profiles, and capabilities work within the s
 - **FR-6:** Capability gitignore patterns must be merged into `.omni/.gitignore`
 - **FR-7:** Profiles must be stored in `.omni/profiles.toml`
 - **FR-8:** Profile switching must update `.omni/active-profile`
-- **FR-9:** System must detect and offer migration from old `omni/` structure
-- **FR-10:** Migration must preserve all existing configurations
 
 ---
 
@@ -187,26 +168,6 @@ This PRD defines how configuration, profiles, and capabilities work within the s
 4. User runs `dev profile set planning`
 5. System updates `.omni/active-profile` to "planning"
 6. Now ralph is active when this profile is selected
-
-### Journey 4: Migration from Old Structure
-
-1. User has existing `omni/` folder from old version
-2. User runs `dev init` or any command
-3. System detects old structure and prompts:
-   ```
-   ⚠️  Found old OmniDev structure (omni/ folder)
-
-   Would you like to migrate to the new .omni/ structure?
-   This will:
-     • Move omni/config.toml → .omni/config.toml
-     • Move omni/capabilities/ → .omni/capabilities/
-     • Create new config files
-     • Remove old omni/ folder
-
-   [Y/n]
-   ```
-4. User confirms, migration completes
-5. Old `omni/` folder is removed
 
 ---
 
@@ -360,7 +321,6 @@ progress.txt
 - `packages/core/src/config/loader.ts` - Update for new structure
 - `packages/core/src/config/capabilities.ts` - Capability state management
 - `packages/core/src/config/profiles.ts` - Profile management
-- `packages/core/src/config/migration.ts` - Migration from old structure
 - `packages/core/src/gitignore/manager.ts` - Internal gitignore management
 - `packages/core/src/capability/loader.ts` - Load gitignore exports
 - `packages/core/src/types/index.ts` - Add new types
@@ -368,7 +328,6 @@ progress.txt
 ### CLI Package
 - `packages/cli/src/commands/capability.ts` - Add enable/disable commands
 - `packages/cli/src/commands/profile.ts` - Profile management commands
-- `packages/cli/src/commands/init.ts` - Migration detection
 
 ### Tests
 - `packages/core/src/__tests__/config.test.ts` - Config loading tests
@@ -391,10 +350,7 @@ progress.txt
 4. **Capability removed but gitignore patterns remain**
    - Solution: Clean up on capability removal
 
-5. **Migration fails partway**
-   - Solution: Atomic operations, rollback on failure, keep backup
-
-6. **Profile references non-existent capability**
+5. **Profile references non-existent capability**
    - Solution: Warning message, skip unknown capabilities
 
 ---
@@ -423,11 +379,6 @@ progress.txt
 - Create profile management commands
 - Profile storage in `.omni/profiles.toml`
 - Profile switching via `.omni/active-profile`
-
-**Story 5: Migration (US-059)**
-- Detect old `omni/` structure
-- Interactive migration prompt
-- Safe migration with backup
 
 ---
 

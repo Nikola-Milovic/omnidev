@@ -14,6 +14,9 @@
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"check": "bun run typecheck && bun run lint && bun run format:check",
+		"test": "bun test",
+		"test:coverage": "bun test --coverage",
+		"test:watch": "bun test --watch",
 		"build": "bun run --filter '*' build",
 		"clean": "rm -rf packages/*/dist capabilities/*/dist",
 		"prepare": "lefthook install"

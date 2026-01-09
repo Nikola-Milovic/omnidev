@@ -1035,3 +1035,29 @@ Files changed:
 - loadRalphConfig parses .omni/ralph/config.toml with custom parser (no external TOML library needed)
 ---
 
+## [2026-01-09 22:30] - US-042
+- Implemented comprehensive Ralph management CLI commands
+- Created PRD management commands: list, create, select, view, archive, delete
+- Created story management commands: list, pass, reset, add
+- Created spec management commands: list, create, view
+- Created utility commands: log (with --tail flag), patterns
+- All commands support --prd flag to target specific PRDs or default to active PRD
+- Added 21 comprehensive tests with mock Ralph capability for isolated testing
+- All quality checks pass (typecheck + lint + format)
+- All 408 tests pass with 95.29% line coverage
+
+Files changed:
+- packages/cli/src/commands/ralph.ts (added 450+ lines of management commands)
+- packages/cli/src/commands/ralph.test.ts (added 470+ lines of tests with mock capability)
+
+**Learnings for future iterations:**
+- Stricli nested route maps work well for organizing subcommands (prd, story, spec)
+- Mock modules in tests can be generated dynamically using template strings for full integration testing
+- Console.log capture pattern in tests: save original, replace with array push, restore after test
+- Optional chaining (match?.[1]) is needed for regex match results in strict TypeScript
+- Use biome-ignore comments for long error messages that Biome wants to break up
+- Delete command implementation deferred (shows warning message only) - confirmation flag needed
+- Test helpers that create mock capabilities enable testing commands without real Ralph module
+- Management commands provide good UX with clear status indicators (✓/✗) and helpful error messages
+---
+

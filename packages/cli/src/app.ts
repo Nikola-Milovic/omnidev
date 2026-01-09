@@ -1,20 +1,10 @@
-import { buildApplication, buildCommand, buildRouteMap } from '@stricli/core';
-
-// Placeholder command - will be replaced in subsequent user stories
-const placeholderCommand = buildCommand({
-	docs: {
-		brief: 'Placeholder command',
-	},
-	parameters: {},
-	func() {
-		console.log('OmniDev CLI - Commands coming soon');
-	},
-});
+import { buildApplication, buildRouteMap } from '@stricli/core';
+import { initCommand } from './commands/init';
 
 const app = buildApplication(
 	buildRouteMap({
 		routes: {
-			_placeholder: placeholderCommand,
+			init: initCommand,
 		},
 		docs: {
 			brief: 'OmniDev commands',

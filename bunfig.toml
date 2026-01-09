@@ -14,3 +14,5 @@ auto = "auto"
 coverage = true
 coverageThreshold = 70
 coverageSkipTestFiles = true
+# Exclude type definitions from coverage
+coverageIgnore = ["**/*.d.ts", "**/*.test.ts"]

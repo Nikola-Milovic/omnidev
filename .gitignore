@@ -1,4 +1,29 @@
+# Ralph agent files
 .claude
 prd.json
 progress.txt
 scripts/ralph/.last-branch
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+*.lcov
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo

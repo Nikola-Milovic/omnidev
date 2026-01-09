@@ -7,5 +7,5 @@
 // State management functions
 export * from "./state.js";
 
-// Sync hook will be exported here
-// export { sync } from './sync.js';
+// Sync hook
+export { sync } from "./sync.js";

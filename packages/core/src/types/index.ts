@@ -16,11 +16,21 @@ export interface EnvDeclaration {
 	default?: string;
 }
 
+export interface SyncConfig {
+	on_sync?: string;
+}
+
+export interface CliConfig {
+	commands?: string[];
+}
+
 export interface CapabilityConfig {
 	capability: CapabilityMetadata;
 	exports?: CapabilityExports;
 	env?: Record<string, EnvDeclaration | Record<string, never>>;
 	mcp?: McpConfig;
+	sync?: SyncConfig;
+	cli?: CliConfig;
 }
 
 export interface McpConfig {

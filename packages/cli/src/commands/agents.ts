@@ -9,8 +9,25 @@ export async function runAgentsSync(): Promise<void> {
 	console.log("Syncing agent configuration...");
 
 	const registry = await buildCapabilityRegistry();
+	const capabilities = registry.getAllCapabilities();
 	const skills = registry.getAllSkills();
 	const rules = registry.getAllRules();
+
+	// Call sync hooks for capabilities that have them
+	for (const capability of capabilities) {
+		if (capability.config.sync?.on_sync) {
+			const syncFnName = capability.config.sync.on_sync;
+			const syncFn = capability.exports[syncFnName];
+
+			if (typeof syncFn === "function") {
+				try {
+					await syncFn();
+				} catch (error) {
+					console.error(`Error running sync hook for ${capability.id}:`, error);
+				}
+			}
+		}
+	}
 
 	// Ensure directories exist
 	mkdirSync(".omni/generated", { recursive: true });

@@ -14,7 +14,10 @@ interface ExecuteResult {
 	diff_stat: { files: number; insertions: number; deletions: number };
 }
 
-export async function handleOmniExecute(_registry: CapabilityRegistry, args: unknown) {
+export async function handleOmniExecute(
+	_registry: CapabilityRegistry,
+	args: unknown,
+): Promise<{ content: Array<{ type: "text"; text: string }> }> {
 	const { code } = (args as ExecuteArgs) || {};
 
 	if (!code) {

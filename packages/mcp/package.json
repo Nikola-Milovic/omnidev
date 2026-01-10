@@ -11,7 +11,8 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.25.2",
-		"@omnidev/core": "workspace:*"
+		"@omnidev/core": "workspace:*",
+		"zod": "^4.0.1"
 	},
 	"devDependencies": {}
 }

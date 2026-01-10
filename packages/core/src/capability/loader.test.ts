@@ -1,21 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { discoverCapabilities, loadCapabilityConfig, loadCapability } from "./loader";
 
 describe("discoverCapabilities", () => {
-	const testDir = "test-capabilities-discovery";
-	const capabilitiesDir = join(testDir, "omni", "capabilities");
+	let testDir: string;
+	let capabilitiesDir: string;
 	let originalCwd: string;
 
 	beforeEach(() => {
 		// Save current working directory
 		originalCwd = process.cwd();
 
-		// Create test directory structure
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		// Create test directory in os temp dir
+		testDir = mkdtempSync(join(tmpdir(), "test-capabilities-"));
+		capabilitiesDir = join(testDir, "omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
 
 		// Change to test directory
@@ -143,18 +143,17 @@ describe("discoverCapabilities", () => {
 });
 
 describe("loadCapabilityConfig", () => {
-	const testDir = "test-capability-config-loading";
-	const capabilitiesDir = join(testDir, ".omni", "capabilities");
+	let testDir: string;
+	let capabilitiesDir: string;
 	let originalCwd: string;
 
 	beforeEach(() => {
 		// Save current working directory
 		originalCwd = process.cwd();
 
-		// Create test directory structure
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		// Create test directory in os temp dir
+		testDir = mkdtempSync(join(tmpdir(), "test-capability-config-"));
+		capabilitiesDir = join(testDir, ".omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
 
 		// Change to test directory
@@ -404,18 +403,17 @@ tools = ["tool1", "tool2"]`,
 });
 
 describe("loadCapability", () => {
-	const testDir = "test-load-capability";
-	const capabilitiesDir = join(testDir, "omni", "capabilities");
+	let testDir: string;
+	let capabilitiesDir: string;
 	let originalCwd: string;
 
 	beforeEach(() => {
 		// Save current working directory
 		originalCwd = process.cwd();
 
-		// Create test directory structure
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		// Create test directory in os temp dir
+		testDir = mkdtempSync(join(tmpdir(), "test-load-capability-"));
+		capabilitiesDir = join(testDir, "omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
 
 		// Change to test directory

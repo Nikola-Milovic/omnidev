@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import type { Rule } from "../types";
+import type { Rule, Doc } from "../types";
 
 /**
  * Load rules from a capability's rules/ directory
@@ -35,15 +35,16 @@ export async function loadRules(capabilityPath: string, capabilityId: string): P
 }
 
 /**
- * Write aggregated rules to .omni/instructions.md
+ * Write aggregated rules and docs to .omni/instructions.md
  * Updates the generated section between markers while preserving user content
  * @param rules Array of rules from all enabled capabilities
+ * @param docs Array of docs from all enabled capabilities
  */
-export async function writeRules(rules: Rule[]): Promise<void> {
+export async function writeRules(rules: Rule[], docs: Doc[] = []): Promise<void> {
 	const instructionsPath = ".omni/instructions.md";
 
-	// Generate rules content
-	const rulesContent = generateRulesContent(rules);
+	// Generate content from rules and docs
+	const rulesContent = generateRulesContent(rules, docs);
 
 	// Read existing content or create new file
 	let content: string;
@@ -85,8 +86,8 @@ export async function writeRules(rules: Rule[]): Promise<void> {
 	await Bun.write(instructionsPath, content);
 }
 
-function generateRulesContent(rules: Rule[]): string {
-	if (rules.length === 0) {
+function generateRulesContent(rules: Rule[], docs: Doc[] = []): string {
+	if (rules.length === 0 && docs.length === 0) {
 		return `<!-- This section is automatically updated when capabilities change -->
 
 ## Capabilities
@@ -100,12 +101,32 @@ No capabilities enabled yet. Run \`omnidev capability enable <name>\` to enable 
 
 `;
 
-	for (const rule of rules) {
-		content += `### ${rule.name} (from ${rule.capabilityId})
+	// Add documentation section if there are docs
+	if (docs.length > 0) {
+		content += `### Documentation
+
+`;
+		for (const doc of docs) {
+			content += `#### ${doc.name} (from ${doc.capabilityId})
+
+${doc.content}
+
+`;
+		}
+	}
+
+	// Add rules section if there are rules
+	if (rules.length > 0) {
+		content += `### Rules
+
+`;
+		for (const rule of rules) {
+			content += `#### ${rule.name} (from ${rule.capabilityId})
 
 ${rule.content}
 
 `;
+		}
 	}
 
 	return content.trim();

@@ -4,14 +4,22 @@
  * Provides PRD-driven development through iterative AI agent invocations.
  */
 
-// State management functions
+import type { CapabilityExport } from "@omnidev/core";
+import { ralphRoutes } from "./cli.js";
+import { sync } from "./sync.js";
+
+// Default export: Structured capability export
+export default {
+	cliCommands: {
+		ralph: ralphRoutes,
+	},
+
+	gitignore: ["ralph/", "*.ralph.log"],
+
+	sync,
+} satisfies CapabilityExport;
+
+// Named exports for programmatic usage
 export * from "./state.js";
-
-// Sync hook
-export { sync } from "./sync.js";
-
-// Orchestrator
 export { loadRalphConfig, runAgent, runOrchestration } from "./orchestrator.js";
-
-// Prompt generation
 export { generatePrompt } from "./prompt.js";

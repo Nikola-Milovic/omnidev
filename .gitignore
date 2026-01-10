@@ -30,3 +30,6 @@ Thumbs.db
 
 .direnv
 .agent/settings.local.json
+
+# Ralph AI Orchestrator
+.omni/ralph/

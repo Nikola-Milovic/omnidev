@@ -2,12 +2,14 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { validateEnv } from "../config/env";
 import { parseCapabilityConfig } from "../config/parser";
-import type { CapabilityConfig, LoadedCapability } from "../types";
+import type { CapabilityConfig, LoadedCapability, Skill, Rule, Doc } from "../types";
+import type { SkillExport, DocExport } from "../types/capability-export";
 import { loadDocs } from "./docs";
 import { loadRules } from "./rules";
 import { loadSkills } from "./skills";
 
 const CAPABILITIES_DIR = ".omni/capabilities";
+const BUILTIN_CAPABILITIES_DIR = "capabilities";
 
 /**
  * Reserved capability names that cannot be used.
@@ -43,18 +45,32 @@ const RESERVED_NAMES = [
  * @returns Array of capability directory paths
  */
 export async function discoverCapabilities(): Promise<string[]> {
-	if (!existsSync(CAPABILITIES_DIR)) {
-		return [];
-	}
-
-	const entries = readdirSync(CAPABILITIES_DIR, { withFileTypes: true });
 	const capabilities: string[] = [];
 
-	for (const entry of entries) {
-		if (entry.isDirectory()) {
-			const configPath = join(CAPABILITIES_DIR, entry.name, "capability.toml");
-			if (existsSync(configPath)) {
-				capabilities.push(join(CAPABILITIES_DIR, entry.name));
+	// Discover built-in capabilities (from capabilities/ directory)
+	if (existsSync(BUILTIN_CAPABILITIES_DIR)) {
+		const entries = readdirSync(BUILTIN_CAPABILITIES_DIR, { withFileTypes: true });
+
+		for (const entry of entries) {
+			if (entry.isDirectory()) {
+				const configPath = join(BUILTIN_CAPABILITIES_DIR, entry.name, "capability.toml");
+				if (existsSync(configPath)) {
+					capabilities.push(join(BUILTIN_CAPABILITIES_DIR, entry.name));
+				}
+			}
+		}
+	}
+
+	// Discover project-specific capabilities (from .omni/capabilities/)
+	if (existsSync(CAPABILITIES_DIR)) {
+		const entries = readdirSync(CAPABILITIES_DIR, { withFileTypes: true });
+
+		for (const entry of entries) {
+			if (entry.isDirectory()) {
+				const configPath = join(CAPABILITIES_DIR, entry.name, "capability.toml");
+				if (existsSync(configPath)) {
+					capabilities.push(join(CAPABILITIES_DIR, entry.name));
+				}
 			}
 		}
 	}
@@ -105,6 +121,16 @@ async function importCapabilityExports(capabilityPath: string): Promise<Record<s
 		const module = await import(absolutePath);
 		return module;
 	} catch (error) {
+		// Check if it's a module resolution error
+		const errorMessage = String(error);
+		if (errorMessage.includes("Cannot find module")) {
+			const match = errorMessage.match(/Cannot find module '([^']+)'/);
+			const missingModule = match ? match[1] : "unknown";
+			throw new Error(
+				`Missing dependency '${missingModule}' for capability at ${capabilityPath}.\n` +
+					`If this is a project-specific capability, install dependencies or remove it from .omni/capabilities/`,
+			);
+		}
 		throw new Error(`Failed to import capability at ${capabilityPath}: ${error}`);
 	}
 }
@@ -123,6 +149,114 @@ async function loadTypeDefinitions(capabilityPath: string): Promise<string | und
 	}
 
 	return Bun.file(typesPath).text();
+}
+
+/**
+ * Convert programmatic skill exports to Skill objects
+ * Supports both old format (Skill objects) and new format (SkillExport objects)
+ */
+function convertSkillExports(skillExports: unknown[], capabilityId: string): Skill[] {
+	return skillExports.map((skillExport) => {
+		// Check if it's already a Skill object (old format)
+		if (
+			typeof skillExport === "object" &&
+			skillExport !== null &&
+			"name" in skillExport &&
+			"instructions" in skillExport
+		) {
+			return skillExport as Skill;
+		}
+
+		// Otherwise, treat as SkillExport (new format)
+		const exportObj = skillExport as SkillExport;
+		const lines = exportObj.skillMd.split("\n");
+		let name = "unnamed";
+		let description = "";
+		let instructions = exportObj.skillMd;
+
+		// Simple YAML frontmatter parser
+		if (lines[0]?.trim() === "---") {
+			const endIndex = lines.findIndex((line, i) => i > 0 && line.trim() === "---");
+			if (endIndex > 0) {
+				const frontmatter = lines.slice(1, endIndex);
+				instructions = lines
+					.slice(endIndex + 1)
+					.join("\n")
+					.trim();
+
+				for (const line of frontmatter) {
+					const match = line.match(/^(\w+):\s*(.+)$/);
+					if (match?.[1] && match[2]) {
+						const key = match[1];
+						const value = match[2];
+						if (key === "name") {
+							name = value.replace(/^["']|["']$/g, "");
+						} else if (key === "description") {
+							description = value.replace(/^["']|["']$/g, "");
+						}
+					}
+				}
+			}
+		}
+
+		return {
+			name,
+			description,
+			instructions,
+			capabilityId,
+		};
+	});
+}
+
+/**
+ * Convert programmatic rule exports to Rule objects
+ * Supports both old format (Rule objects) and new format (string content)
+ */
+function convertRuleExports(ruleExports: unknown[], capabilityId: string): Rule[] {
+	return ruleExports.map((ruleExport, index) => {
+		// Check if it's already a Rule object (old format)
+		if (
+			typeof ruleExport === "object" &&
+			ruleExport !== null &&
+			"name" in ruleExport &&
+			"content" in ruleExport
+		) {
+			return ruleExport as Rule;
+		}
+
+		// Otherwise, treat as string content (new format)
+		return {
+			name: `rule-${index + 1}`,
+			content: String(ruleExport).trim(),
+			capabilityId,
+		};
+	});
+}
+
+/**
+ * Convert programmatic doc exports to Doc objects
+ * Supports both old format (Doc objects) and new format (DocExport objects)
+ */
+function convertDocExports(docExports: unknown[], capabilityId: string): Doc[] {
+	return docExports.map((docExport) => {
+		// Check if it's already a Doc object (old format)
+		if (
+			typeof docExport === "object" &&
+			docExport !== null &&
+			"name" in docExport &&
+			"content" in docExport
+		) {
+			return docExport as Doc;
+		}
+
+		// Otherwise, treat as DocExport (new format with 'title' instead of 'name')
+		const exportObj = docExport as DocExport;
+		return {
+			name: exportObj.title,
+			content: exportObj.content.trim(),
+			capabilityId,
+		};
+	});
 }
 
 /**
@@ -155,17 +289,17 @@ export async function loadCapability(
 
 	const skills =
 		"skills" in exports && Array.isArray(exportsAny.skills)
-			? (exportsAny.skills as LoadedCapability["skills"])
+			? convertSkillExports(exportsAny.skills, id)
 			: await loadSkills(capabilityPath, id);
 
 	const rules =
 		"rules" in exports && Array.isArray(exportsAny.rules)
-			? (exportsAny.rules as LoadedCapability["rules"])
+			? convertRuleExports(exportsAny.rules, id)
 			: await loadRules(capabilityPath, id);
 
 	const docs =
 		"docs" in exports && Array.isArray(exportsAny.docs)
-			? (exportsAny.docs as LoadedCapability["docs"])
+			? convertDocExports(exportsAny.docs, id)
 			: await loadDocs(capabilityPath, id);
 
 	const typeDefinitionsFromExports =

@@ -19,6 +19,7 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
 	const capabilities = registry.getAllCapabilities();
 	const skills = registry.getAllSkills();
 	const rules = registry.getAllRules();
+	const docs = registry.getAllDocs();
 
 	// Rebuild .omni/.gitignore with all enabled capability patterns
 	const gitignorePatterns = new Map<string, string[]>();
@@ -31,7 +32,18 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
 
 	// Call sync hooks for capabilities that have them
 	for (const capability of capabilities) {
-		if (capability.config.sync?.on_sync) {
+		// Check for structured export sync function first (new approach)
+		// biome-ignore lint/suspicious/noExplicitAny: Dynamic module exports need runtime type checking
+		const defaultExport = (capability.exports as any).default;
+		if (defaultExport && typeof defaultExport.sync === "function") {
+			try {
+				await defaultExport.sync();
+			} catch (error) {
+				console.error(`Error running sync hook for ${capability.id}:`, error);
+			}
+		}
+		// Fall back to TOML-based sync hook (legacy approach)
+		else if (capability.config.sync?.on_sync) {
 			const syncFnName = capability.config.sync.on_sync;
 			const syncFn = capability.exports[syncFnName];
 
@@ -49,8 +61,8 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
 	mkdirSync(".claude/skills", { recursive: true });
 	mkdirSync(".cursor/rules", { recursive: true });
 
-	// Write rules to .omni/instructions.md
-	await writeRules(rules);
+	// Write rules and docs to .omni/instructions.md
+	await writeRules(rules, docs);
 
 	// Write skills to .claude/skills/
 	for (const skill of skills) {
@@ -75,7 +87,7 @@ ${skill.instructions}`,
 	if (!silent) {
 		console.log("✓ Synced:");
 		console.log("  - .omni/.gitignore (capability patterns)");
-		console.log("  - .omni/instructions.md (capability rules)");
+		console.log(`  - .omni/instructions.md (${docs.length} docs, ${rules.length} rules)`);
 		console.log(`  - .claude/skills/ (${skills.length} skills)`);
 		console.log(`  - .cursor/rules/ (${rules.length} rules)`);
 	}

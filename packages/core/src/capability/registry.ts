@@ -37,7 +37,10 @@ export async function buildCapabilityRegistry(): Promise<CapabilityRegistry> {
 				capabilities.set(cap.id, cap);
 			}
 		} catch (error) {
-			console.error(`Failed to load capability at ${path}:`, error);
+			// Extract just the error message without stack trace for cleaner output
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.warn(`Warning: Skipping capability at ${path}`);
+			console.warn(`  ${errorMessage}`);
 		}
 	}
 

@@ -22,7 +22,7 @@ interface QueryArgs {
 export async function handleOmniQuery(
 	registry: CapabilityRegistry,
 	args: unknown,
-): Promise<{ content: Array<{ type: string; text: string }> }> {
+): Promise<{ content: Array<{ type: "text"; text: string }> }> {
 	const { query = "", limit = 10, include_types = false } = (args as QueryArgs) || {};
 
 	const results: string[] = [];

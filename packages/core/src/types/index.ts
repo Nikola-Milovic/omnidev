@@ -1,3 +1,6 @@
+// Capability Export Types (for capability developers)
+export * from "./capability-export.js";
+
 // Capability Types
 export interface CapabilityMetadata {
 	id: string;

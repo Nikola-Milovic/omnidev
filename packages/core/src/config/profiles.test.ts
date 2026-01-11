@@ -172,4 +172,68 @@ describe("resolveEnabledCapabilities", () => {
 		const result = resolveEnabledCapabilities(config, "dev");
 		expect(result).toEqual([]);
 	});
+
+	test("includes always-enabled capabilities with profile capabilities", () => {
+		const config: OmniConfig = {
+			always_enabled_capabilities: ["logging", "telemetry"],
+			profiles: {
+				dev: {
+					capabilities: ["tasks", "debug"],
+				},
+			},
+		};
+		const result = resolveEnabledCapabilities(config, "dev");
+		expect(result).toEqual(["logging", "telemetry", "tasks", "debug"]);
+	});
+
+	test("removes duplicates when capability is in both always-enabled and profile", () => {
+		const config: OmniConfig = {
+			always_enabled_capabilities: ["logging", "tasks"],
+			profiles: {
+				dev: {
+					capabilities: ["tasks", "debug"],
+				},
+			},
+		};
+		const result = resolveEnabledCapabilities(config, "dev");
+		expect(result).toEqual(["logging", "tasks", "debug"]);
+	});
+
+	test("returns only always-enabled capabilities when profile has none", () => {
+		const config: OmniConfig = {
+			always_enabled_capabilities: ["logging", "telemetry"],
+			profiles: {
+				dev: {
+					capabilities: [],
+				},
+			},
+		};
+		const result = resolveEnabledCapabilities(config, "dev");
+		expect(result).toEqual(["logging", "telemetry"]);
+	});
+
+	test("returns always-enabled capabilities even when no profiles exist", () => {
+		const config: OmniConfig = {
+			always_enabled_capabilities: ["logging", "telemetry"],
+		};
+		const result = resolveEnabledCapabilities(config, null);
+		expect(result).toEqual(["logging", "telemetry"]);
+	});
+
+	test("always-enabled capabilities work with active_profile", () => {
+		const config: OmniConfig = {
+			active_profile: "dev",
+			always_enabled_capabilities: ["logging"],
+			profiles: {
+				dev: {
+					capabilities: ["tasks", "debug"],
+				},
+				default: {
+					capabilities: ["tasks"],
+				},
+			},
+		};
+		const result = resolveEnabledCapabilities(config, null);
+		expect(result).toEqual(["logging", "tasks", "debug"]);
+	});
 });

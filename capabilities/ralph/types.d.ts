@@ -5,41 +5,58 @@
  */
 
 /**
- * User Story definition
+ * Story status
+ */
+export type StoryStatus = "pending" | "in_progress" | "completed" | "blocked";
+
+/**
+ * Story definition - a chunk of work within a PRD
  */
 export interface Story {
 	/** Unique story identifier (e.g., US-001) */
 	id: string;
 	/** Story title */
 	title: string;
-	/** Path to spec file relative to PRD directory */
-	specFile: string;
-	/** Scope of work for this story */
-	scope: string;
-	/** Verifiable acceptance criteria */
+	/** Verifiable acceptance criteria for this chunk */
 	acceptanceCriteria: string[];
-	/** Priority (lower = higher priority) */
+	/** Current status */
+	status: StoryStatus;
+	/** Priority 1-10 (lower = higher priority) */
 	priority: number;
-	/** Whether the story passes all acceptance criteria */
-	passes: boolean;
-	/** Optional notes about the story */
-	notes: string;
+	/** Questions for user when blocked */
+	questions: string[];
+}
+
+/**
+ * Last run information - captured on Ctrl+C or completion
+ */
+export interface LastRun {
+	/** ISO timestamp */
+	timestamp: string;
+	/** Story ID that was being worked on */
+	storyId: string;
+	/** Reason for stopping */
+	reason: "user_interrupted" | "completed" | "blocked" | "error";
+	/** Agent's summary of where it stopped */
+	summary: string;
 }
 
 /**
  * Product Requirements Document
  */
 export interface PRD {
-	/** PRD name (unique identifier) */
+	/** PRD name (unique identifier, matches folder name) */
 	name: string;
 	/** Git branch name for this work */
 	branchName: string;
-	/** Description of the work */
+	/** Description of the feature */
 	description: string;
 	/** ISO timestamp of creation */
 	createdAt: string;
-	/** List of user stories */
-	userStories: Story[];
+	/** List of stories (work chunks) */
+	stories: Story[];
+	/** Last run information (set on Ctrl+C or completion) */
+	lastRun?: LastRun;
 }
 
 /**

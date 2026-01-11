@@ -7,19 +7,31 @@
 import { spawn } from "bun";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { AgentConfig, RalphConfig } from "./types.d.ts";
-import { archivePRD, getNextStory, getPRD } from "./state.ts";
+import type { AgentConfig, RalphConfig, Story } from "./types.d.ts";
+import {
+	archivePRD,
+	getNextStory,
+	getPRD,
+	hasBlockedStories,
+	updateLastRun,
+	updateStoryStatus,
+} from "./state.ts";
 import { generatePrompt } from "./prompt.ts";
 
 const RALPH_DIR = ".omni/ralph";
 const CONFIG_PATH = join(RALPH_DIR, "config.toml");
+
+// Track current state for Ctrl+C handler
+let currentPrdName: string | null = null;
+let currentStory: Story | null = null;
+let isShuttingDown = false;
 
 /**
  * Loads Ralph configuration from .omni/ralph/config.toml
  */
 export async function loadRalphConfig(): Promise<RalphConfig> {
 	if (!existsSync(CONFIG_PATH)) {
-		throw new Error("Ralph config not found. Run 'omnidev ralph init' first.");
+		throw new Error("Ralph config not found. Run 'omnidev sync' first.");
 	}
 
 	const content = await Bun.file(CONFIG_PATH).text();
@@ -130,14 +142,37 @@ export async function runAgent(
 }
 
 /**
+ * Handle Ctrl+C - save state and exit gracefully
+ */
+async function handleShutdown(): Promise<void> {
+	if (isShuttingDown) return;
+	isShuttingDown = true;
+
+	console.log("\n\nInterrupted! Saving state...");
+
+	if (currentPrdName && currentStory) {
+		// Update lastRun in PRD
+		await updateLastRun(currentPrdName, {
+			timestamp: new Date().toISOString(),
+			storyId: currentStory.id,
+			reason: "user_interrupted",
+			summary: `Interrupted while working on ${currentStory.id}: ${currentStory.title}`,
+		});
+
+		console.log(`Saved state: stopped at ${currentStory.id}`);
+	}
+
+	process.exit(0);
+}
+
+/**
  * Runs the orchestration loop for a PRD.
  */
-export async function runOrchestration(
-	prdName: string,
-	agentName: string,
-	maxIterations: number,
-): Promise<void> {
+export async function runOrchestration(prdName: string): Promise<void> {
 	const config = await loadRalphConfig();
+
+	const agentName = config.default_agent;
+	const maxIterations = config.default_iterations;
 
 	// Validate agent exists
 	const agentConfig = config.agents[agentName];
@@ -147,11 +182,37 @@ export async function runOrchestration(
 		);
 	}
 
+	// Set up Ctrl+C handler
+	currentPrdName = prdName;
+	process.on("SIGINT", handleShutdown);
+	process.on("SIGTERM", handleShutdown);
+
 	console.log(`Starting orchestration for PRD: ${prdName}`);
 	console.log(`Using agent: ${agentName}`);
 	console.log(`Max iterations: ${maxIterations}`);
+	console.log(`Press Ctrl+C to stop\n`);
+
+	// Check for blocked stories first
+	const blocked = await hasBlockedStories(prdName);
+	if (blocked.length > 0) {
+		console.log("⚠️  Blocked stories found:\n");
+		for (const story of blocked) {
+			console.log(`  ${story.id}: ${story.title}`);
+			if (story.questions.length > 0) {
+				console.log("  Questions:");
+				for (const q of story.questions) {
+					console.log(`    - ${q}`);
+				}
+			}
+			console.log();
+		}
+		console.log("Please resolve these before continuing.");
+		return;
+	}
 
 	for (let i = 0; i < maxIterations; i++) {
+		if (isShuttingDown) break;
+
 		console.log(`\n=== Iteration ${i + 1}/${maxIterations} ===`);
 
 		// Get current PRD and next story
@@ -159,15 +220,29 @@ export async function runOrchestration(
 		const story = await getNextStory(prdName);
 
 		if (!story) {
-			console.log("✓ All stories complete!");
+			console.log("All stories complete!");
 
 			if (config.auto_archive) {
 				console.log("Auto-archiving PRD...");
 				await archivePRD(prdName);
 			}
 
+			// Update lastRun
+			await updateLastRun(prdName, {
+				timestamp: new Date().toISOString(),
+				storyId: "ALL",
+				reason: "completed",
+				summary: "All stories completed successfully",
+			});
+
 			return;
 		}
+
+		// Update current story for Ctrl+C handler
+		currentStory = story;
+
+		// Mark story as in_progress
+		await updateStoryStatus(prdName, story.id, "in_progress");
 
 		console.log(`Working on: ${story.id} - ${story.title}`);
 
@@ -185,26 +260,58 @@ export async function runOrchestration(
 
 		// Check for completion signal
 		if (output.includes("<promise>COMPLETE</promise>")) {
-			console.log("✓ Agent signaled completion!");
+			console.log("Agent signaled completion!");
 
 			if (config.auto_archive) {
 				console.log("Auto-archiving PRD...");
 				await archivePRD(prdName);
 			}
 
+			await updateLastRun(prdName, {
+				timestamp: new Date().toISOString(),
+				storyId: "ALL",
+				reason: "completed",
+				summary: "All stories completed successfully",
+			});
+
 			return;
 		}
 
-		// Check if story was marked as passed
+		// Check if story was marked as completed or blocked
 		const updatedPrd = await getPRD(prdName);
-		const updatedStory = updatedPrd.userStories.find((s) => s.id === story.id);
-		if (updatedStory?.passes) {
-			console.log(`✓ Story ${story.id} marked as passed`);
+		const updatedStory = updatedPrd.stories.find((s) => s.id === story.id);
+
+		if (updatedStory?.status === "completed") {
+			console.log(`Story ${story.id} completed`);
+		} else if (updatedStory?.status === "blocked") {
+			console.log(`Story ${story.id} is blocked`);
+			if (updatedStory.questions.length > 0) {
+				console.log("Questions:");
+				for (const q of updatedStory.questions) {
+					console.log(`  - ${q}`);
+				}
+			}
+
+			await updateLastRun(prdName, {
+				timestamp: new Date().toISOString(),
+				storyId: story.id,
+				reason: "blocked",
+				summary: `Blocked on ${story.id}: ${updatedStory.questions.join("; ")}`,
+			});
+
+			return;
 		} else {
-			console.log(`! Story ${story.id} not yet passed`);
+			console.log(`Story ${story.id} still in progress`);
 		}
 	}
 
 	console.log(`\nReached max iterations (${maxIterations})`);
 	console.log("Run 'omnidev ralph start' again to continue.");
+
+	await updateLastRun(prdName, {
+		timestamp: new Date().toISOString(),
+		storyId: currentStory?.id ?? "unknown",
+		reason: "user_interrupted",
+		summary: `Reached max iterations while working on ${currentStory?.id}`,
+	});
 }

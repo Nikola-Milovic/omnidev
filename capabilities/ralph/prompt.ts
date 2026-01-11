@@ -5,15 +5,46 @@
  */
 
 import type { PRD, Story } from "./types.d.ts";
-import { getPatterns, getProgress } from "./state.ts";
+import { getProgress, getSpec } from "./state.ts";
+
+/**
+ * Extract codebase patterns from progress content
+ */
+function extractPatterns(progressContent: string): string[] {
+	const lines = progressContent.split("\n");
+	const patterns: string[] = [];
+	let inPatternsSection = false;
+
+	for (const line of lines) {
+		if (line.startsWith("## Codebase Patterns")) {
+			inPatternsSection = true;
+			continue;
+		}
+		if (line.startsWith("## ") && inPatternsSection) {
+			break;
+		}
+		if (inPatternsSection && line.startsWith("- ")) {
+			patterns.push(line.slice(2));
+		}
+	}
+
+	return patterns;
+}
 
 /**
  * Generates a prompt for the agent based on PRD and current story.
  */
 export async function generatePrompt(prd: PRD, story: Story, prdName: string): Promise<string> {
-	// Load progress and patterns
+	// Load progress and spec
 	const progressContent = await getProgress(prdName);
-	const patterns = await getPatterns(prdName);
+	let specContent = "";
+	try {
+		specContent = await getSpec(prdName);
+	} catch {
+		specContent = "(spec.md not found)";
+	}
+
+	const patterns = extractPatterns(progressContent);
 
 	// Format acceptance criteria
 	const criteriaLines = story.acceptanceCriteria.map((c) => `  - ${c}`).join("\n");
@@ -25,133 +56,128 @@ export async function generatePrompt(prd: PRD, story: Story, prdName: string): P
 	const progressLines = progressContent.split("\n");
 	const recentProgress = progressLines.slice(-20).join("\n");
 
+	// Format other stories for context
+	const otherStories = prd.stories
+		.filter((s) => s.id !== story.id)
+		.map((s) => `  - ${s.id}: ${s.title} [${s.status}]`)
+		.join("\n");
+
 	return `# Ralph Agent Instructions
 
-You are an autonomous coding agent working on the ${prd.name} project.
+You are an autonomous coding agent working on the ${prd.name} feature.
+
+## Feature Overview
 
 ${prd.description}
 
-## Your Task
+Branch: \`${prd.branchName}\`
 
-1. Read the PRD at \`.omni/ralph/prds/${prdName}/prd.json\`
-2. Read the progress log at \`.omni/ralph/prds/${prdName}/progress.txt\` (check Codebase Patterns section first)
-3. Check you're on the correct branch from PRD \`branchName\`. If not, check it out or create from main.
-4. Pick the **highest priority** user story where \`passes: false\`
-5. **Read the linked task file** (\`taskFile\` field) for full context - this contains:
-   - Detailed requirements and system behaviors
-   - Technical implementation details
-   - Code examples and patterns
-   - Touchpoints (files to create/modify)
-   - Acceptance criteria
-6. Implement the story's \`scope\` (may be full task or a specific section)
-7. Run quality checks: \`bun run check\` (runs typecheck + lint + format:check)
-8. Run tests: \`bun test\`
-9. If checks pass, commit ALL changes with message: \`feat: [Story ID] - [Story Title]\`
-10. Update the PRD to set \`passes: true\` for the completed story
-11. Append your progress to \`.omni/ralph/prds/${prdName}/progress.txt\`
+## Your Current Task
 
-## Critical: Read the Task File!
+**${story.id}: ${story.title}**
 
-The PRD story is just an overview. The \`taskFile\` contains the real requirements:
-- **Introduction**: What needs to be done and why
-- **Goals**: What we're trying to achieve
-- **User Stories**: Detailed acceptance criteria
-- **Functional Requirements**: Specific behaviors
-- **Technical Considerations**: Code examples and patterns
-- **Touchpoints**: Files you'll need to create/modify
-- **Dependencies**: What needs to exist first
+Acceptance Criteria:
+${criteriaLines}
 
-The \`scope\` field tells you which part of the task to implement in this story.
+## Workflow
+
+1. **Read the spec** at \`.omni/ralph/prds/${prdName}/spec.md\` for full requirements
+2. **Read the progress log** at \`.omni/ralph/prds/${prdName}/progress.txt\` (check Codebase Patterns first)
+3. **Verify branch**: Check you're on \`${prd.branchName}\`, if not create/checkout it
+4. **Implement this story** following the spec and acceptance criteria
+5. **Run quality checks**: \`bun run check\` (typecheck + lint + format:check)
+6. **Run tests**: \`bun test\`
+7. **Commit changes**: \`git commit -m "feat: [${story.id}] - ${story.title}"\`
+8. **Update prd.json**: Set this story's status to "completed"
+9. **Append to progress.txt**: Document what you did
+
+## Spec File
+
+\`\`\`markdown
+${specContent.slice(0, 3000)}${specContent.length > 3000 ? "\n...(truncated)" : ""}
+\`\`\`
 
 ## Progress Report Format
 
-APPEND to \`.omni/ralph/prds/${prdName}/progress.txt\` (never replace, always append):
+APPEND to progress.txt (never replace):
 
-\`\`\`
-## [Date/Time] - [Story ID]
-- What was implemented
-- Files changed
-- **Learnings for future iterations:**
-  - Patterns discovered
-  - Gotchas encountered
+\`\`\`markdown
+## [Date/Time] - ${story.id}: ${story.title}
+
+**What was done:**
+- Implementation details
+
+**Files changed:**
+- file1.ts
+- file2.ts
+
+**Patterns discovered:**
+- Any reusable patterns
+
 ---
 \`\`\`
 
-## Consolidate Patterns
+## If You're Blocked
 
-If you discover a **reusable pattern**, add it to \`## Codebase Patterns\` at the TOP of progress.txt:
+If you cannot complete this story (unclear requirements, missing dependencies, etc.):
 
-\`\`\`
-## Codebase Patterns
-- Example: Use \`Bun.file().text()\` for async file reading
-- Example: Always use \`existsSync\` from 'fs' for file checks
+1. Update prd.json: Set this story's status to "blocked"
+2. Add questions to the story's \`questions\` array
+3. End your response explaining why
+
+Example:
+\`\`\`json
+{
+  "id": "${story.id}",
+  "status": "blocked",
+  "questions": [
+    "Should X return Y or Z?",
+    "What is the expected behavior for edge case W?"
+  ]
+}
 \`\`\`
 
 ## Running Commands
 
 \`\`\`bash
-# Quality checks (run before every commit)
-bun run typecheck     # TypeScript check
-bun run lint          # Biome lint check
-bun run format:check  # Biome format check
-bun run check         # All of the above
-
-# Auto-fix
+bun run check         # TypeScript + lint + format check
+bun test              # Run tests
 bun run format        # Fix formatting
 bun run lint:fix      # Fix lint issues
-
-# Testing
-bun test              # Run all tests
-bun test --coverage   # Run with coverage report
-
-# Installing dependencies
-bun install           # Install all workspace dependencies
-bun add <pkg>         # Add to current package
-bun add -d <pkg>      # Add as dev dependency
 \`\`\`
 
 ## Technology Stack
 
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
-- **Packages**: ESM only (\`"type": "module"\`)
-- **Monorepo**: Bun workspaces
+- **Packages**: ESM only
 - **Linting**: Biome
 - **Testing**: Bun's built-in test runner
-- **CLI**: Stricli
-- **MCP**: @modelcontextprotocol/sdk
 
 ## Stop Condition
 
-After completing a user story, check if ALL stories have \`passes: true\`.
+After completing this story, check if ALL stories have \`status: "completed"\`.
 
 If ALL stories are complete, reply with:
 <promise>COMPLETE</promise>
 
-If there are still stories with \`passes: false\`, end your response normally.
+Otherwise, end your response normally.
 
 ## Important
 
 - Work on ONE story per iteration
-- **Always read the task file first** - it has the details you need
-- Use \`bun\` not \`npm\`, \`yarn\`, or \`pnpm\`
-- Commit frequently with descriptive messages
 - Keep quality checks green
-- Do NOT use type escape hatches (\`any\`, \`as unknown\`) - use proper types
-- Run \`bun install\` after creating package.json files
-- Aim for 70%+ test coverage on new code
+- Commit with message: \`feat: [${story.id}] - ${story.title}\`
+- Do NOT use type escape hatches (\`any\`, \`as unknown\`)
+- If blocked, use the questions array - don't guess
 
-## Current Story
+## Other Stories in This PRD
 
-**${story.id}: ${story.title}**
-- Task File: ${story.specFile}
-- Scope: ${story.scope}
-- Acceptance Criteria:
-${criteriaLines}
+${otherStories || "  (none)"}
 
 ## Recent Progress
 
-${recentProgress}
+${recentProgress || "(no progress yet)"}
 
 ## Codebase Patterns
 

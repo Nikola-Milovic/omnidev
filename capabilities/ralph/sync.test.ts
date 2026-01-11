@@ -55,45 +55,6 @@ describe("Ralph sync hook", () => {
 		expect(content).not.toContain("default_agent");
 	});
 
-	test("creates .gitignore with Ralph entry if not exists", async () => {
-		await sync();
-
-		expect(existsSync(".gitignore")).toBe(true);
-
-		const content = await Bun.file(".gitignore").text();
-		expect(content).toContain(".omni/ralph/");
-		expect(content).toContain("# Ralph AI Orchestrator");
-	});
-
-	test("updates existing .gitignore without duplicate entries", async () => {
-		await Bun.write(".gitignore", "node_modules/\n.env\n");
-
-		await sync();
-
-		const content = await Bun.file(".gitignore").text();
-		expect(content).toContain("node_modules/");
-		expect(content).toContain(".env");
-		expect(content).toContain(".omni/ralph/");
-		expect(content).toContain("# Ralph AI Orchestrator");
-
-		// Run sync again - should not duplicate entry
-		await sync();
-
-		const content2 = await Bun.file(".gitignore").text();
-		const matches = content2.split(".omni/ralph/").length - 1;
-		expect(matches).toBe(1);
-	});
-
-	test("handles .gitignore without trailing newline", async () => {
-		await Bun.write(".gitignore", "node_modules/");
-
-		await sync();
-
-		const content = await Bun.file(".gitignore").text();
-		expect(content).toContain("node_modules/");
-		expect(content).toContain(".omni/ralph/");
-	});
-
 	test("is idempotent - safe to run multiple times", async () => {
 		await sync();
 		await sync();
@@ -103,10 +64,6 @@ describe("Ralph sync hook", () => {
 		expect(existsSync(".omni/ralph/prds")).toBe(true);
 		expect(existsSync(".omni/ralph/completed-prds")).toBe(true);
 		expect(existsSync(".omni/ralph/config.toml")).toBe(true);
-
-		const gitignore = await Bun.file(".gitignore").text();
-		const matches = gitignore.split(".omni/ralph/").length - 1;
-		expect(matches).toBe(1);
 	});
 
 	test("handles existing directory structure gracefully", async () => {

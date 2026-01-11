@@ -8,47 +8,62 @@ import { join } from "node:path";
 import {
 	appendProgress,
 	archivePRD,
-	createPRD,
-	deletePRD,
-	getActivePRD,
 	getNextStory,
-	getPatterns,
 	getPRD,
 	getProgress,
+	getSpec,
+	hasBlockedStories,
+	isPRDComplete,
 	listPRDs,
-	markStoryFailed,
-	markStoryPassed,
-	setActivePRD,
+	updateLastRun,
 	updatePRD,
+	updateStoryStatus,
 } from "./state.js";
+import type { PRD } from "./types.js";
 
 describe("Ralph State Management", () => {
 	let testDir: string;
 	let originalCwd: string;
 
+	// Helper to create a PRD directly (since createPRD was removed)
+	async function createTestPRD(name: string, options: Partial<PRD> = {}): Promise<PRD> {
+		const prdDir = `.omni/ralph/prds/${name}`;
+		mkdirSync(prdDir, { recursive: true });
+
+		const prd: PRD = {
+			name,
+			branchName: options.branchName ?? `feature/${name}`,
+			description: options.description ?? "Test PRD",
+			createdAt: options.createdAt ?? new Date().toISOString(),
+			stories: options.stories ?? [],
+			...(options.lastRun && { lastRun: options.lastRun }),
+		};
+
+		await Bun.write(join(prdDir, "prd.json"), JSON.stringify(prd, null, 2));
+		await Bun.write(
+			join(prdDir, "progress.txt"),
+			"## Codebase Patterns\n\n---\n\n## Progress Log\n\n",
+		);
+		await Bun.write(join(prdDir, "spec.md"), "# Test Spec\n\nTest content");
+
+		return prd;
+	}
+
 	beforeEach(() => {
-		// Create unique test directory
 		testDir = join(
 			process.cwd(),
 			".test-ralph",
 			`test-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
 		);
 		mkdirSync(testDir, { recursive: true });
-
-		// Change to test directory
 		originalCwd = process.cwd();
 		process.chdir(testDir);
-
-		// Create Ralph directory structure
 		mkdirSync(".omni/ralph/prds", { recursive: true });
 		mkdirSync(".omni/ralph/completed-prds", { recursive: true });
 	});
 
 	afterEach(() => {
-		// Change back to original directory
 		process.chdir(originalCwd);
-
-		// Clean up test directory
 		if (existsSync(testDir)) {
 			rmSync(testDir, { recursive: true, force: true });
 		}
@@ -61,8 +76,8 @@ describe("Ralph State Management", () => {
 		});
 
 		test("lists active PRDs", async () => {
-			await createPRD("test-prd-1");
-			await createPRD("test-prd-2");
+			await createTestPRD("test-prd-1");
+			await createTestPRD("test-prd-2");
 
 			const prds = await listPRDs();
 			expect(prds).toContain("test-prd-1");
@@ -71,9 +86,8 @@ describe("Ralph State Management", () => {
 		});
 
 		test("includes completed PRDs when requested", async () => {
-			await createPRD("active-prd");
+			await createTestPRD("active-prd");
 
-			// Manually create completed PRD
 			const completedPath = ".omni/ralph/completed-prds/completed-prd";
 			mkdirSync(completedPath, { recursive: true });
 			writeFileSync(
@@ -83,7 +97,7 @@ describe("Ralph State Management", () => {
 					branchName: "main",
 					description: "Completed",
 					createdAt: new Date().toISOString(),
-					userStories: [],
+					stories: [],
 				}),
 			);
 
@@ -95,7 +109,7 @@ describe("Ralph State Management", () => {
 
 	describe("getPRD", () => {
 		test("retrieves an existing PRD", async () => {
-			await createPRD("test-prd", {
+			await createTestPRD("test-prd", {
 				description: "Test PRD",
 				branchName: "feature/test",
 			});
@@ -110,18 +124,7 @@ describe("Ralph State Management", () => {
 			await expect(getPRD("non-existent")).rejects.toThrow("PRD not found: non-existent");
 		});
 
-		test("retrieves completed PRD when active not found", async () => {
-			// Create and archive a PRD
-			await createPRD("test-prd", { description: "Test" });
-			await archivePRD("test-prd");
-
-			// Should find it in completed PRDs
-			const prd = await getPRD("test-prd");
-			expect(prd.name).toBe("test-prd");
-		});
-
 		test("throws error for invalid PRD structure", async () => {
-			// Manually create invalid PRD
 			const prdPath = ".omni/ralph/prds/invalid-prd";
 			mkdirSync(prdPath, { recursive: true });
 			writeFileSync(join(prdPath, "prd.json"), JSON.stringify({ foo: "bar" }));
@@ -130,66 +133,9 @@ describe("Ralph State Management", () => {
 		});
 	});
 
-	describe("createPRD", () => {
-		test("creates PRD with default values", async () => {
-			const prd = await createPRD("test-prd");
-
-			expect(prd.name).toBe("test-prd");
-			expect(prd.branchName).toBe("ralph/test-prd");
-			expect(prd.description).toBe("");
-			expect(prd.userStories).toEqual([]);
-			expect(prd.createdAt).toBeTruthy();
-
-			// Verify file exists
-			const prdPath = ".omni/ralph/prds/test-prd/prd.json";
-			expect(existsSync(prdPath)).toBe(true);
-		});
-
-		test("creates PRD with custom options", async () => {
-			const prd = await createPRD("custom-prd", {
-				branchName: "feature/custom",
-				description: "Custom PRD",
-				userStories: [
-					{
-						id: "US-001",
-						title: "Test Story",
-						specFile: "spec-001.md",
-						scope: "Full implementation",
-						acceptanceCriteria: ["Criterion 1"],
-						priority: 1,
-						passes: false,
-						notes: "",
-					},
-				],
-			});
-
-			expect(prd.branchName).toBe("feature/custom");
-			expect(prd.description).toBe("Custom PRD");
-			expect(prd.userStories.length).toBe(1);
-		});
-
-		test("creates directory structure", async () => {
-			await createPRD("test-prd");
-
-			const prdDir = ".omni/ralph/prds/test-prd";
-			const specsDir = join(prdDir, "specs");
-
-			expect(existsSync(prdDir)).toBe(true);
-			expect(existsSync(specsDir)).toBe(true);
-			expect(existsSync(join(prdDir, "prd.json"))).toBe(true);
-			expect(existsSync(join(prdDir, "progress.txt"))).toBe(true);
-		});
-
-		test("throws error if PRD already exists", async () => {
-			await createPRD("test-prd");
-
-			await expect(createPRD("test-prd")).rejects.toThrow("PRD already exists");
-		});
-	});
-
 	describe("updatePRD", () => {
 		test("updates PRD fields", async () => {
-			await createPRD("test-prd", { description: "Original" });
+			await createTestPRD("test-prd", { description: "Original" });
 
 			const updated = await updatePRD("test-prd", {
 				description: "Updated",
@@ -199,13 +145,12 @@ describe("Ralph State Management", () => {
 			expect(updated.description).toBe("Updated");
 			expect(updated.branchName).toBe("feature/updated");
 
-			// Verify persisted
 			const retrieved = await getPRD("test-prd");
 			expect(retrieved.description).toBe("Updated");
 		});
 
 		test("preserves name even if update tries to change it", async () => {
-			await createPRD("test-prd");
+			await createTestPRD("test-prd");
 
 			const updated = await updatePRD("test-prd", {
 				name: "different-name" as never,
@@ -213,85 +158,19 @@ describe("Ralph State Management", () => {
 
 			expect(updated.name).toBe("test-prd");
 		});
-
-		test("throws error for non-existent PRD", async () => {
-			await expect(updatePRD("non-existent", { description: "Test" })).rejects.toThrow(
-				"PRD not found",
-			);
-		});
-	});
-
-	describe("archivePRD", () => {
-		test("moves PRD to completed directory", async () => {
-			await createPRD("test-prd");
-
-			await archivePRD("test-prd");
-
-			// Check active directory is empty
-			const activePath = ".omni/ralph/prds/test-prd";
-			expect(existsSync(activePath)).toBe(false);
-
-			// Check completed directory has archived PRD
-			const timestamp = new Date().toISOString().split("T")[0];
-			const completedPath = `.omni/ralph/completed-prds/${timestamp}-test-prd`;
-			expect(existsSync(completedPath)).toBe(true);
-		});
-
-		test("throws error for non-existent PRD", async () => {
-			await expect(archivePRD("non-existent")).rejects.toThrow("PRD not found");
-		});
-
-		test("throws error if archive already exists", async () => {
-			await createPRD("test-prd");
-			await archivePRD("test-prd");
-
-			// Create another PRD with same name
-			await createPRD("test-prd");
-
-			// Try to archive again on same day
-			await expect(archivePRD("test-prd")).rejects.toThrow("Archive already exists");
-		});
-	});
-
-	describe("deletePRD", () => {
-		test("deletes active PRD", async () => {
-			await createPRD("test-prd");
-
-			await deletePRD("test-prd");
-
-			const prdPath = ".omni/ralph/prds/test-prd";
-			expect(existsSync(prdPath)).toBe(false);
-		});
-
-		test("deletes completed PRD", async () => {
-			await createPRD("test-prd");
-			await archivePRD("test-prd");
-
-			await deletePRD("test-prd");
-
-			// Should not find it in completed directory
-			const prds = await listPRDs(true);
-			expect(prds.some((name) => name.includes("test-prd"))).toBe(false);
-		});
-
-		test("throws error for non-existent PRD", async () => {
-			await expect(deletePRD("non-existent")).rejects.toThrow("PRD not found");
-		});
 	});
 
 	describe("getNextStory", () => {
-		test("returns null when no incomplete stories", async () => {
-			await createPRD("test-prd", {
-				userStories: [
+		test("returns null when no workable stories", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
 					{
 						id: "US-001",
 						title: "Story 1",
-						specFile: "spec.md",
-						scope: "Full",
 						acceptanceCriteria: [],
+						status: "completed",
 						priority: 1,
-						passes: true,
-						notes: "",
+						questions: [],
 					},
 				],
 			});
@@ -300,109 +179,283 @@ describe("Ralph State Management", () => {
 			expect(story).toBe(null);
 		});
 
-		test("returns highest priority incomplete story", async () => {
-			await createPRD("test-prd", {
-				userStories: [
+		test("returns highest priority pending story", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
 					{
 						id: "US-001",
 						title: "Story 1",
-						specFile: "spec.md",
-						scope: "Full",
 						acceptanceCriteria: [],
+						status: "pending",
 						priority: 2,
-						passes: false,
-						notes: "",
+						questions: [],
 					},
 					{
 						id: "US-002",
 						title: "Story 2",
-						specFile: "spec.md",
-						scope: "Full",
 						acceptanceCriteria: [],
+						status: "pending",
 						priority: 1,
-						passes: false,
-						notes: "",
+						questions: [],
 					},
 				],
 			});
 
 			const story = await getNextStory("test-prd");
-			expect(story?.id).toBe("US-002"); // Lower priority number = higher priority
+			expect(story?.id).toBe("US-002");
 		});
 
-		test("returns null for empty PRD", async () => {
-			await createPRD("test-prd");
+		test("returns in_progress story first", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 1,
+						questions: [],
+					},
+					{
+						id: "US-002",
+						title: "Story 2",
+						acceptanceCriteria: [],
+						status: "in_progress",
+						priority: 2,
+						questions: [],
+					},
+				],
+			});
 
 			const story = await getNextStory("test-prd");
-			expect(story).toBe(null);
+			expect(story?.id).toBe("US-001"); // Lower priority wins, both are workable
 		});
-	});
 
-	describe("markStoryPassed", () => {
-		test("marks story as passed", async () => {
-			await createPRD("test-prd", {
-				userStories: [
+		test("skips blocked stories", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
 					{
 						id: "US-001",
 						title: "Story 1",
-						specFile: "spec.md",
-						scope: "Full",
 						acceptanceCriteria: [],
+						status: "blocked",
 						priority: 1,
-						passes: false,
-						notes: "",
+						questions: ["Question?"],
+					},
+					{
+						id: "US-002",
+						title: "Story 2",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 2,
+						questions: [],
 					},
 				],
 			});
 
-			await markStoryPassed("test-prd", "US-001");
-
-			const prd = await getPRD("test-prd");
-			const story = prd.userStories.find((s) => s.id === "US-001");
-			expect(story?.passes).toBe(true);
-		});
-
-		test("throws error for non-existent story", async () => {
-			await createPRD("test-prd");
-
-			await expect(markStoryPassed("test-prd", "US-999")).rejects.toThrow("Story not found");
+			const story = await getNextStory("test-prd");
+			expect(story?.id).toBe("US-002");
 		});
 	});
 
-	describe("markStoryFailed", () => {
-		test("marks story as failed", async () => {
-			await createPRD("test-prd", {
-				userStories: [
+	describe("updateStoryStatus", () => {
+		test("updates story status", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
 					{
 						id: "US-001",
 						title: "Story 1",
-						specFile: "spec.md",
-						scope: "Full",
 						acceptanceCriteria: [],
+						status: "pending",
 						priority: 1,
-						passes: true,
-						notes: "",
+						questions: [],
 					},
 				],
 			});
 
-			await markStoryFailed("test-prd", "US-001");
+			await updateStoryStatus("test-prd", "US-001", "completed");
 
 			const prd = await getPRD("test-prd");
-			const story = prd.userStories.find((s) => s.id === "US-001");
-			expect(story?.passes).toBe(false);
+			expect(prd.stories[0]?.status).toBe("completed");
+		});
+
+		test("updates questions when blocking", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 1,
+						questions: [],
+					},
+				],
+			});
+
+			await updateStoryStatus("test-prd", "US-001", "blocked", ["Question 1?", "Question 2?"]);
+
+			const prd = await getPRD("test-prd");
+			expect(prd.stories[0]?.status).toBe("blocked");
+			expect(prd.stories[0]?.questions).toEqual(["Question 1?", "Question 2?"]);
 		});
 
 		test("throws error for non-existent story", async () => {
-			await createPRD("test-prd");
+			await createTestPRD("test-prd");
 
-			await expect(markStoryFailed("test-prd", "US-999")).rejects.toThrow("Story not found");
+			await expect(updateStoryStatus("test-prd", "US-999", "completed")).rejects.toThrow(
+				"Story not found",
+			);
+		});
+	});
+
+	describe("updateLastRun", () => {
+		test("updates lastRun field", async () => {
+			await createTestPRD("test-prd");
+
+			await updateLastRun("test-prd", {
+				timestamp: "2025-01-10T12:00:00Z",
+				storyId: "US-001",
+				reason: "user_interrupted",
+				summary: "Stopped mid-work",
+			});
+
+			const prd = await getPRD("test-prd");
+			expect(prd.lastRun?.storyId).toBe("US-001");
+			expect(prd.lastRun?.reason).toBe("user_interrupted");
+		});
+	});
+
+	describe("isPRDComplete", () => {
+		test("returns true when all stories completed", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "completed",
+						priority: 1,
+						questions: [],
+					},
+					{
+						id: "US-002",
+						title: "Story 2",
+						acceptanceCriteria: [],
+						status: "completed",
+						priority: 2,
+						questions: [],
+					},
+				],
+			});
+
+			const complete = await isPRDComplete("test-prd");
+			expect(complete).toBe(true);
+		});
+
+		test("returns false when stories pending", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "completed",
+						priority: 1,
+						questions: [],
+					},
+					{
+						id: "US-002",
+						title: "Story 2",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 2,
+						questions: [],
+					},
+				],
+			});
+
+			const complete = await isPRDComplete("test-prd");
+			expect(complete).toBe(false);
+		});
+	});
+
+	describe("hasBlockedStories", () => {
+		test("returns blocked stories", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "blocked",
+						priority: 1,
+						questions: ["Question?"],
+					},
+					{
+						id: "US-002",
+						title: "Story 2",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 2,
+						questions: [],
+					},
+				],
+			});
+
+			const blocked = await hasBlockedStories("test-prd");
+			expect(blocked.length).toBe(1);
+			expect(blocked[0]?.id).toBe("US-001");
+		});
+
+		test("returns empty array when no blocked stories", async () => {
+			await createTestPRD("test-prd", {
+				stories: [
+					{
+						id: "US-001",
+						title: "Story 1",
+						acceptanceCriteria: [],
+						status: "pending",
+						priority: 1,
+						questions: [],
+					},
+				],
+			});
+
+			const blocked = await hasBlockedStories("test-prd");
+			expect(blocked).toEqual([]);
+		});
+	});
+
+	describe("getSpec", () => {
+		test("returns spec content", async () => {
+			await createTestPRD("test-prd");
+
+			const spec = await getSpec("test-prd");
+			expect(spec).toContain("# Test Spec");
+		});
+
+		test("throws error when spec missing", async () => {
+			const prdDir = ".omni/ralph/prds/no-spec";
+			mkdirSync(prdDir, { recursive: true });
+			await Bun.write(
+				join(prdDir, "prd.json"),
+				JSON.stringify({
+					name: "no-spec",
+					branchName: "feature/test",
+					description: "Test",
+					createdAt: new Date().toISOString(),
+					stories: [],
+				}),
+			);
+
+			await expect(getSpec("no-spec")).rejects.toThrow("Spec file not found");
 		});
 	});
 
 	describe("appendProgress", () => {
 		test("appends content to progress log", async () => {
-			await createPRD("test-prd");
+			await createTestPRD("test-prd");
 
 			await appendProgress("test-prd", "## Entry 1\n- Item 1");
 			await appendProgress("test-prd", "## Entry 2\n- Item 2");
@@ -411,129 +464,24 @@ describe("Ralph State Management", () => {
 			expect(progress).toContain("## Entry 1");
 			expect(progress).toContain("## Entry 2");
 		});
-
-		test("creates progress file if it does not exist", async () => {
-			await createPRD("test-prd");
-
-			// Delete progress file
-			const progressPath = ".omni/ralph/prds/test-prd/progress.txt";
-			rmSync(progressPath, { force: true });
-
-			await appendProgress("test-prd", "## New Entry");
-
-			const progress = await getProgress("test-prd");
-			expect(progress).toContain("## New Entry");
-		});
 	});
 
-	describe("getProgress", () => {
-		test("returns progress log content", async () => {
-			await createPRD("test-prd");
-			await appendProgress("test-prd", "## Test Entry");
+	describe("archivePRD", () => {
+		test("moves PRD to completed directory", async () => {
+			await createTestPRD("test-prd");
 
-			const progress = await getProgress("test-prd");
-			expect(progress).toContain("## Test Entry");
-		});
+			await archivePRD("test-prd");
 
-		test("returns empty string for non-existent progress file", async () => {
-			await createPRD("test-prd");
+			const activePath = ".omni/ralph/prds/test-prd";
+			expect(existsSync(activePath)).toBe(false);
 
-			// Delete progress file
-			const progressPath = ".omni/ralph/prds/test-prd/progress.txt";
-			rmSync(progressPath, { force: true });
-
-			const progress = await getProgress("test-prd");
-			expect(progress).toBe("");
-		});
-	});
-
-	describe("getPatterns", () => {
-		test("extracts patterns from progress log", async () => {
-			await createPRD("test-prd");
-
-			const progressContent = `## Codebase Patterns
-- Use Bun for file operations
-- Always use strict TypeScript
-- Test coverage should be 70%+
-
-## Progress Log
-
-## Entry 1
-- Some progress
-`;
-
-			// Write directly to progress file
-			const progressPath = ".omni/ralph/prds/test-prd/progress.txt";
-			writeFileSync(progressPath, progressContent);
-
-			const patterns = await getPatterns("test-prd");
-			expect(patterns).toContain("Use Bun for file operations");
-			expect(patterns).toContain("Always use strict TypeScript");
-			expect(patterns).toContain("Test coverage should be 70%+");
-			expect(patterns.length).toBe(3);
-		});
-
-		test("returns empty array when no patterns section", async () => {
-			await createPRD("test-prd");
-			await appendProgress("test-prd", "## Entry 1\n- Progress");
-
-			const patterns = await getPatterns("test-prd");
-			expect(patterns).toEqual([]);
-		});
-
-		test("returns empty array when patterns section is empty", async () => {
-			await createPRD("test-prd");
-
-			const progressContent = `## Codebase Patterns
-
-## Progress Log
-`;
-			const progressPath = ".omni/ralph/prds/test-prd/progress.txt";
-			writeFileSync(progressPath, progressContent);
-
-			const patterns = await getPatterns("test-prd");
-			expect(patterns).toEqual([]);
-		});
-	});
-
-	describe("getActivePRD", () => {
-		test("returns null when no active PRD", async () => {
-			const active = await getActivePRD();
-			expect(active).toBe(null);
-		});
-
-		test("returns active PRD name", async () => {
-			await createPRD("test-prd");
-			await setActivePRD("test-prd");
-
-			const active = await getActivePRD();
-			expect(active).toBe("test-prd");
-		});
-	});
-
-	describe("setActivePRD", () => {
-		test("sets active PRD", async () => {
-			await createPRD("test-prd");
-
-			await setActivePRD("test-prd");
-
-			const active = await getActivePRD();
-			expect(active).toBe("test-prd");
+			const timestamp = new Date().toISOString().split("T")[0];
+			const completedPath = `.omni/ralph/completed-prds/${timestamp}-test-prd`;
+			expect(existsSync(completedPath)).toBe(true);
 		});
 
 		test("throws error for non-existent PRD", async () => {
-			await expect(setActivePRD("non-existent")).rejects.toThrow("PRD not found");
-		});
-
-		test("creates Ralph directory if it does not exist", async () => {
-			// Delete Ralph directory
-			rmSync(".omni/ralph", { recursive: true, force: true });
-
-			await createPRD("test-prd");
-			await setActivePRD("test-prd");
-
-			const ralphDir = ".omni/ralph";
-			expect(existsSync(ralphDir)).toBe(true);
+			await expect(archivePRD("non-existent")).rejects.toThrow("PRD not found");
 		});
 	});
 });

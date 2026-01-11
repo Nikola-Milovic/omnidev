@@ -36,7 +36,11 @@ export function resolveEnabledCapabilities(
 		? config.profiles?.[profileName]
 		: config.profiles?.[config.active_profile ?? "default"];
 
-	return profile?.capabilities ?? [];
+	const profileCapabilities = profile?.capabilities ?? [];
+	const alwaysEnabled = config.always_enabled_capabilities ?? [];
+
+	// Merge always-enabled capabilities with profile capabilities (no duplicates)
+	return [...new Set([...alwaysEnabled, ...profileCapabilities])];
 }
 
 /**

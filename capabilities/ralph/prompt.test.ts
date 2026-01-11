@@ -7,18 +7,35 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { generatePrompt } from "./prompt";
 import type { PRD, Story } from "./types.d.ts";
-import { createPRD } from "./state";
 
 const TEST_DIR = join(process.cwd(), ".test-ralph-prompt");
 const RALPH_DIR = join(TEST_DIR, ".omni/ralph");
 const PRDS_DIR = join(RALPH_DIR, "prds");
 
+// Helper to create a PRD directly
+async function createTestPRD(name: string, prd: Partial<PRD> = {}): Promise<void> {
+	const prdDir = join(PRDS_DIR, name);
+	mkdirSync(prdDir, { recursive: true });
+
+	const fullPRD: PRD = {
+		name,
+		branchName: prd.branchName ?? `feature/${name}`,
+		description: prd.description ?? "Test PRD",
+		createdAt: prd.createdAt ?? new Date().toISOString(),
+		stories: prd.stories ?? [],
+	};
+
+	await Bun.write(join(prdDir, "prd.json"), JSON.stringify(fullPRD, null, 2));
+	await Bun.write(
+		join(prdDir, "progress.txt"),
+		"## Codebase Patterns\n\n---\n\n## Progress Log\n\n",
+	);
+	await Bun.write(join(prdDir, "spec.md"), "# Test Spec\n\nTest specification content");
+}
+
 beforeEach(() => {
-	// Create test directory
 	mkdirSync(TEST_DIR, { recursive: true });
 	process.chdir(TEST_DIR);
-
-	// Create Ralph structure
 	mkdirSync(RALPH_DIR, { recursive: true });
 	mkdirSync(PRDS_DIR, { recursive: true });
 });
@@ -37,22 +54,19 @@ describe("generatePrompt", () => {
 			branchName: "feature/test",
 			description: "Test project description",
 			createdAt: "2026-01-09T00:00:00Z",
-			userStories: [],
+			stories: [],
 		};
 
 		const story: Story = {
 			id: "US-001",
 			title: "Test Story",
-			specFile: "specs/001-test.md",
-			scope: "Implement test feature",
 			acceptanceCriteria: ["Feature works", "Tests pass"],
+			status: "pending",
 			priority: 1,
-			passes: false,
-			notes: "",
+			questions: [],
 		};
 
-		// Create PRD to get progress file
-		await createPRD("test-project", prd);
+		await createTestPRD("test-project", prd);
 
 		const prompt = await generatePrompt(prd, story, "test-project");
 
@@ -60,10 +74,34 @@ describe("generatePrompt", () => {
 		expect(prompt).toContain("Test project description");
 		expect(prompt).toContain("US-001");
 		expect(prompt).toContain("Test Story");
-		expect(prompt).toContain("specs/001-test.md");
-		expect(prompt).toContain("Implement test feature");
 		expect(prompt).toContain("Feature works");
 		expect(prompt).toContain("Tests pass");
+	});
+
+	test("includes spec content", async () => {
+		const prd: PRD = {
+			name: "spec-test",
+			branchName: "main",
+			description: "Test",
+			createdAt: "2026-01-09T00:00:00Z",
+			stories: [],
+		};
+
+		const story: Story = {
+			id: "US-002",
+			title: "Story",
+			acceptanceCriteria: [],
+			status: "pending",
+			priority: 1,
+			questions: [],
+		};
+
+		await createTestPRD("spec-test", prd);
+
+		const prompt = await generatePrompt(prd, story, "spec-test");
+
+		expect(prompt).toContain("Test Spec");
+		expect(prompt).toContain("Test specification content");
 	});
 
 	test("includes recent progress", async () => {
@@ -72,22 +110,21 @@ describe("generatePrompt", () => {
 			branchName: "main",
 			description: "Test",
 			createdAt: "2026-01-09T00:00:00Z",
-			userStories: [],
+			stories: [],
 		};
 
 		const story: Story = {
 			id: "US-002",
 			title: "Story",
-			specFile: "test.md",
-			scope: "Test",
 			acceptanceCriteria: [],
+			status: "pending",
 			priority: 1,
-			passes: false,
-			notes: "",
+			questions: [],
 		};
 
-		// Create PRD and add progress
-		await createPRD("progress-test", prd);
+		await createTestPRD("progress-test", prd);
+
+		// Add progress
 		const { appendProgress } = await import("./state");
 		await appendProgress("progress-test", "## Test Progress\n- Did something");
 
@@ -103,22 +140,19 @@ describe("generatePrompt", () => {
 			branchName: "main",
 			description: "Test",
 			createdAt: "2026-01-09T00:00:00Z",
-			userStories: [],
+			stories: [],
 		};
 
 		const story: Story = {
 			id: "US-003",
 			title: "Story",
-			specFile: "test.md",
-			scope: "Test",
 			acceptanceCriteria: [],
+			status: "pending",
 			priority: 1,
-			passes: false,
-			notes: "",
+			questions: [],
 		};
 
-		// Create PRD and add patterns
-		await createPRD("patterns-test", prd);
+		await createTestPRD("patterns-test", prd);
 		const prdDir = join(PRDS_DIR, "patterns-test");
 		const progressPath = join(prdDir, "progress.txt");
 		await Bun.write(
@@ -138,21 +172,19 @@ describe("generatePrompt", () => {
 			branchName: "main",
 			description: "Test",
 			createdAt: "2026-01-09T00:00:00Z",
-			userStories: [],
+			stories: [],
 		};
 
 		const story: Story = {
 			id: "US-004",
 			title: "Story",
-			specFile: "test.md",
-			scope: "Test",
 			acceptanceCriteria: [],
+			status: "pending",
 			priority: 1,
-			passes: false,
-			notes: "",
+			questions: [],
 		};
 
-		await createPRD("no-patterns", prd);
+		await createTestPRD("no-patterns", prd);
 
 		const prompt = await generatePrompt(prd, story, "no-patterns");
 
@@ -165,25 +197,59 @@ describe("generatePrompt", () => {
 			branchName: "main",
 			description: "Test",
 			createdAt: "2026-01-09T00:00:00Z",
-			userStories: [],
+			stories: [],
 		};
 
 		const story: Story = {
 			id: "US-005",
 			title: "Story",
-			specFile: "test.md",
-			scope: "Test",
 			acceptanceCriteria: ["First criterion", "Second criterion"],
+			status: "pending",
 			priority: 1,
-			passes: false,
-			notes: "",
+			questions: [],
 		};
 
-		await createPRD("criteria-test", prd);
+		await createTestPRD("criteria-test", prd);
 
 		const prompt = await generatePrompt(prd, story, "criteria-test");
 
 		expect(prompt).toContain("  - First criterion");
 		expect(prompt).toContain("  - Second criterion");
+	});
+
+	test("includes other stories for context", async () => {
+		const prd: PRD = {
+			name: "multi-story",
+			branchName: "main",
+			description: "Test",
+			createdAt: "2026-01-09T00:00:00Z",
+			stories: [
+				{
+					id: "US-001",
+					title: "First Story",
+					acceptanceCriteria: [],
+					status: "completed",
+					priority: 1,
+					questions: [],
+				},
+				{
+					id: "US-002",
+					title: "Second Story",
+					acceptanceCriteria: [],
+					status: "pending",
+					priority: 2,
+					questions: [],
+				},
+			],
+		};
+
+		const story = prd.stories[1];
+		expect(story).toBeDefined();
+
+		await createTestPRD("multi-story", prd);
+
+		const prompt = await generatePrompt(prd, story, "multi-story");
+
+		expect(prompt).toContain("US-001: First Story [completed]");
 	});
 });

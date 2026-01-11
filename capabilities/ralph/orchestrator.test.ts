@@ -5,8 +5,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadRalphConfig, runAgent, runOrchestration } from "./orchestrator";
-import { createPRD } from "./state";
+import { loadRalphConfig, runAgent } from "./orchestrator";
+import type { PRD } from "./types";
 
 const TEST_DIR = join(process.cwd(), ".test-ralph-orchestrator");
 const RALPH_DIR = join(TEST_DIR, ".omni/ralph");
@@ -27,12 +27,30 @@ command = "npx"
 args = ["-y", "@anthropic-ai/claude-code", "--model", "sonnet", "-p"]
 `;
 
+// Helper to create a PRD directly
+async function createTestPRD(name: string, options: Partial<PRD> = {}): Promise<void> {
+	const prdDir = join(PRDS_DIR, name);
+	mkdirSync(prdDir, { recursive: true });
+
+	const prd: PRD = {
+		name,
+		branchName: options.branchName ?? `feature/${name}`,
+		description: options.description ?? "Test PRD",
+		createdAt: options.createdAt ?? new Date().toISOString(),
+		stories: options.stories ?? [],
+	};
+
+	await Bun.write(join(prdDir, "prd.json"), JSON.stringify(prd, null, 2));
+	await Bun.write(
+		join(prdDir, "progress.txt"),
+		"## Codebase Patterns\n\n---\n\n## Progress Log\n\n",
+	);
+	await Bun.write(join(prdDir, "spec.md"), "# Test Spec\n\nTest content");
+}
+
 beforeEach(() => {
-	// Create test directory
 	mkdirSync(TEST_DIR, { recursive: true });
 	process.chdir(TEST_DIR);
-
-	// Create Ralph structure
 	mkdirSync(RALPH_DIR, { recursive: true });
 	mkdirSync(PRDS_DIR, { recursive: true });
 	writeFileSync(CONFIG_PATH, MOCK_CONFIG);
@@ -106,53 +124,56 @@ describe("runAgent", () => {
 
 describe("runOrchestration", () => {
 	test("throws if PRD doesn't exist", async () => {
-		await expect(runOrchestration("nonexistent", "test", 1)).rejects.toThrow(
-			"PRD not found: nonexistent",
-		);
+		const { runOrchestration } = await import("./orchestrator");
+
+		await expect(runOrchestration("nonexistent")).rejects.toThrow("PRD not found: nonexistent");
 	});
 
-	test("throws if agent doesn't exist", async () => {
-		await createPRD("test-prd", {
+	test("stops when blocked stories exist", async () => {
+		await createTestPRD("blocked-prd", {
 			branchName: "main",
-			description: "Test PRD",
-			userStories: [
+			description: "Blocked PRD",
+			stories: [
 				{
 					id: "US-001",
-					title: "Test story",
-					specFile: "test.md",
-					scope: "Test scope",
+					title: "Blocked story",
 					acceptanceCriteria: ["Done"],
+					status: "blocked",
 					priority: 1,
-					passes: false,
-					notes: "",
+					questions: ["What should I do?"],
 				},
 			],
 		});
 
-		await expect(runOrchestration("test-prd", "nonexistent", 1)).rejects.toThrow(
-			"Agent 'nonexistent' not found",
-		);
+		const { runOrchestration } = await import("./orchestrator");
+
+		// Should stop immediately due to blocked story
+		await runOrchestration("blocked-prd");
+
+		// No crash = success
 	});
 
 	test("completes when no stories remain", async () => {
-		await createPRD("completed-prd", {
+		await createTestPRD("completed-prd", {
 			branchName: "main",
 			description: "Completed PRD",
-			userStories: [
+			stories: [
 				{
 					id: "US-001",
 					title: "Done story",
-					specFile: "test.md",
-					scope: "Test",
 					acceptanceCriteria: ["Done"],
+					status: "completed",
 					priority: 1,
-					passes: true,
-					notes: "",
+					questions: [],
 				},
 			],
 		});
 
+		const { runOrchestration } = await import("./orchestrator");
+
 		// Should complete immediately without running agent
-		await runOrchestration("completed-prd", "test", 1);
+		await runOrchestration("completed-prd");
+
+		// No crash = success
 	});
 });

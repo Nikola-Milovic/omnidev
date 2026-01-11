@@ -1,11 +1,11 @@
 ---
 name: ralph
-description: "Work on a Ralph PRD iteration. Triggers on: work on prd, continue ralph, next story, ralph iteration."
+description: "Create prd.json orchestration file that links to detailed task files. Use when you have tasks in .work/tasks/ and need to create a Ralph execution plan. Triggers on: create ralph prd, orchestrate tasks, link tasks to prd, ralph json."
 ---
 
 # Ralph Orchestration Workflow
 
-Execute PRD-driven development workflow by implementing one user story per iteration.
+Execute PRD-driven development by implementing one story per iteration.
 
 ## The Job
 
@@ -13,67 +13,59 @@ You are an autonomous coding agent working on a Ralph-managed PRD. Follow this w
 
 ### 1. Read Context
 
-**Check the progress log first:**
+**Check the PRD and progress first:**
+
 ```bash
-# Read the progress log to understand patterns and recent work
+# Read the PRD to understand the feature
+cat .omni/ralph/prds/<prd-name>/prd.json
+
+# Read the spec for detailed requirements
+cat .omni/ralph/prds/<prd-name>/spec.md
+
+# Read progress log to understand patterns and recent work
 cat .omni/ralph/prds/<prd-name>/progress.txt
 ```
 
-**Important sections:**
-- **Codebase Patterns**: Reusable patterns discovered in previous iterations
-- **Progress Log**: Recent work, files changed, and learnings
+**Important:**
+- The **spec.md** contains the feature requirements
+- The **progress.txt** contains patterns discovered in previous iterations
+- The **lastRun** field in prd.json shows where the previous run stopped
 
 ### 2. Verify Branch
 
 Check you're on the correct branch specified in the PRD:
+
 ```bash
 git branch --show-current
 ```
 
-If not on the right branch, either check it out or create it from main:
+If not on the right branch:
 ```bash
 git checkout <branch-name>
-# OR
+# OR create it
 git checkout -b <branch-name> main
 ```
 
 ### 3. Pick Next Story
 
-Read the PRD to find the highest priority story where `passes: false`:
-```bash
-cat .omni/ralph/prds/<prd-name>/prd.json
-```
+Look at `prd.json` and find the next story to work on:
 
-Look for the story with the lowest `priority` number that has `passes: false`.
+1. Find stories with `status: "in_progress"` first (resume interrupted work)
+2. Otherwise, find the lowest `priority` story with `status: "pending"`
+3. Skip stories with `status: "blocked"` (waiting for user input)
 
-### 4. Read the Spec File
+### 4. Implement the Story
 
-**CRITICAL**: The PRD story is just an overview. Read the full spec file for implementation details:
-```bash
-cat .omni/ralph/prds/<prd-name>/specs/<spec-file>
-```
+Follow the spec requirements and the story's acceptance criteria:
 
-The spec contains:
-- **Introduction**: What needs to be done and why
-- **Goals**: What we're trying to achieve
-- **Functional Requirements**: Specific behaviors
-- **Technical Considerations**: Code examples and patterns
-- **Touchpoints**: Files to create/modify
-- **Dependencies**: What needs to exist first
+- Implement ONLY what's needed for this story
+- Follow patterns from progress.txt
+- Keep changes focused and minimal
 
-Pay attention to the story's `scope` field - it tells you which part of the spec to implement.
-
-### 5. Implement the Story
-
-Follow the spec's requirements:
-- Create or modify files listed in **Touchpoints**
-- Follow patterns from **Technical Considerations**
-- Use codebase patterns from progress.txt
-- Implement ONLY what's in the story's `scope`
-
-### 6. Run Quality Checks
+### 5. Run Quality Checks
 
 Before committing, ensure all checks pass:
+
 ```bash
 bun run check      # Runs typecheck + lint + format:check
 bun test           # Run tests
@@ -81,47 +73,53 @@ bun test           # Run tests
 
 Fix any issues before proceeding.
 
-### 7. Commit Changes
+### 6. Commit Changes
 
-When all checks pass, commit with the standard format:
+When all checks pass:
+
 ```bash
 git add .
 git commit -m "feat: [<story-id>] - <story-title>"
 ```
 
-Example: `feat: [US-001] - Set up authentication database schema`
+Example: `feat: [US-001] - Set up database schema`
 
-### 8. Update PRD
+### 7. Update PRD
 
-Mark the story as passed in the PRD:
+Mark the story as completed in prd.json:
+
 ```json
 {
   "id": "US-001",
-  "passes": true  // Changed from false to true
+  "status": "completed"
 }
 ```
 
-Save the updated PRD to `.omni/ralph/prds/<prd-name>/prd.json`.
+Save the updated PRD.
 
-### 9. Append Progress
+### 8. Append Progress
 
-Add an entry to the progress log:
+Add an entry to progress.txt:
+
 ```markdown
-## [Date/Time] - <story-id>
-- Brief description of what was implemented
-- Files changed: file1.ts, file2.ts, file3.ts
-- **Learnings for future iterations:**
-  - Pattern or gotcha discovered
-  - Approach that worked well
-  - Avoid this mistake
+## [Date/Time] - US-001: Story Title
+
+**What was done:**
+- Brief description of implementation
+
+**Files changed:**
+- file1.ts
+- file2.ts
+
+**Patterns discovered:**
+- Pattern or approach that worked well
+
 ---
 ```
 
-Append this to `.omni/ralph/prds/<prd-name>/progress.txt`.
+### 9. Check for Completion
 
-### 10. Check for Completion
-
-After updating the PRD, check if ALL stories have `passes: true`.
+After updating the PRD, check if ALL stories have `status: "completed"`.
 
 If ALL stories are complete, reply with:
 ```
@@ -130,16 +128,51 @@ If ALL stories are complete, reply with:
 
 Otherwise, end your response normally. Ralph will spawn the next iteration.
 
+## Handling Blocked Stories
+
+If you cannot complete a story (unclear requirements, missing dependencies, etc.):
+
+1. Set `status: "blocked"` in the story
+2. Add your questions to the `questions` array:
+
+```json
+{
+  "id": "US-003",
+  "status": "blocked",
+  "questions": [
+    "Should the API return 404 or empty array when no results?",
+    "What is the maximum page size for pagination?"
+  ]
+}
+```
+
+3. Reply with a summary explaining why you're blocked
+
+Ralph will stop and present the questions to the user.
+
 ## Key Principles
 
-- **Work on ONE story per iteration**: Never implement multiple stories at once
-- **Read the spec first**: The story title is just a summary - the spec has the details
-- **Follow the scope**: Only implement what's in the story's `scope` field
-- **Keep checks green**: Never commit failing tests or lint errors
-- **Document learnings**: Help future iterations by adding patterns to progress.txt
-- **No type escape hatches**: Don't use `any` or `as unknown` - use proper types
+- **One story per iteration** - Never implement multiple stories at once
+- **Read the spec first** - The story title is just a summary
+- **Keep checks green** - Never commit failing tests or lint errors
+- **Document patterns** - Help future iterations by updating progress.txt
+- **Ask when blocked** - Use the questions array, don't guess
 
 ## Example Iteration
 
 ```
 User: Continue working on the Ralph PRD
+
+Agent:
+1. Reads prd.json - finds US-002 is next (pending, priority 2)
+2. Reads spec.md - understands the requirements
+3. Reads progress.txt - sees patterns from US-001
+4. Implements US-002 following the spec
+5. Runs checks - all pass
+6. Commits: "feat: [US-002] - Add login endpoint"
+7. Updates prd.json - sets US-002 to completed
+8. Appends progress.txt with what was done
+9. Checks - US-003 still pending, so ends normally
+
+Ralph spawns next iteration...
+```

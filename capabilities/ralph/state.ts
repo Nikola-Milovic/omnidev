@@ -6,12 +6,11 @@
 
 import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { PRD, Story } from "./types.js";
+import type { LastRun, PRD, Story, StoryStatus } from "./types.js";
 
 const RALPH_DIR = ".omni/ralph";
 const PRDS_DIR = join(RALPH_DIR, "prds");
 const COMPLETED_PRDS_DIR = join(RALPH_DIR, "completed-prds");
-const ACTIVE_PRD_FILE = join(RALPH_DIR, "active-prd");
 
 /**
  * Get the path to a PRD directory
@@ -36,10 +35,10 @@ function getProgressFilePath(name: string, completed = false): string {
 }
 
 /**
- * Get the path to the specs directory
+ * Get the path to the spec file
  */
-function getSpecsPath(name: string, completed = false): string {
-	return join(getPRDPath(name, completed), "specs");
+function getSpecFilePath(name: string, completed = false): string {
+	return join(getPRDPath(name, completed), "spec.md");
 }
 
 /**
@@ -76,30 +75,6 @@ export async function listPRDs(includeCompleted = false): Promise<string[]> {
 }
 
 /**
- * Find an archived PRD by base name (searches for YYYY-MM-DD-{name} pattern)
- */
-function findArchivedPRD(baseName: string): string | null {
-	const completedDir = join(process.cwd(), COMPLETED_PRDS_DIR);
-
-	if (!existsSync(completedDir)) {
-		return null;
-	}
-
-	const entries = readdirSync(completedDir, { withFileTypes: true });
-
-	for (const entry of entries) {
-		if (entry.isDirectory() && entry.name.endsWith(`-${baseName}`)) {
-			const archivedPath = join(completedDir, entry.name, "prd.json");
-			if (existsSync(archivedPath)) {
-				return archivedPath;
-			}
-		}
-	}
-
-	return null;
-}
-
-/**
  * Get a PRD by name
  */
 export async function getPRD(name: string): Promise<PRD> {
@@ -108,29 +83,21 @@ export async function getPRD(name: string): Promise<PRD> {
 
 	// If not found, try completed PRDs
 	if (!existsSync(prdPath)) {
-		// Try with exact name first
 		prdPath = getPRDFilePath(name, true);
-
-		// If still not found, search for archived PRD with timestamp prefix
 		if (!existsSync(prdPath)) {
-			const archivedPath = findArchivedPRD(name);
-			if (archivedPath) {
-				prdPath = archivedPath;
-			} else {
-				throw new Error(`PRD not found: ${name}`);
-			}
+			throw new Error(`PRD not found: ${name}`);
 		}
 	}
 
 	const content = await Bun.file(prdPath).text();
 	const prd = JSON.parse(content) as PRD;
 
-	// Validate PRD structure (check for undefined/null, not empty strings)
+	// Validate PRD structure
 	if (
 		prd.name === undefined ||
 		prd.branchName === undefined ||
 		prd.description === undefined ||
-		prd.userStories === undefined
+		prd.stories === undefined
 	) {
 		throw new Error(`Invalid PRD structure: ${name}`);
 	}
@@ -139,56 +106,17 @@ export async function getPRD(name: string): Promise<PRD> {
 }
 
 /**
- * Create a new PRD
- */
-export async function createPRD(name: string, options: Partial<PRD> = {}): Promise<PRD> {
-	const prdPath = getPRDPath(name, false);
-
-	// Check if PRD already exists
-	if (existsSync(prdPath)) {
-		throw new Error(`PRD already exists: ${name}`);
-	}
-
-	// Create PRD directory structure
-	mkdirSync(prdPath, { recursive: true });
-	mkdirSync(getSpecsPath(name, false), { recursive: true });
-
-	// Create PRD object
-	const prd: PRD = {
-		name,
-		branchName: options.branchName || `ralph/${name}`,
-		description: options.description || "",
-		createdAt: options.createdAt || new Date().toISOString(),
-		userStories: options.userStories || [],
-	};
-
-	// Write PRD to file
-	const prdFilePath = getPRDFilePath(name, false);
-	await Bun.write(prdFilePath, JSON.stringify(prd, null, 2));
-
-	// Create empty progress file
-	const progressPath = getProgressFilePath(name, false);
-	await Bun.write(progressPath, "## Codebase Patterns\n\n---\n\n## Progress Log\n\n");
-
-	return prd;
-}
-
-/**
  * Update an existing PRD
  */
 export async function updatePRD(name: string, updates: Partial<PRD>): Promise<PRD> {
-	// Get existing PRD
 	const existingPRD = await getPRD(name);
 
-	// Merge updates
 	const updatedPRD: PRD = {
 		...existingPRD,
 		...updates,
-		// Ensure name doesn't change
-		name: existingPRD.name,
+		name: existingPRD.name, // Ensure name doesn't change
 	};
 
-	// Write updated PRD
 	const prdPath = getPRDFilePath(name, false);
 	await Bun.write(prdPath, JSON.stringify(updatedPRD, null, 2));
 
@@ -214,101 +142,57 @@ export async function archivePRD(name: string): Promise<void> {
 	const archiveName = `${timestamp}-${name}`;
 	const completedPath = getPRDPath(archiveName, true);
 
-	// Check if archive already exists
 	if (existsSync(completedPath)) {
 		throw new Error(`Archive already exists: ${archiveName}`);
 	}
 
-	// Move directory using Bun's file system API
 	const { renameSync } = await import("node:fs");
 	renameSync(activePath, completedPath);
 }
 
 /**
- * Delete a PRD (with confirmation)
- */
-export async function deletePRD(name: string): Promise<void> {
-	const activePath = getPRDPath(name, false);
-
-	let pathToDelete: string | null = null;
-
-	if (existsSync(activePath)) {
-		pathToDelete = activePath;
-	} else {
-		// Try exact completed path
-		const completedPath = getPRDPath(name, true);
-		if (existsSync(completedPath)) {
-			pathToDelete = completedPath;
-		} else {
-			// Search for archived PRD with timestamp prefix
-			const archivedPath = findArchivedPRD(name);
-			if (archivedPath) {
-				// Get directory path from file path
-				pathToDelete = join(archivedPath, "..");
-			}
-		}
-	}
-
-	if (!pathToDelete) {
-		throw new Error(`PRD not found: ${name}`);
-	}
-
-	// Delete directory recursively
-	const { rmSync } = await import("node:fs");
-	rmSync(pathToDelete, { recursive: true, force: true });
-}
-
-/**
- * Get the next incomplete story from a PRD
+ * Get the next pending story from a PRD (sorted by priority)
  */
 export async function getNextStory(prdName: string): Promise<Story | null> {
 	const prd = await getPRD(prdName);
 
-	// Find stories that haven't passed, sorted by priority
-	const incompleteStories = prd.userStories
-		.filter((story) => !story.passes)
+	// Find stories that are pending or in_progress, sorted by priority
+	const workableStories = prd.stories
+		.filter((story) => story.status === "pending" || story.status === "in_progress")
 		.sort((a, b) => a.priority - b.priority);
 
-	const firstStory = incompleteStories[0];
-	return firstStory !== undefined ? firstStory : null;
+	return workableStories[0] ?? null;
 }
 
 /**
- * Mark a story as passed
+ * Update a story's status
  */
-export async function markStoryPassed(prdName: string, storyId: string): Promise<void> {
+export async function updateStoryStatus(
+	prdName: string,
+	storyId: string,
+	status: StoryStatus,
+	questions?: string[],
+): Promise<void> {
 	const prd = await getPRD(prdName);
 
-	// Find the story
-	const story = prd.userStories.find((s) => s.id === storyId);
+	const story = prd.stories.find((s) => s.id === storyId);
 	if (!story) {
 		throw new Error(`Story not found: ${storyId}`);
 	}
 
-	// Mark as passed
-	story.passes = true;
+	story.status = status;
+	if (questions !== undefined) {
+		story.questions = questions;
+	}
 
-	// Update PRD
-	await updatePRD(prdName, { userStories: prd.userStories });
+	await updatePRD(prdName, { stories: prd.stories });
 }
 
 /**
- * Mark a story as failed
+ * Update the lastRun field in PRD
  */
-export async function markStoryFailed(prdName: string, storyId: string): Promise<void> {
-	const prd = await getPRD(prdName);
-
-	// Find the story
-	const story = prd.userStories.find((s) => s.id === storyId);
-	if (!story) {
-		throw new Error(`Story not found: ${storyId}`);
-	}
-
-	// Mark as failed
-	story.passes = false;
-
-	// Update PRD
-	await updatePRD(prdName, { userStories: prd.userStories });
+export async function updateLastRun(prdName: string, lastRun: LastRun): Promise<void> {
+	await updatePRD(prdName, { lastRun });
 }
 
 /**
@@ -317,13 +201,11 @@ export async function markStoryFailed(prdName: string, storyId: string): Promise
 export async function appendProgress(prdName: string, content: string): Promise<void> {
 	const progressPath = getProgressFilePath(prdName, false);
 
-	// Read existing content
 	let existingContent = "";
 	if (existsSync(progressPath)) {
 		existingContent = await Bun.file(progressPath).text();
 	}
 
-	// Append new content
 	const updatedContent = `${existingContent}\n${content}\n`;
 	await Bun.write(progressPath, updatedContent);
 }
@@ -342,59 +224,30 @@ export async function getProgress(prdName: string): Promise<string> {
 }
 
 /**
- * Extract codebase patterns from the progress log
+ * Get the spec file content
  */
-export async function getPatterns(prdName: string): Promise<string[]> {
-	const progressContent = await getProgress(prdName);
-	const lines = progressContent.split("\n");
-	const patterns: string[] = [];
-	let inPatternsSection = false;
+export async function getSpec(prdName: string): Promise<string> {
+	const specPath = getSpecFilePath(prdName, false);
 
-	for (const line of lines) {
-		if (line.startsWith("## Codebase Patterns")) {
-			inPatternsSection = true;
-			continue;
-		}
-		if (line.startsWith("## ") && inPatternsSection) {
-			break;
-		}
-		if (inPatternsSection && line.startsWith("- ")) {
-			patterns.push(line.slice(2));
-		}
+	if (!existsSync(specPath)) {
+		throw new Error(`Spec file not found for PRD: ${prdName}`);
 	}
 
-	return patterns;
+	return await Bun.file(specPath).text();
 }
 
 /**
- * Get the currently active PRD name
+ * Check if all stories in a PRD are completed
  */
-export async function getActivePRD(): Promise<string | null> {
-	const activePRDPath = join(process.cwd(), ACTIVE_PRD_FILE);
-
-	if (!existsSync(activePRDPath)) {
-		return null;
-	}
-
-	const content = await Bun.file(activePRDPath).text();
-	return content.trim();
+export async function isPRDComplete(prdName: string): Promise<boolean> {
+	const prd = await getPRD(prdName);
+	return prd.stories.every((story) => story.status === "completed");
 }
 
 /**
- * Set the currently active PRD
+ * Check if any stories are blocked
  */
-export async function setActivePRD(name: string): Promise<void> {
-	// Verify PRD exists
-	const prdPath = getPRDPath(name, false);
-	if (!existsSync(prdPath)) {
-		throw new Error(`PRD not found: ${name}`);
-	}
-
-	// Create Ralph directory if it doesn't exist
-	const ralphDir = join(process.cwd(), RALPH_DIR);
-	mkdirSync(ralphDir, { recursive: true });
-
-	// Write active PRD name
-	const activePRDPath = join(process.cwd(), ACTIVE_PRD_FILE);
-	await Bun.write(activePRDPath, name);
+export async function hasBlockedStories(prdName: string): Promise<Story[]> {
+	const prd = await getPRD(prdName);
+	return prd.stories.filter((story) => story.status === "blocked");
 }

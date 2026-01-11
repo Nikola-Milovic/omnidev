@@ -11,7 +11,6 @@ const RALPH_DIR = ".omni/ralph";
 const PRDS_DIR = join(RALPH_DIR, "prds");
 const COMPLETED_PRDS_DIR = join(RALPH_DIR, "completed-prds");
 const CONFIG_PATH = join(RALPH_DIR, "config.toml");
-const GITIGNORE_PATH = ".gitignore";
 
 const DEFAULT_CONFIG = `[ralph]
 default_agent = "claude"
@@ -49,35 +48,5 @@ export async function sync(): Promise<void> {
 		console.log(`Ralph: Created default config at ${CONFIG_PATH}`);
 	}
 
-	// Update .gitignore
-	await updateGitignore();
-
 	console.log("Ralph: Sync complete");
-}
-
-/**
- * Updates .gitignore to include .omni/ralph/ if not present.
- */
-async function updateGitignore(): Promise<void> {
-	const entry = ".omni/ralph/";
-
-	let content = "";
-	if (existsSync(GITIGNORE_PATH)) {
-		content = await Bun.file(GITIGNORE_PATH).text();
-	}
-
-	// Check if entry already exists
-	if (content.includes(entry)) {
-		return;
-	}
-
-	// Add entry with section header
-	const newContent = content.endsWith("\n") ? content : `${content}\n`;
-	const ralphSection = `
-# Ralph AI Orchestrator
-${entry}
-`;
-
-	await Bun.write(GITIGNORE_PATH, newContent + ralphSection);
-	console.log("Ralph: Updated .gitignore");
 }

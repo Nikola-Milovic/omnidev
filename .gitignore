@@ -4,6 +4,9 @@ prd.json
 progress.txt
 scripts/ralph/.last-branch
 
+# OmniDev runtime files
+.omni/
+
 # Dependencies
 node_modules/
 
@@ -30,6 +33,3 @@ Thumbs.db
 
 .direnv
 .agent/settings.local.json
-
-# Ralph AI Orchestrator
-.omni/ralph/

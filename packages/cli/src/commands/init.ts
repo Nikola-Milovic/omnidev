@@ -180,6 +180,9 @@ sandbox/
 # Logs
 *.log
 
+# MCP server process ID
+server.pid
+
 # Capability-specific patterns are appended below by each capability
 `;
 }

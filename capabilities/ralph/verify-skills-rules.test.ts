@@ -1,9 +1,11 @@
 import { describe, test, expect } from "bun:test";
-import { join } from "node:path";
 import { loadSkills, loadRules } from "@omnidev/core";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 describe("Ralph Capability - Skills and Rules Discovery", () => {
-	const ralphPath = join(process.cwd(), "capabilities", "ralph");
+	// Get the path to the ralph capability directory from this test file's location
+	const ralphPath = dirname(fileURLToPath(import.meta.url));
 
 	test("skills are discovered by loader", async () => {
 		const skills = await loadSkills(ralphPath, "ralph");

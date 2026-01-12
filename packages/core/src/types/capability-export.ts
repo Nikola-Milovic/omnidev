@@ -56,6 +56,32 @@ export interface JSONSchema {
 }
 
 /**
+ * Subagent export structure
+ *
+ * Defines a subagent that Claude can delegate tasks to.
+ * Uses YAML frontmatter in markdown format for configuration.
+ *
+ * @example
+ * ```typescript
+ * const codeReviewer: SubagentExport = {
+ *   subagentMd: `---
+ * name: code-reviewer
+ * description: Reviews code for quality and best practices
+ * tools: Read, Glob, Grep
+ * model: sonnet
+ * ---
+ *
+ * You are a code reviewer. When invoked, analyze the code and provide
+ * specific, actionable feedback on quality, security, and best practices.`
+ * };
+ * ```
+ */
+export interface SubagentExport {
+	/** SUBAGENT.md content (markdown with YAML frontmatter) */
+	subagentMd: string;
+}
+
+/**
  * Sandbox tool export structure
  *
  * Defines a tool that can be called from sandbox code via omni_execute.
@@ -161,6 +187,9 @@ export interface CapabilityExport {
 
 	/** Skills (programmatic - optional, can also use skills/ directory) */
 	skills?: SkillExport[];
+
+	/** Subagents (programmatic - optional, can also use subagents/ directory) */
+	subagents?: SubagentExport[];
 
 	/** Gitignore patterns */
 	gitignore?: string[];

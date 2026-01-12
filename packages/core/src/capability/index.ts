@@ -4,3 +4,4 @@ export type { CapabilityRegistry } from "./registry";
 export { buildCapabilityRegistry } from "./registry";
 export { loadRules, writeRules } from "./rules";
 export { loadSkills } from "./skills";
+export { loadSubagents } from "./subagents";

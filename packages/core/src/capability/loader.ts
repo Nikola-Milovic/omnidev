@@ -2,11 +2,12 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { validateEnv } from "../config/env";
 import { parseCapabilityConfig } from "../config/parser";
-import type { CapabilityConfig, Doc, LoadedCapability, Rule, Skill } from "../types";
-import type { DocExport, SkillExport } from "../types/capability-export";
+import type { CapabilityConfig, Doc, LoadedCapability, Rule, Skill, Subagent } from "../types";
+import type { DocExport, SkillExport, SubagentExport } from "../types/capability-export";
 import { loadDocs } from "./docs";
 import { loadRules } from "./rules";
 import { loadSkills } from "./skills";
+import { loadSubagents } from "./subagents";
 
 const CAPABILITIES_DIR = ".omni/capabilities";
 const BUILTIN_CAPABILITIES_DIR = "capabilities";
@@ -260,6 +261,98 @@ function convertDocExports(docExports: unknown[], capabilityId: string): Doc[] {
 }
 
 /**
+ * Convert programmatic subagent exports to Subagent objects
+ * Parses SubagentExport markdown with YAML frontmatter
+ */
+function convertSubagentExports(subagentExports: unknown[], capabilityId: string): Subagent[] {
+	return subagentExports.map((subagentExport) => {
+		// Check if it's already a Subagent object (old format)
+		if (
+			typeof subagentExport === "object" &&
+			subagentExport !== null &&
+			"name" in subagentExport &&
+			"systemPrompt" in subagentExport
+		) {
+			return subagentExport as Subagent;
+		}
+
+		// Otherwise, treat as SubagentExport (markdown with YAML frontmatter)
+		const exportObj = subagentExport as SubagentExport;
+		const lines = exportObj.subagentMd.split("\n");
+		let name = "unnamed";
+		let description = "";
+		let systemPrompt = exportObj.subagentMd;
+		let tools: string[] | undefined;
+		let disallowedTools: string[] | undefined;
+		let model: string | undefined;
+		let permissionMode: string | undefined;
+		let skills: string[] | undefined;
+
+		// Simple YAML frontmatter parser
+		if (lines[0]?.trim() === "---") {
+			const endIndex = lines.findIndex((line, i) => i > 0 && line.trim() === "---");
+			if (endIndex > 0) {
+				const frontmatter = lines.slice(1, endIndex);
+				systemPrompt = lines
+					.slice(endIndex + 1)
+					.join("\n")
+					.trim();
+
+				for (const line of frontmatter) {
+					const match = line.match(/^(\w+):\s*(.+)$/);
+					if (match?.[1] && match[2]) {
+						const key = match[1];
+						const value = match[2].replace(/^["']|["']$/g, "");
+						switch (key) {
+							case "name":
+								name = value;
+								break;
+							case "description":
+								description = value;
+								break;
+							case "tools":
+								tools = value.split(",").map((t) => t.trim());
+								break;
+							case "disallowedTools":
+								disallowedTools = value.split(",").map((t) => t.trim());
+								break;
+							case "model":
+								model = value;
+								break;
+							case "permissionMode":
+								permissionMode = value;
+								break;
+							case "skills":
+								skills = value.split(",").map((s) => s.trim());
+								break;
+						}
+					}
+				}
+			}
+		}
+
+		const result: Subagent = {
+			name,
+			description,
+			systemPrompt,
+			capabilityId,
+		};
+
+		if (tools) result.tools = tools;
+		if (disallowedTools) result.disallowedTools = disallowedTools;
+		if (model) {
+			result.model = model as NonNullable<Subagent["model"]>;
+		}
+		if (permissionMode) {
+			result.permissionMode = permissionMode as NonNullable<Subagent["permissionMode"]>;
+		}
+		if (skills) result.skills = skills;
+
+		return result;
+	});
+}
+
+/**
  * Loads a complete capability including config, skills, rules, docs, and exports.
  * Validates environment requirements before loading.
  *
@@ -302,6 +395,11 @@ export async function loadCapability(
 			? convertDocExports(exportsAny.docs, id)
 			: await loadDocs(capabilityPath, id);
 
+	const subagents =
+		"subagents" in exports && Array.isArray(exportsAny.subagents)
+			? convertSubagentExports(exportsAny.subagents, id)
+			: await loadSubagents(capabilityPath, id);
+
 	const typeDefinitionsFromExports =
 		"typeDefinitions" in exports && typeof exportsAny.typeDefinitions === "string"
 			? (exportsAny.typeDefinitions as string)
@@ -326,6 +424,7 @@ export async function loadCapability(
 		skills,
 		rules,
 		docs,
+		subagents,
 		exports,
 	};
 

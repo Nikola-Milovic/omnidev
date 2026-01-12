@@ -7,6 +7,12 @@ export interface CapabilityMetadata {
 	name: string;
 	version: string;
 	description: string;
+	/** Optional metadata about the capability author and source */
+	metadata?: {
+		author?: string;
+		repository?: string;
+		license?: string;
+	};
 }
 
 export interface CapabilityExports {
@@ -74,6 +80,88 @@ export interface Doc {
 	capabilityId: string;
 }
 
+export type SubagentModel = "sonnet" | "opus" | "haiku" | "inherit";
+export type SubagentPermissionMode =
+	| "default"
+	| "acceptEdits"
+	| "dontAsk"
+	| "bypassPermissions"
+	| "plan";
+
+export interface SubagentHookConfig {
+	matcher?: string;
+	hooks: {
+		type: "command";
+		command: string;
+	}[];
+}
+
+export interface SubagentHooks {
+	PreToolUse?: SubagentHookConfig[];
+	PostToolUse?: SubagentHookConfig[];
+	Stop?: SubagentHookConfig[];
+}
+
+export interface Subagent {
+	/** Unique identifier using lowercase letters and hyphens */
+	name: string;
+	/** When Claude should delegate to this subagent */
+	description: string;
+	/** System prompt that guides the subagent's behavior */
+	systemPrompt: string;
+	/** Tools the subagent can use (inherits all if omitted) */
+	tools?: string[];
+	/** Tools to deny (removed from inherited or specified list) */
+	disallowedTools?: string[];
+	/** Model to use: sonnet, opus, haiku, or inherit */
+	model?: SubagentModel;
+	/** Permission mode for the subagent */
+	permissionMode?: SubagentPermissionMode;
+	/** Skills to load into the subagent's context at startup */
+	skills?: string[];
+	/** Lifecycle hooks scoped to this subagent */
+	hooks?: SubagentHooks;
+	/** Capability that provides this subagent */
+	capabilityId: string;
+}
+
+// Remote Capability Types
+export type RemoteCapabilitySourceType = "github" | "git" | "git-ssh";
+
+export interface RemoteCapabilitySource {
+	/** Source URL or shorthand (e.g., "github:user/repo") */
+	source: string;
+	/** Git ref to checkout: tag, branch, or commit hash */
+	ref?: string;
+	/** Subdirectory within the repo containing the capability */
+	path?: string;
+	/** Type of capability: "full" (default) or "skills" (skills-only repo) */
+	type?: "full" | "skills";
+	/** For monorepos: specific capabilities to extract */
+	capabilities?: string[];
+}
+
+export interface RemoteCapabilityLock {
+	/** Original source reference */
+	source: string;
+	/** Exact commit hash */
+	commit: string;
+	/** Version from capability.toml or package.json */
+	version: string;
+	/** Pinned ref if specified */
+	ref?: string;
+	/** Last sync timestamp (ISO 8601) */
+	synced_at: string;
+}
+
+export interface RemoteLockFile {
+	capabilities: Record<string, RemoteCapabilityLock>;
+}
+
+export interface RemoteCapabilitiesConfig {
+	capabilities?: Record<string, string | RemoteCapabilitySource>;
+}
+
 // Config Types
 export interface ProfileConfig {
 	capabilities?: string[];
@@ -88,6 +176,8 @@ export interface OmniConfig {
 	providers?: {
 		enabled?: Provider[];
 	};
+	/** Remote capabilities configuration */
+	remote?: RemoteCapabilitiesConfig;
 }
 
 // Provider Types
@@ -104,6 +194,19 @@ export function getActiveProviders(config: ProviderConfig): Provider[] {
 	return ["claude"]; // Default
 }
 
+// Capability Source Types
+export type CapabilitySourceType = "built-in" | "local" | "remote";
+
+export interface CapabilitySource {
+	type: CapabilitySourceType;
+	/** For remote capabilities: the source URL/shorthand */
+	remote?: string;
+	/** For remote capabilities: the pinned ref if any */
+	ref?: string;
+	/** For remote capabilities: the current commit hash */
+	commit?: string;
+}
+
 // Loaded Capability
 export interface LoadedCapability {
 	id: string;
@@ -112,7 +215,10 @@ export interface LoadedCapability {
 	skills: Skill[];
 	rules: Rule[];
 	docs: Doc[];
+	subagents: Subagent[];
 	typeDefinitions?: string;
 	gitignore?: string[];
 	exports: Record<string, unknown>;
+	/** Where this capability comes from */
+	source?: CapabilitySource;
 }

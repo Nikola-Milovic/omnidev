@@ -20,20 +20,21 @@ OmniDev is a meta-MCP that eliminates context bloat by exposing only **2 tools**
 3. [Architecture Overview](#architecture-overview)
 4. [The Two MCP Tools](#the-two-mcp-tools)
 5. [Capabilities System](#capabilities-system)
-6. [Dependency Management & Workspaces](#dependency-management--workspaces)
-7. [Environment & Secrets](#environment--secrets)
-8. [Skills & Rules System](#skills--rules-system)
-9. [Agent Sync & Multi-Provider Support](#agent-sync--multi-provider-support)
-10. [Sandbox Environment](#sandbox-environment)
-11. [Git Safety Layer](#git-safety-layer)
-12. [Directory Structure](#directory-structure)
-13. [Configuration System](#configuration-system)
-14. [Profiles System](#profiles-system)
-15. [Ralph - AI Agent Orchestrator](#ralph---ai-agent-orchestrator)
-16. [CLI Interface](#cli-interface)
-17. [Demo Scenarios](#demo-scenarios)
-18. [Technical Notes](#technical-notes)
-19. [Future Features](#future-features)
+6. [Remote Capabilities & Versioning](#remote-capabilities--versioning)
+7. [Dependency Management & Workspaces](#dependency-management--workspaces)
+8. [Environment & Secrets](#environment--secrets)
+9. [Skills & Rules System](#skills--rules-system)
+10. [Agent Sync & Multi-Provider Support](#agent-sync--multi-provider-support)
+11. [Sandbox Environment](#sandbox-environment)
+12. [Git Safety Layer](#git-safety-layer)
+13. [Directory Structure](#directory-structure)
+14. [Configuration System](#configuration-system)
+15. [Profiles System](#profiles-system)
+16. [Ralph - AI Agent Orchestrator](#ralph---ai-agent-orchestrator)
+17. [CLI Interface](#cli-interface)
+18. [Demo Scenarios](#demo-scenarios)
+19. [Technical Notes](#technical-notes)
+20. [Future Features](#future-features)
 
 ---
 
@@ -629,6 +630,254 @@ OmniDev checks exports first, then falls back to filesystem:
 *   **Manual**: Drop a folder into `omni/capabilities/`.
 *   **Hub (Future)**: `omnidev install <capability>` downloads from a registry.
 *   **Composition**: A user can mix and match. A "DevOps" capability might contain `kubectl` MCP (via `capability.toml`) AND a custom TypeScript module to parse logs (`tools/parser.ts`) AND documentation on deployment policy (`docs/deploy.md`) AND CLI commands (`cli/commands.ts`).
+
+---
+
+## Remote Capabilities & Versioning
+
+OmniDev supports dynamic capabilities sourced from GitHub repositories. These capabilities are automatically synchronized during `omnidev sync`, ensuring you always have the latest version without manual copy-paste.
+
+### The Problem
+
+1. **Manual Updates**: Copying capability code between projects leads to version drift
+2. **No Version Tracking**: Hard to know which version of a capability is installed
+3. **Community Sharing**: No easy way to share and consume capabilities from the community
+4. **Skills Repositories**: Third-party skill repositories (e.g., `obsidian-skills`) require manual extraction
+
+### The Solution: Remote Capabilities
+
+Remote capabilities are GitHub repositories that follow the standard capability structure. OmniDev clones them locally and keeps them synchronized.
+
+### Capability Versioning
+
+All capabilities (local and remote) support versioning through `capability.toml` and optionally `package.json`.
+
+**Version Sources (precedence order):**
+1. `capability.toml` → `[capability].version`
+2. `package.json` → `version` field
+3. For remote capabilities: Git commit hash as fallback
+
+**capability.toml versioning:**
+
+```toml
+[capability]
+id = "my-capability"
+name = "My Capability"
+version = "1.2.0"           # Semantic version
+description = "A versioned capability"
+
+[capability.metadata]
+author = "Your Name"
+repository = "https://github.com/user/my-capability"
+license = "MIT"
+```
+
+### Remote Capability Configuration
+
+Remote capabilities are defined in `omni/config.toml` using the `[remote]` table:
+
+```toml
+# omni/config.toml
+[remote.capabilities]
+# Simple GitHub repository reference
+obsidian-skills = "github:anthropics/obsidian-skills"
+
+# Full configuration with options
+aws-tools = {
+  source = "github:company/aws-tools",
+  ref = "v2.1.0",           # Pin to tag, branch, or commit
+  path = "capabilities/aws" # Subdirectory within repo (optional)
+}
+
+# Multiple capabilities from a monorepo
+[remote.capabilities.skills-hub]
+source = "github:anthropics/claude-code-skills"
+capabilities = ["obsidian", "git-workflow", "code-review"]  # Extract specific capabilities
+
+# SSH source for private repos
+internal-tools = { source = "git@github.com:company/internal-tools.git" }
+```
+
+### Remote Source Formats
+
+OmniDev supports multiple source formats:
+
+| Format | Example | Use Case |
+|--------|---------|----------|
+| **GitHub shorthand** | `github:user/repo` | Public GitHub repos |
+| **GitHub with ref** | `github:user/repo#v1.0.0` | Pinned version |
+| **Git URL** | `https://github.com/user/repo.git` | Any Git host |
+| **Git SSH** | `git@github.com:user/repo.git` | Private repos with SSH |
+
+### Repository Structure for Skill Collections
+
+For repositories that contain multiple skills (like `obsidian-skills`), OmniDev supports two patterns:
+
+**Pattern 1: Skills-only repository**
+```
+obsidian-skills/
+├── README.md
+├── LICENSE
+└── skills/
+    ├── note-taking/
+    │   └── SKILL.md
+    ├── daily-notes/
+    │   └── SKILL.md
+    └── knowledge-graph/
+        └── SKILL.md
+```
+
+Configuration:
+```toml
+[remote.capabilities.obsidian]
+source = "github:anthropics/obsidian-skills"
+type = "skills"  # Extract skills/ folder as a capability
+```
+
+**Pattern 2: Full capability repository**
+```
+my-capability/
+├── capability.toml
+├── package.json
+├── index.ts
+├── skills/
+├── rules/
+└── docs/
+```
+
+Configuration:
+```toml
+[remote.capabilities]
+my-capability = "github:user/my-capability"
+```
+
+### Sync Behavior
+
+During `omnidev sync`, remote capabilities are updated:
+
+```bash
+omnidev sync
+# Output:
+# ✓ Syncing remote capabilities...
+#   ↓ obsidian-skills: v1.2.0 → v1.3.0 (updated)
+#   ✓ aws-tools: v2.1.0 (up to date, pinned)
+#   ↓ internal-tools: abc123 → def456 (updated)
+# ✓ Generating agent configuration...
+# ✓ Sync complete (3 capabilities, 12 skills, 5 rules)
+```
+
+**Sync process:**
+1. For each remote capability, fetch latest from Git
+2. If `ref` is specified, checkout that specific version
+3. Otherwise, pull latest from default branch
+4. Update `.omni/remote/` cache with new content
+5. Record commit hash in `.omni/remote.lock.toml`
+6. Continue with normal capability loading
+
+### Local Storage
+
+Remote capabilities are cached in `.omni/remote/`:
+
+```
+.omni/
+├── remote/
+│   ├── obsidian-skills/         # Cloned repository
+│   │   ├── .git/
+│   │   ├── skills/
+│   │   └── ...
+│   └── aws-tools/
+│       └── ...
+├── remote.lock.toml             # Version lock file
+└── ...
+```
+
+**remote.lock.toml:**
+```toml
+# Auto-generated by omnidev sync - DO NOT EDIT
+# Records exact versions for reproducibility
+
+[capabilities.obsidian-skills]
+source = "github:anthropics/obsidian-skills"
+commit = "abc123def456789..."
+version = "1.3.0"
+synced_at = "2026-01-12T10:30:00Z"
+
+[capabilities.aws-tools]
+source = "github:company/aws-tools"
+commit = "fedcba987654321..."
+version = "2.1.0"
+ref = "v2.1.0"  # Pinned
+synced_at = "2026-01-10T08:15:00Z"
+```
+
+### Version Pinning Strategies
+
+| Strategy | Configuration | Behavior |
+|----------|--------------|----------|
+| **Latest** | `source = "github:user/repo"` | Always sync to latest |
+| **Tag** | `ref = "v1.0.0"` | Pin to semantic version tag |
+| **Branch** | `ref = "stable"` | Track a specific branch |
+| **Commit** | `ref = "abc123"` | Pin to exact commit (immutable) |
+
+### CLI Commands
+
+```bash
+# Sync all remote capabilities
+omnidev sync
+
+# Force re-clone (clear cache)
+omnidev sync --force
+
+# Check for updates without applying
+omnidev remote check
+# Output:
+# obsidian-skills: v1.2.0 → v1.3.0 (update available)
+# aws-tools: v2.1.0 (pinned, up to date)
+
+# List remote capabilities
+omnidev remote list
+# Output:
+# obsidian-skills  github:anthropics/obsidian-skills  v1.3.0  (abc123)
+# aws-tools        github:company/aws-tools           v2.1.0  (fedcba, pinned)
+
+# Add a new remote capability
+omnidev remote add github:anthropics/claude-code-skills
+
+# Remove a remote capability
+omnidev remote remove obsidian-skills
+```
+
+### Version Comparison in Capability Metadata
+
+When listing capabilities, version information is displayed:
+
+```bash
+omnidev capability list
+# Output:
+# ID              VERSION  SOURCE                              STATUS
+# ralph           1.0.0    built-in                            enabled
+# tasks           1.0.0    built-in                            enabled
+# obsidian-skills 1.3.0    github:anthropics/obsidian-skills   enabled (remote)
+# aws-tools       2.1.0    github:company/aws-tools            enabled (remote, pinned)
+# my-local-cap    0.1.0    omni/capabilities/my-local-cap      enabled
+```
+
+### Security Considerations
+
+*   **Trust**: Remote capabilities execute code on your machine. Only add repositories you trust.
+*   **Review**: Pin to specific versions (`ref = "v1.0.0"`) for production environments.
+*   **Audit**: Review capability code after sync, especially for capabilities with `index.ts` or `tools/`.
+*   **Private repos**: Use SSH sources and ensure your SSH keys are configured.
+
+### Future: Capabilities Hub
+
+The remote capability system is the foundation for a future **Capabilities Hub**:
+
+*   **Registry**: Central discovery and search for community capabilities
+*   **Verification**: Signed capabilities with author verification
+*   **Rating/Reviews**: Community feedback on capability quality
+*   **Automatic updates**: Opt-in auto-updates with changelogs
+*   **Enterprise**: Private hub instances for organizations
 
 ---
 
@@ -1326,11 +1575,21 @@ Capabilities can contribute commands that appear under `omnidev <capability> <co
 *   **Skills loading**: `skills/*/SKILL.md` files are parsed (YAML frontmatter + Markdown body) and collected at startup.
 *   **Rules loading**: `rules/*.md` from capabilities are collected and filtered by active profile.
 *   **Agent sync**: `omnidev agents sync` compiles skills + rules → `.omni/generated/`. `omnidev profile set` automatically calls sync.
+*   **Remote capabilities**: Cloned to `.omni/remote/<name>/`. Version locked in `.omni/remote.lock.toml`. Sync fetches latest or pinned ref.
+*   **Version resolution**: Check `capability.toml` version first, then `package.json`, then fall back to commit hash for remote capabilities.
 
 ---
 
 ## Future Features
 
 *   **Remote Sandboxes**: Execute code in a cloud container for heavy workloads.
-*   **Capability Hub**: `omnidev install user/capability`.
+*   **Capabilities Hub**: Building on the [Remote Capabilities](#remote-capabilities--versioning) foundation:
+    *   Central registry at `hub.omnidev.dev` for discovery and search
+    *   `omnidev install user/capability` as shorthand for adding remote capabilities
+    *   Verified publishers with signed capability packages
+    *   Community ratings, reviews, and usage statistics
+    *   Automatic update notifications with changelogs
+    *   Enterprise private hub instances for organizations
+    *   CLI integration: `omnidev hub search`, `omnidev hub publish`
 *   **Binary Distribution**: Compile to single executable via `bun build --compile`.
+*   **Capability Analytics**: Track which capabilities are most used, performance metrics, and adoption trends.

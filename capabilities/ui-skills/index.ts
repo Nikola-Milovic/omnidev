@@ -1,23 +1,26 @@
-import type { CapabilityExport, SubagentExport } from "@omnidev/core";
+import type { CapabilityExport, CommandExport, SubagentExport } from "@omnidev/core";
 
 /**
- * UI Skills capability - provides subagents for common development tasks.
+ * UI Skills capability - provides subagents and slash commands for common development tasks.
  *
- * This capability demonstrates two approaches for defining subagents:
+ * This capability demonstrates two approaches for defining content:
  *
- * 1. **Static files** (in subagents/ directory):
+ * 1. **Static files** (in directories):
  *    - subagents/code-reviewer/SUBAGENT.md
  *    - subagents/test-runner/SUBAGENT.md
  *    - subagents/db-reader/SUBAGENT.md
+ *    - commands/fix-issue/COMMAND.md
+ *    - commands/review-pr/COMMAND.md
+ *    - commands/run-tests/COMMAND.md
  *
  * 2. **Programmatic exports** (below):
  *    - Useful for dynamic generation or complex configurations
  *    - Takes precedence over static files if both are present
  *
  * Static files are loaded automatically. Programmatic exports are useful when:
- * - You need to generate subagent prompts dynamically
- * - You want to include complex hook configurations
- * - You need to share logic between multiple subagents
+ * - You need to generate content dynamically
+ * - You want to include complex configurations
+ * - You need to share logic between multiple items
  */
 
 // Example of a programmatically defined subagent
@@ -66,13 +69,59 @@ Suggestions for improvements or areas needing attention.
 `,
 };
 
+// Example of a programmatically defined command
+// This shows how to create commands with full control over configuration
+const optimizeCommand: CommandExport = {
+	commandMd: `---
+name: optimize
+description: Analyze code for performance issues and suggest optimizations
+allowed-tools: Bash(node --prof:*), Bash(python -m cProfile:*)
+---
+
+Analyze $ARGUMENTS for performance issues and suggest optimizations.
+
+## Analysis Steps
+
+1. **Profile the code**: Run performance profiling tools
+2. **Identify bottlenecks**: Look for:
+   - Inefficient algorithms (O(n²) or worse)
+   - Unnecessary loops or iterations
+   - Memory leaks
+   - Blocking I/O operations
+   - Unoptimized database queries
+
+3. **Suggest optimizations**:
+   - Algorithm improvements
+   - Caching strategies
+   - Lazy loading
+   - Batch processing
+   - Parallel execution
+
+## Output Format
+
+### Performance Issues Found
+- Issue: [description]
+- Location: @[file:line]
+- Current complexity: O(...)
+- Impact: High/Medium/Low
+
+### Recommended Optimizations
+For each issue:
+1. **Optimization**: [what to change]
+2. **Expected improvement**: [estimated speedup]
+3. **Code example**: [show the optimized version]
+4. **Trade-offs**: [any downsides]
+`,
+};
+
 export default {
-	// Subagents can be exported programmatically
-	// Note: The capability also has static subagents in subagents/ directory
-	// which are loaded automatically (code-reviewer, test-runner, db-reader)
-	// Uncomment below to add programmatic subagents:
+	// Subagents and commands can be exported programmatically
+	// Note: The capability also has static files in subagents/ and commands/ directories
+	// which are loaded automatically
+	// Uncomment below to add programmatic exports:
 	// subagents: [researcherSubagent],
+	// commands: [optimizeCommand],
 } satisfies CapabilityExport;
 
 // Re-export for potential external use
-export { researcherSubagent };
+export { optimizeCommand, researcherSubagent };

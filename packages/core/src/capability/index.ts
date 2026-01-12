@@ -1,3 +1,4 @@
+export { loadCommands } from "./commands";
 export { loadDocs } from "./docs";
 export { discoverCapabilities, loadCapability, loadCapabilityConfig } from "./loader";
 export type { CapabilityRegistry } from "./registry";

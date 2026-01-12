@@ -125,11 +125,26 @@ export interface Subagent {
 	capabilityId: string;
 }
 
-// Remote Capability Types
-export type RemoteCapabilitySourceType = "github" | "git" | "git-ssh";
+export interface Command {
+	/** Command name (used as /command-name) */
+	name: string;
+	/** Brief description of what this command does */
+	description: string;
+	/** Optional allowed tools specification (e.g., "Bash(git add:*), Bash(git status:*)") */
+	allowedTools?: string;
+	/** Command prompt (markdown content with support for $ARGUMENTS, $1, $2, !`commands`, @files) */
+	prompt: string;
+	/** Capability that provides this command */
+	capabilityId: string;
+}
 
-export interface RemoteCapabilitySource {
-	/** Source URL or shorthand (e.g., "github:user/repo") */
+// Capability Source Types
+// Sources: local (manual), git (version via package.json), hub (future)
+export type CapabilitySourceType = "built-in" | "local" | "git" | "hub";
+
+/** Configuration for a Git-sourced capability */
+export interface GitCapabilitySourceConfig {
+	/** Source URL or shorthand (e.g., "github:user/repo", "git@github.com:...") */
 	source: string;
 	/** Git ref to checkout: tag, branch, or commit hash */
 	ref?: string;
@@ -137,29 +152,35 @@ export interface RemoteCapabilitySource {
 	path?: string;
 	/** Type of capability: "full" (default) or "skills" (skills-only repo) */
 	type?: "full" | "skills";
-	/** For monorepos: specific capabilities to extract */
-	capabilities?: string[];
 }
 
-export interface RemoteCapabilityLock {
+/** Lock file entry for a capability (version tracking) */
+export interface CapabilityLockEntry {
 	/** Original source reference */
 	source: string;
-	/** Exact commit hash */
-	commit: string;
 	/** Version from capability.toml or package.json */
 	version: string;
+	/** For git sources: exact commit hash */
+	commit?: string;
 	/** Pinned ref if specified */
 	ref?: string;
-	/** Last sync timestamp (ISO 8601) */
-	synced_at: string;
+	/** Last update timestamp (ISO 8601) */
+	updated_at: string;
 }
 
-export interface RemoteLockFile {
-	capabilities: Record<string, RemoteCapabilityLock>;
+/** Lock file structure (.omni/capabilities.lock.toml) */
+export interface CapabilitiesLockFile {
+	capabilities: Record<string, CapabilityLockEntry>;
 }
 
-export interface RemoteCapabilitiesConfig {
-	capabilities?: Record<string, string | RemoteCapabilitySource>;
+/** Capabilities configuration section in omni/config.toml */
+export interface CapabilitiesConfig {
+	/** List of enabled capability IDs */
+	enable?: string[];
+	/** List of disabled capability IDs */
+	disable?: string[];
+	/** Git-sourced capabilities: id -> source string or full config */
+	sources?: Record<string, string | GitCapabilitySourceConfig>;
 }
 
 // Config Types
@@ -176,8 +197,8 @@ export interface OmniConfig {
 	providers?: {
 		enabled?: Provider[];
 	};
-	/** Remote capabilities configuration */
-	remote?: RemoteCapabilitiesConfig;
+	/** Capabilities configuration (enable/disable, sources) */
+	capabilities?: CapabilitiesConfig;
 }
 
 // Provider Types
@@ -194,17 +215,17 @@ export function getActiveProviders(config: ProviderConfig): Provider[] {
 	return ["claude"]; // Default
 }
 
-// Capability Source Types
-export type CapabilitySourceType = "built-in" | "local" | "remote";
-
+/** Runtime info about where a capability came from */
 export interface CapabilitySource {
 	type: CapabilitySourceType;
-	/** For remote capabilities: the source URL/shorthand */
-	remote?: string;
-	/** For remote capabilities: the pinned ref if any */
+	/** For git-sourced capabilities: the source URL/shorthand */
+	gitSource?: string;
+	/** For git-sourced capabilities: the pinned ref if any */
 	ref?: string;
-	/** For remote capabilities: the current commit hash */
+	/** For git-sourced capabilities: the current commit hash */
 	commit?: string;
+	/** Version from capability.toml or package.json */
+	version?: string;
 }
 
 // Loaded Capability
@@ -216,6 +237,7 @@ export interface LoadedCapability {
 	rules: Rule[];
 	docs: Doc[];
 	subagents: Subagent[];
+	commands: Command[];
 	typeDefinitions?: string;
 	gitignore?: string[];
 	exports: Record<string, unknown>;

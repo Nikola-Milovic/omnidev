@@ -82,6 +82,35 @@ export interface SubagentExport {
 }
 
 /**
+ * Slash command export structure
+ *
+ * Defines a slash command that can be invoked in Claude Code.
+ * Uses YAML frontmatter in markdown format for configuration.
+ *
+ * @example
+ * ```typescript
+ * const fixIssue: CommandExport = {
+ *   commandMd: `---
+ * name: fix-issue
+ * description: Fix a GitHub issue following coding standards
+ * allowed-tools: Bash(git add:*), Bash(git commit:*)
+ * ---
+ *
+ * Fix issue #$ARGUMENTS following our coding standards.
+ *
+ * 1. Read the issue details
+ * 2. Implement the fix
+ * 3. Write tests
+ * 4. Create a commit`
+ * };
+ * ```
+ */
+export interface CommandExport {
+	/** COMMAND.md content (markdown with YAML frontmatter) */
+	commandMd: string;
+}
+
+/**
  * Sandbox tool export structure
  *
  * Defines a tool that can be called from sandbox code via omni_execute.
@@ -190,6 +219,9 @@ export interface CapabilityExport {
 
 	/** Subagents (programmatic - optional, can also use subagents/ directory) */
 	subagents?: SubagentExport[];
+
+	/** Commands (programmatic - optional, can also use commands/ directory) */
+	commands?: CommandExport[];
 
 	/** Gitignore patterns */
 	gitignore?: string[];

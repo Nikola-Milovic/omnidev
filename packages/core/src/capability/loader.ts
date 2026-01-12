@@ -2,8 +2,22 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { validateEnv } from "../config/env";
 import { parseCapabilityConfig } from "../config/parser";
-import type { CapabilityConfig, Doc, LoadedCapability, Rule, Skill, Subagent } from "../types";
-import type { DocExport, SkillExport, SubagentExport } from "../types/capability-export";
+import type {
+	CapabilityConfig,
+	Command,
+	Doc,
+	LoadedCapability,
+	Rule,
+	Skill,
+	Subagent,
+} from "../types";
+import type {
+	CommandExport,
+	DocExport,
+	SkillExport,
+	SubagentExport,
+} from "../types/capability-export";
+import { loadCommands } from "./commands";
 import { loadDocs } from "./docs";
 import { loadRules } from "./rules";
 import { loadSkills } from "./skills";
@@ -353,6 +367,77 @@ function convertSubagentExports(subagentExports: unknown[], capabilityId: string
 }
 
 /**
+ * Convert programmatic command exports to Command objects
+ * Parses CommandExport markdown with YAML frontmatter
+ */
+function convertCommandExports(commandExports: unknown[], capabilityId: string): Command[] {
+	return commandExports.map((commandExport) => {
+		// Check if it's already a Command object (old format)
+		if (
+			typeof commandExport === "object" &&
+			commandExport !== null &&
+			"name" in commandExport &&
+			"prompt" in commandExport
+		) {
+			return commandExport as Command;
+		}
+
+		// Otherwise, treat as CommandExport (markdown with YAML frontmatter)
+		const exportObj = commandExport as CommandExport;
+		const lines = exportObj.commandMd.split("\n");
+		let name = "unnamed";
+		let description = "";
+		let prompt = exportObj.commandMd;
+		let allowedTools: string | undefined;
+
+		// Simple YAML frontmatter parser
+		if (lines[0]?.trim() === "---") {
+			const endIndex = lines.findIndex((line, i) => i > 0 && line.trim() === "---");
+			if (endIndex > 0) {
+				const frontmatter = lines.slice(1, endIndex);
+				prompt = lines
+					.slice(endIndex + 1)
+					.join("\n")
+					.trim();
+
+				for (const line of frontmatter) {
+					const match = line.match(/^(\w+):\s*(.+)$/);
+					if (match?.[1] && match[2]) {
+						const key = match[1];
+						const value = match[2].replace(/^["']|["']$/g, "");
+						switch (key) {
+							case "name":
+								name = value;
+								break;
+							case "description":
+								description = value;
+								break;
+							case "allowedTools":
+							case "allowed-tools":
+								allowedTools = value;
+								break;
+						}
+					}
+				}
+			}
+		}
+
+		const result: Command = {
+			name,
+			description,
+			prompt,
+			capabilityId,
+		};
+
+		if (allowedTools) {
+			result.allowedTools = allowedTools;
+		}
+
+		return result;
+	});
+}
+
+/**
  * Loads a complete capability including config, skills, rules, docs, and exports.
  * Validates environment requirements before loading.
  *
@@ -400,6 +485,11 @@ export async function loadCapability(
 			? convertSubagentExports(exportsAny.subagents, id)
 			: await loadSubagents(capabilityPath, id);
 
+	const commands =
+		"commands" in exports && Array.isArray(exportsAny.commands)
+			? convertCommandExports(exportsAny.commands, id)
+			: await loadCommands(capabilityPath, id);
+
 	const typeDefinitionsFromExports =
 		"typeDefinitions" in exports && typeof exportsAny.typeDefinitions === "string"
 			? (exportsAny.typeDefinitions as string)
@@ -425,6 +515,7 @@ export async function loadCapability(
 		rules,
 		docs,
 		subagents,
+		commands,
 		exports,
 	};
 

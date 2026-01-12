@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { parse } from "@iarna/toml";
+import { parse } from "smol-toml";
 import type { Provider, ProviderConfig } from "../types/index.js";
 
 const PROVIDER_CONFIG_PATH = ".omni/provider.toml";
@@ -10,7 +10,7 @@ export async function loadProviderConfig(): Promise<ProviderConfig> {
 	}
 
 	const content = await Bun.file(PROVIDER_CONFIG_PATH).text();
-	const parsed = parse(content) as ProviderConfig;
+	const parsed = parse(content) as unknown as ProviderConfig;
 	return parsed;
 }
 

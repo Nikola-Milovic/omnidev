@@ -16,6 +16,7 @@ import { handleOmniExecute } from "./tools/execute.js";
 import { handleOmniQuery } from "./tools/query.js";
 import { handleSandboxEnvironment } from "./tools/sandbox-environment.js";
 import { startWatcher } from "./watcher.js";
+import { findFreePort } from "./utils/net.js";
 
 const LOG_FILE = ".omni/logs/mcp-server.log";
 
@@ -180,7 +181,9 @@ export async function startServer(): Promise<void> {
 		const mcpController = new McpController();
 
 		// Start HTTP relay server for sandbox->MCP communication
-		const RELAY_PORT = Number(process.env["OMNI_RELAY_PORT"]) || 9876;
+		// Find a free port starting from 10000
+		const RELAY_PORT = await findFreePort(10000);
+
 		mcpController.setRelayPort(RELAY_PORT);
 		// Keep reference to prevent GC, but we don't need to use it directly
 		const _relayServer = createRelayServer(mcpController, RELAY_PORT);

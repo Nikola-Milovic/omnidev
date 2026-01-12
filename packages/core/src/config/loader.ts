@@ -12,18 +12,21 @@ const LOCAL_CONFIG = ".omni/config.local.toml";
  * @returns Merged config with override values taking precedence
  */
 function mergeConfigs(base: OmniConfig, override: OmniConfig): OmniConfig {
-	return {
-		...base,
-		...override,
-		env: {
-			...base.env,
-			...override.env,
-		},
-		profiles: {
-			...base.profiles,
-			...override.profiles,
-		},
-	};
+	const merged: OmniConfig = { ...base, ...override };
+
+	// Deep merge env
+	merged.env = { ...base.env, ...override.env };
+
+	// Deep merge profiles
+	merged.profiles = { ...base.profiles };
+	for (const [name, profile] of Object.entries(override.profiles || {})) {
+		merged.profiles[name] = {
+			...(base.profiles?.[name] || {}),
+			...profile,
+		};
+	}
+
+	return merged;
 }
 
 /**

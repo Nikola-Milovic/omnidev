@@ -1,6 +1,6 @@
 # OmniDev
 
-> A meta-MCP that eliminates context bloat by exposing only **2 tools** to LLMs while providing unlimited power through a sandboxed coding environment.
+> A meta-MCP that eliminates context bloat by exposing only **3 tools** to LLMs while providing unlimited power through a sandboxed coding environment.
 
 ## The Core Insight
 
@@ -16,17 +16,18 @@ Most AI agents interact with the world through dozens of MCP tools, bloating con
 
 ┌─────────────────────────────────────────────────────────────────┐
 │                      OmniDev Approach                            │
-│   LLM Context: [omni_query, omni_execute]                       │
+│   LLM Context: [omni_query, omni_sandbox_environment,           │
+│                 omni_execute]                                    │
 │   Action: Write Script → Execute → Done                          │
 │                  FAST, PROGRAMMATIC, POWERFUL                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Everything is a Capability.** MCPs become code (`aws.*`), workflows become code (`ralph.*`), docs become searchable context—all accessible through two simple tools.
+**Everything is a Capability.** MCPs become code (`aws.*`), workflows become code (`ralph.*`), docs become searchable context—all accessible through three simple tools.
 
 ## Features
 
-- **🔧 Two MCP Tools** — `omni_query` for discovery, `omni_execute` for action
+- **🔧 Three MCP Tools** — `omni_query` for search, `omni_sandbox_environment` for tool introspection, `omni_execute` for execution
 - **📦 Capability System** — Extensible plugins for MCPs, workflows, docs, CLI commands
 - **🔄 Multi-Provider Sync** — One command generates configs for Claude, Cursor, and more
 - **📝 Skills & Rules** — Define agent behaviors and guidelines per capability
@@ -39,7 +40,8 @@ Most AI agents interact with the world through dozens of MCP tools, bloating con
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        LLM / AI Agent                            │
-│   Only sees 2 tools: omni_query, omni_execute                   │
+│   Only sees 3 tools: omni_query, omni_sandbox_environment,      │
+│                      omni_execute                                │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -145,24 +147,40 @@ omnidev serve
 | `omnidev ralph story list` | List stories in active PRD |
 | `omnidev ralph story pass <id>` | Mark story as passed |
 
-## The Two MCP Tools
+## The Three MCP Tools
 
 ### `omni_query`
 
-Discovery and search without dumping tons of context.
+Search and discovery across capabilities, docs, skills, and rules.
 
 ```json
 {
-  "query": "search query",
-  "limit": 10,
-  "include_types": false
+  "query": "search query"  // Empty query returns summary of enabled capabilities
 }
 ```
 
-- Search across capabilities, docs, and skills
+- Search across capabilities, docs, skills, and rules
 - Returns short snippets with source tags
-- Returns type definitions when `include_types` is true
 - Empty query returns summary of enabled capabilities
+
+### `omni_sandbox_environment`
+
+Discover available sandbox tools with three levels of detail.
+
+```json
+// Level 1: Overview of all modules
+{}
+
+// Level 2: Module details with schemas
+{ "capability": "my-capability" }
+
+// Level 3: Full tool specification
+{ "capability": "my-capability", "tool": "myTool" }
+```
+
+- No params: Overview of all modules and tools (short descriptions)
+- With capability: Details for that module (input/output schemas)
+- With capability + tool: Full specification (JSDoc, examples, detailed docs)
 
 ### `omni_execute`
 

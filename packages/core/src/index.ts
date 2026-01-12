@@ -30,7 +30,5 @@ export * from "./sync";
 // Export templates
 export * from "./templates/agents";
 export * from "./templates/claude";
-// Export test utilities
-export * from "./test-utils";
 // Export core types
 export * from "./types";

@@ -47,34 +47,13 @@ export async function handleOmniExecute(
 	}
 
 	debug("Writing user code to sandbox");
-	// Write code to sandbox wrapped in a main function
 	mkdirSync(".omni/sandbox", { recursive: true });
 
-	// Wrap user code in an async main function that returns 0 on success
-	const wrappedCode = `
-export async function main(): Promise<number> {
-	try {
-		${code}
-		return 0;
-	} catch (error) {
-		console.error(error);
-		return 1;
-	}
-}
-`;
-	await Bun.write(".omni/sandbox/main.ts", wrappedCode);
-
-	// Write a runner that imports and calls main()
-	const runnerCode = `
-import { main } from "./main.ts";
-
-const exitCode = await main();
-process.exit(exitCode);
-`;
-	await Bun.write(".omni/sandbox/_runner.ts", runnerCode);
+	// Write user code directly to main.ts
+	await Bun.write(".omni/sandbox/main.ts", code);
 
 	debug("Executing code...");
-	// Execute with Bun - run the runner which calls main()
+	// Execute main.ts directly with Bun
 	const result = await executeCode();
 	debug("Execution complete", {
 		exitCode: result.exitCode,
@@ -114,7 +93,7 @@ async function executeCode(): Promise<{
 	stderr: string;
 }> {
 	return new Promise((resolve) => {
-		const proc = spawn("bun", ["run", ".omni/sandbox/_runner.ts"], {
+		const proc = spawn("bun", ["run", ".omni/sandbox/main.ts"], {
 			cwd: process.cwd(),
 			env: {
 				...process.env,

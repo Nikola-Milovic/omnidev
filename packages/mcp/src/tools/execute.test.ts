@@ -54,9 +54,8 @@ describe("handleOmniExecute", () => {
 		await handleOmniExecute(mockRegistry, { code });
 
 		const writtenCode = await Bun.file(".omni/sandbox/main.ts").text();
-		// The code should be wrapped in an async main function
+		// The code should be written directly to main.ts
 		expect(writtenCode).toContain(code);
-		expect(writtenCode).toContain("export async function main()");
 	});
 
 	test("should execute code and return stdout", async () => {

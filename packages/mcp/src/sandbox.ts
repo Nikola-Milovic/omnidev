@@ -22,8 +22,8 @@ export async function setupSandbox(capabilities: LoadedCapability[]): Promise<vo
 		const entries = await readdir(SANDBOX_NODE_MODULES);
 		for (const entry of entries) {
 			const entryPath = join(SANDBOX_NODE_MODULES, entry);
-			await rm(entryPath, { recursive: true, force: true }).catch(() => {
-				// Ignore errors
+			await rm(entryPath, { recursive: true, force: true }).catch((error) => {
+				console.error(`Warning: Failed to remove ${entryPath}:`, error);
 			});
 		}
 	}

@@ -23,10 +23,6 @@
 		"noImplicitReturns": true,
 
 		// Emit
-		"declaration": true,
-		"declarationMap": true,
-		"sourceMap": true,
-		"outDir": "./dist",
 		"noEmit": true,
 
 		// Interop Constraints

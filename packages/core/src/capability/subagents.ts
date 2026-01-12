@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Subagent, SubagentHooks, SubagentModel, SubagentPermissionMode } from "../types";
+import { parseFrontmatterWithMarkdown } from "./yaml-parser";
 
 interface SubagentFrontmatter {
 	name: string;
@@ -46,21 +47,14 @@ export async function loadSubagents(
 async function parseSubagentFile(filePath: string, capabilityId: string): Promise<Subagent> {
 	const content = await Bun.file(filePath).text();
 
-	// Parse YAML frontmatter
-	const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+	const parsed = parseFrontmatterWithMarkdown<SubagentFrontmatter>(content);
 
-	if (!frontmatterMatch) {
+	if (!parsed) {
 		throw new Error(`Invalid SUBAGENT.md format at ${filePath}: missing YAML frontmatter`);
 	}
 
-	const yamlStr = frontmatterMatch[1];
-	const systemPrompt = frontmatterMatch[2];
-
-	if (!yamlStr || systemPrompt === undefined) {
-		throw new Error(`Invalid SUBAGENT.md format at ${filePath}: missing YAML or markdown content`);
-	}
-
-	const frontmatter = parseYamlFrontmatter(yamlStr);
+	const frontmatter = parsed.frontmatter;
+	const systemPrompt = parsed.markdown;
 
 	if (!frontmatter.name || !frontmatter.description) {
 		throw new Error(`Invalid SUBAGENT.md at ${filePath}: name and description required`);
@@ -106,25 +100,4 @@ function parseCommaSeparatedList(value: string): string[] {
 		.split(",")
 		.map((item) => item.trim())
 		.filter(Boolean);
-}
-
-function parseYamlFrontmatter(yaml: string): SubagentFrontmatter {
-	const result: Record<string, string | SubagentHooks> = {};
-
-	for (const line of yaml.split("\n")) {
-		// Simple key-value parsing for non-nested values
-		const match = line.match(/^(\w+):\s*"?([^"]*)"?\s*$/);
-		if (match) {
-			const key = match[1];
-			const value = match[2];
-			if (key && value !== undefined && key !== "hooks") {
-				result[key] = value;
-			}
-		}
-	}
-
-	// Note: Complex hooks parsing would require a proper YAML parser
-	// For now, hooks should be specified programmatically via SubagentExport
-
-	return result as unknown as SubagentFrontmatter;
 }

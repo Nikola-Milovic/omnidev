@@ -5,6 +5,10 @@
  * used across the CLI and MCP server packages.
  */
 
+// Re-export @stricli/core for capabilities to use
+// This ensures all capabilities use the same @stricli/core instance as the CLI
+export { buildCommand, buildRouteMap } from "@stricli/core";
+
 export const version = "0.1.0";
 
 export function getVersion(): string {

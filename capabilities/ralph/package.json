@@ -4,7 +4,6 @@
 	"type": "module",
 	"main": "index.ts",
 	"dependencies": {
-		"@omnidev/core": "^0.1.0",
-		"@stricli/core": "^1.2.5"
+		"@omnidev/core": "^0.1.0"
 	}
 }

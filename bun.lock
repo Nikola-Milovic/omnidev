@@ -20,7 +20,6 @@
       "version": "1.0.0",
       "dependencies": {
         "@omnidev/core": "^0.1.0",
-        "@stricli/core": "^1.2.5",
       },
     },
     "capabilities/tasks": {
@@ -50,6 +49,7 @@
       "name": "@omnidev/core",
       "version": "0.1.0",
       "dependencies": {
+        "@stricli/core": "^1.2.5",
         "smol-toml": "^1.6.0",
       },
     },

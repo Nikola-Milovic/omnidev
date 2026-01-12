@@ -112,10 +112,12 @@ You can use **both** approaches! Static files and programmatic exports are merge
 
 Add CLI commands that appear in `omnidev <command>`:
 
-```typescript
-import { buildRouteMap, buildCommand } from "@stricli/core";
+> **Important**: Always import `buildCommand` and `buildRouteMap` from `@omnidev/core`, not from `@stricli/core` directly. This ensures your capability uses the same Stricli instance as the CLI, avoiding "getRoutingTargetForInput is not a function" errors that occur when multiple Stricli instances are loaded.
 
-// Define commands using stricli
+```typescript
+import { buildCommand, buildRouteMap } from "@omnidev/core";
+
+// Define commands using stricli (re-exported from @omnidev/core)
 const myCommand = buildCommand({
   func: async (flags, arg1, arg2) => {
     // Command implementation
@@ -657,7 +659,7 @@ export { getDeploymentStatus } from "./api.js";
 
 **index.ts:**
 ```typescript
-import { buildRouteMap, buildCommand } from "@stricli/core";
+import { buildCommand, buildRouteMap } from "@omnidev/core";
 import type { CapabilityExport } from "@omnidev/core";
 
 // Generate everything programmatically
@@ -996,6 +998,24 @@ All fields in `CapabilityExport` are optional. Only export what your capability 
 3. Run `omnidev sync` and check for error messages
 4. Check that static files are in the correct directories (`docs/`, `rules/`, `skills/`)
 5. Look for warnings about missing or invalid exports
+
+### Q: I'm getting "getRoutingTargetForInput is not a function" error
+
+This error occurs when your capability imports `buildCommand`/`buildRouteMap` from `@stricli/core` directly instead of from `@omnidev/core`. When capabilities install their own copy of `@stricli/core`, it creates duplicate module instances that are incompatible with each other.
+
+**Fix**: Change your imports from:
+```typescript
+// ❌ Wrong - creates duplicate module instance
+import { buildCommand, buildRouteMap } from "@stricli/core";
+```
+
+To:
+```typescript
+// ✅ Correct - uses shared module instance
+import { buildCommand, buildRouteMap } from "@omnidev/core";
+```
+
+Also ensure your `package.json` does NOT list `@stricli/core` as a dependency - it's provided by `@omnidev/core`.
 
 ## Need Help?
 

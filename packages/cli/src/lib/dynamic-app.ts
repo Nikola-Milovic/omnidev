@@ -10,6 +10,7 @@ import { mcpRoutes } from "../commands/mcp";
 import { profileRoutes } from "../commands/profile";
 import { serveCommand } from "../commands/serve";
 import { syncCommand } from "../commands/sync";
+import { debug } from "./debug";
 
 /**
  * Build CLI app with dynamically loaded capability commands
@@ -26,19 +27,36 @@ export async function buildDynamicApp() {
 		mcp: mcpRoutes,
 	};
 
+	debug("Core routes registered", Object.keys(routes));
+
 	// Only load capability commands if initialized
 	if (existsSync(".omni/config.toml")) {
 		try {
 			const capabilityCommands = await loadCapabilityCommands();
+			debug("Capability commands loaded", {
+				commands: Object.keys(capabilityCommands),
+				details: Object.entries(capabilityCommands).map(([name, cmd]) => ({
+					name,
+					type: typeof cmd,
+					// biome-ignore lint/suspicious/noExplicitAny: Debug: access constructor name
+					constructor: (cmd as any)?.constructor?.name,
+					keys: Object.keys(cmd as object),
+					// biome-ignore lint/suspicious/noExplicitAny: Debug: check for method
+					hasGetRoutingTargetForInput: typeof (cmd as any)?.getRoutingTargetForInput,
+				})),
+			});
 			Object.assign(routes, capabilityCommands);
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.warn(`Warning: Failed to load capability commands: ${errorMessage}`);
+			debug("Full error loading capabilities", error);
 			// Continue with core commands only
 		}
 	}
 
-	return buildApplication(
+	debug("Final routes", Object.keys(routes));
+
+	const app = buildApplication(
 		buildRouteMap({
 			// biome-ignore lint/suspicious/noExplicitAny: Dynamic commands from capabilities
 			routes: routes as any,
@@ -53,6 +71,10 @@ export async function buildDynamicApp() {
 			},
 		},
 	);
+
+	debug("App built successfully");
+
+	return app;
 }
 
 /**
@@ -71,7 +93,14 @@ async function loadCapabilityCommands(): Promise<Record<string, unknown>> {
 
 	for (const capability of capabilities) {
 		try {
+			debug(`Loading capability '${capability.id}'`, { path: capability.path });
 			const capabilityExport = await loadCapabilityExport(capability);
+
+			debug(`Capability '${capability.id}' export`, {
+				found: !!capabilityExport,
+				hasCLICommands: !!capabilityExport?.cliCommands,
+				cliCommands: capabilityExport?.cliCommands ? Object.keys(capabilityExport.cliCommands) : [],
+			});
 
 			// Extract CLI commands from structured export
 			if (capabilityExport?.cliCommands) {
@@ -82,6 +111,11 @@ async function loadCapabilityCommands(): Promise<Record<string, unknown>> {
 						);
 					}
 					commands[commandName] = command;
+					debug(`Registered command '${commandName}' from '${capability.id}'`, {
+						type: typeof command,
+						// biome-ignore lint/suspicious/noExplicitAny: Debug: access constructor name
+						constructor: (command as any)?.constructor?.name,
+					});
 				}
 			}
 		} catch (error) {
@@ -124,5 +158,23 @@ async function loadCapabilityExport(capability: {
 		return null;
 	}
 
-	return module.default as CapabilityExport;
+	const capExport = module.default as CapabilityExport;
+
+	// Debug: Log the actual structure of CLI commands
+	if (capExport.cliCommands) {
+		for (const [name, cmd] of Object.entries(capExport.cliCommands)) {
+			debug(`CLI command '${name}' structure`, {
+				type: typeof cmd,
+				// biome-ignore lint/suspicious/noExplicitAny: Debug: access constructor name
+				constructor: (cmd as any)?.constructor?.name,
+				keys: Object.keys(cmd as object),
+				// biome-ignore lint/suspicious/noExplicitAny: Debug: check for method
+				hasGetRoutingTargetForInput: typeof (cmd as any)?.getRoutingTargetForInput,
+				// biome-ignore lint/suspicious/noExplicitAny: Debug: access routes property
+				routesKeys: (cmd as any).routes ? Object.keys((cmd as any).routes) : undefined,
+			});
+		}
+	}
+
+	return capExport;
 }

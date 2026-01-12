@@ -10,7 +10,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { buildCommand, buildRouteMap } from "@stricli/core";
+import { buildCommand, buildRouteMap } from "@omnidev/core";
 import type { PRD, Story } from "./types";
 
 const RALPH_DIR = ".omni/ralph";
@@ -158,7 +158,7 @@ export async function runStatus(_flags: Record<string, never>, prdName?: string)
 /**
  * Start Ralph orchestration
  */
-export async function runStart(_flags: Record<string, never>, prdName?: string): Promise<void> {
+export async function runStart(_flags: Record<string, never>, prdName: string): Promise<void> {
 	if (!prdName) {
 		console.error("Usage: omnidev ralph start <prd-name>");
 		console.error("\nAvailable PRDs:");
@@ -221,7 +221,7 @@ const statusCommand = buildCommand({
 			kind: "tuple" as const,
 			parameters: [
 				{
-					brief: "PRD name",
+					brief: "PRD name (optional - shows list if omitted)",
 					parse: String,
 					optional: true,
 				},
@@ -243,7 +243,6 @@ const startCommand = buildCommand({
 				{
 					brief: "PRD name",
 					parse: String,
-					optional: true,
 				},
 			],
 		},
@@ -268,7 +267,7 @@ const progressCommand = buildCommand({
 			kind: "tuple" as const,
 			parameters: [
 				{
-					brief: "PRD name",
+					brief: "PRD name (optional - shows error if omitted)",
 					parse: String,
 					optional: true,
 				},

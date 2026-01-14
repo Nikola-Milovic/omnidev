@@ -32,3 +32,6 @@ export * from "./templates/agents";
 export * from "./templates/claude";
 // Export core types
 export * from "./types";
+
+// Export debug utilities
+export * from "./debug";

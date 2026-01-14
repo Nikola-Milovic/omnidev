@@ -7,8 +7,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@omnidev/core": "^0.1.0",
-		"@stricli/core": "^1.2.5"
+		"@omnidev/core": "link:@omnidev/core"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

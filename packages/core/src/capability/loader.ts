@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { validateEnv } from "../config/env";
 import { parseCapabilityConfig } from "../config/parser";
@@ -54,8 +54,20 @@ const RESERVED_NAMES = [
 ];
 
 /**
+ * Check if a path is a directory (follows symlinks)
+ */
+function isDirectoryOrSymlink(path: string): boolean {
+	try {
+		return statSync(path).isDirectory();
+	} catch {
+		return false;
+	}
+}
+
+/**
  * Discovers capabilities by scanning the .omni/capabilities directory.
  * A directory is considered a capability if it contains a capability.toml file.
+ * Follows symlinks to support linked capability directories.
  *
  * @returns Array of capability directory paths
  */
@@ -67,10 +79,11 @@ export async function discoverCapabilities(): Promise<string[]> {
 		const entries = readdirSync(BUILTIN_CAPABILITIES_DIR, { withFileTypes: true });
 
 		for (const entry of entries) {
-			if (entry.isDirectory()) {
-				const configPath = join(BUILTIN_CAPABILITIES_DIR, entry.name, "capability.toml");
+			const entryPath = join(BUILTIN_CAPABILITIES_DIR, entry.name);
+			if (entry.isDirectory() || (entry.isSymbolicLink() && isDirectoryOrSymlink(entryPath))) {
+				const configPath = join(entryPath, "capability.toml");
 				if (existsSync(configPath)) {
-					capabilities.push(join(BUILTIN_CAPABILITIES_DIR, entry.name));
+					capabilities.push(entryPath);
 				}
 			}
 		}
@@ -81,10 +94,11 @@ export async function discoverCapabilities(): Promise<string[]> {
 		const entries = readdirSync(CAPABILITIES_DIR, { withFileTypes: true });
 
 		for (const entry of entries) {
-			if (entry.isDirectory()) {
-				const configPath = join(CAPABILITIES_DIR, entry.name, "capability.toml");
+			const entryPath = join(CAPABILITIES_DIR, entry.name);
+			if (entry.isDirectory() || (entry.isSymbolicLink() && isDirectoryOrSymlink(entryPath))) {
+				const configPath = join(entryPath, "capability.toml");
 				if (existsSync(configPath)) {
-					capabilities.push(join(CAPABILITIES_DIR, entry.name));
+					capabilities.push(entryPath);
 				}
 			}
 		}

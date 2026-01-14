@@ -160,6 +160,7 @@ bun test --coverage  # with coverage report
 - Capability hub / remote installation
 - Git safety layer (checkpoints, rollback)
 - Doc indexing and search
+- Create abstraction over `strictli` in omnidev core so that we don't directly depend on their types
 
 ## Tech Stack
 

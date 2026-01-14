@@ -10,7 +10,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { buildCommand, buildRouteMap } from "@omnidev/core";
+import { buildCommand, buildRouteMap, debug } from "@omnidev/core";
 import type { PRD, Story } from "./types";
 
 const RALPH_DIR = ".omni/state/ralph";
@@ -20,7 +20,10 @@ const PRDS_DIR = join(RALPH_DIR, "prds");
  * List all PRDs with status summary
  */
 export async function runList(): Promise<void> {
+	debug("runList called", { cwd: process.cwd(), PRDS_DIR });
+
 	if (!existsSync(PRDS_DIR)) {
+		debug("PRDS_DIR does not exist", { PRDS_DIR });
 		console.log("No PRDs found.");
 		console.log("\nCreate a PRD using the /prd skill.");
 		return;
@@ -29,6 +32,8 @@ export async function runList(): Promise<void> {
 	const prdDirs = readdirSync(PRDS_DIR, { withFileTypes: true })
 		.filter((d) => d.isDirectory())
 		.map((d) => d.name);
+
+	debug("Found PRD directories", { prdDirs });
 
 	if (prdDirs.length === 0) {
 		console.log("No PRDs found.");

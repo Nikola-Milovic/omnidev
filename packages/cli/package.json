@@ -2,11 +2,25 @@
 	"name": "@omnidev/cli",
 	"version": "0.1.0",
 	"type": "module",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nikola-Milovic/omnidev.git",
+		"directory": "packages/cli"
+	},
 	"exports": {
 		".": "./src/index.ts"
 	},
 	"bin": {
 		"omnidev": "./src/index.ts"
+	},
+	"files": [
+		"src",
+		"README.md"
+	],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",

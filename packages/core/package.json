@@ -2,16 +2,30 @@
 	"name": "@omnidev/core",
 	"version": "0.1.0",
 	"type": "module",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nikola-Milovic/omnidev.git",
+		"directory": "packages/core"
+	},
 	"exports": {
 		".": "./src/index.ts"
+	},
+	"files": [
+		"src",
+		"README.md"
+	],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",
 		"build": "echo 'Build not needed for Bun runtime'"
 	},
-	"devDependencies": {},
 	"dependencies": {
 		"@stricli/core": "^1.2.5",
 		"smol-toml": "^1.6.0"
-	}
+	},
+	"devDependencies": {}
 }

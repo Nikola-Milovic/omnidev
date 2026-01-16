@@ -1,13 +1,14 @@
 {
 	"name": "@omnidev/capability-tasks",
 	"version": "1.0.0",
+	"private": true,
 	"type": "module",
 	"main": "./index.ts",
 	"scripts": {
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@omnidev/core": "link:@omnidev/core"
+		"@omnidev/core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

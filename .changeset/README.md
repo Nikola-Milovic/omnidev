@@ -37,7 +37,6 @@ npm login
 # 2. Publish packages manually
 cd packages/core && npm publish --access public
 cd ../cli && npm publish --access public
-cd ../mcp && npm publish --access public
 
 # 3. Configure trusted publishers on npmjs.com (see below)
 ```
@@ -60,7 +59,7 @@ After packages exist on npm, for each package:
    - **Workflow filename**: `release.yml`
    - **Environment**: (leave empty)
 
-Repeat for `@omnidev-ai/cli` and `@omnidev-ai/mcp`.
+Repeat for `@omnidev-ai/cli`.
 
 ## Security
 

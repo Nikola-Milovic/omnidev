@@ -1,6 +1,7 @@
 {
 	"name": "@omnidev-ai/mcp",
 	"version": "0.1.0",
+	"private": true,
 	"type": "module",
 	"license": "MIT",
 	"repository": {
@@ -10,14 +11,6 @@
 	},
 	"exports": {
 		".": "./src/index.ts"
-	},
-	"files": [
-		"src",
-		"README.md"
-	],
-	"publishConfig": {
-		"access": "public",
-		"registry": "https://registry.npmjs.org"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",

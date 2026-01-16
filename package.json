@@ -4,8 +4,7 @@
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"packages/*",
-		"capabilities/*"
+		"packages/*"
 	],
 	"scripts": {
 		"typecheck": "tsc --noEmit",
@@ -18,7 +17,7 @@
 		"test:coverage": "bun test --coverage",
 		"test:watch": "bun test --watch",
 		"build": "bun run --filter '*' build",
-		"clean": "rm -rf packages/*/dist capabilities/*/dist",
+		"clean": "rm -rf packages/*/dist",
 		"prepare": "lefthook install",
 		"changeset": "changeset",
 		"version": "changeset version",

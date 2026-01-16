@@ -14,10 +14,12 @@ Capabilities are the core extension mechanism in OmniDev. They allow you to add 
 
 ## Capability Structure
 
+Capabilities live in their own repositories (like [omnidev-capabilities](https://github.com/Nikola-Milovic/omnidev-capabilities)) and can be referenced by path or git URL in your `omnidev.toml`.
+
 A typical capability has this directory structure:
 
 ```
-capabilities/my-capability/
+my-capability/
 ├── capability.toml       # Metadata and configuration
 ├── index.ts              # Main export (REQUIRED)
 ├── cli.ts                # CLI command definitions (optional)
@@ -60,7 +62,7 @@ Capabilities can provide content in **two ways**:
 Create files in your capability directory:
 
 ```
-capabilities/my-capability/
+my-capability/
 ├── docs/
 │   ├── overview.md
 │   └── usage.md
@@ -610,7 +612,7 @@ export default {
 
 Directory structure:
 ```
-capabilities/deploy/
+deploy/
 ├── capability.toml
 ├── index.ts
 ├── cli.ts
@@ -1019,6 +1021,6 @@ Also ensure your `package.json` does NOT list `@stricli/core` as a dependency - 
 
 ## Need Help?
 
-- Check examples in `capabilities/` directory
+- Check examples in the [omnidev-capabilities](https://github.com/Nikola-Milovic/omnidev-capabilities) repository
 - Review the Ralph capability for a complete implementation
 - Open an issue on GitHub for questions

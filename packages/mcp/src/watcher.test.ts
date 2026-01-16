@@ -4,13 +4,17 @@
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync } from "node:fs";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { startWatcher } from "./watcher.js";
 
 describe("startWatcher", () => {
-	const TEST_DIR = ".test-watcher";
+	let TEST_DIR: string;
 	const originalCwd = process.cwd();
 
 	beforeEach(() => {
+		// Create test directory in /tmp
+		TEST_DIR = tmpdir("watcher-test-");
+
 		// Create test directory structure
 		mkdirSync(`${TEST_DIR}/omni`, { recursive: true });
 		mkdirSync(`${TEST_DIR}/.omni`, { recursive: true });

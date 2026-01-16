@@ -1,22 +1,19 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "../test-utils/index.js";
 import { readActiveProfileState } from "../state/active-profile.js";
 import type { OmniConfig } from "../types/index.js";
 import { getActiveProfile, resolveEnabledCapabilities, setActiveProfile } from "./profiles.js";
 
 describe("getActiveProfile", () => {
-	const TEST_DIR = ".omni-test-profiles";
+	let TEST_DIR: string;
 	let originalCwd: string;
 
 	beforeEach(() => {
-		if (!existsSync(TEST_DIR)) {
-			mkdirSync(TEST_DIR, { recursive: true });
-		}
 		originalCwd = process.cwd();
+		TEST_DIR = tmpdir("profiles-test-");
 		process.chdir(TEST_DIR);
-		if (!existsSync(".omni")) {
-			mkdirSync(".omni", { recursive: true });
-		}
+		mkdirSync(".omni", { recursive: true });
 	});
 
 	afterEach(() => {

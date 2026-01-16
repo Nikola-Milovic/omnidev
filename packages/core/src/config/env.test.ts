@@ -1,18 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "../test-utils/index.js";
 import type { EnvDeclaration } from "../types";
 import { isSecretEnvVar, loadEnvironment, validateEnv } from "./env";
 
 describe("loadEnvironment", () => {
 	const originalCwd = process.cwd();
-	const testDir = "/tmp/omnidev-test-env";
+	let testDir: string;
 
 	beforeEach(() => {
-		// Clean up and create test directory
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true });
-		}
-		mkdirSync(testDir, { recursive: true });
+		// Create test directory in /tmp
+		testDir = tmpdir("env-test-");
 		process.chdir(testDir);
 	});
 

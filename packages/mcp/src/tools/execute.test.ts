@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import type { CapabilityRegistry } from "@omnidev-ai/core";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { handleOmniExecute } from "./execute";
 
 describe("handleOmniExecute", () => {
@@ -17,8 +18,7 @@ describe("handleOmniExecute", () => {
 
 	beforeEach(() => {
 		originalCwd = process.cwd();
-		testDir = `/tmp/omnidev-execute-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-		mkdirSync(testDir, { recursive: true });
+		testDir = tmpdir("execute-test-");
 		process.chdir(testDir);
 
 		// Initialize git repo for diff tests

@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
+import { tmpdir } from "../test-utils/index.js";
 import { parseProviderFlag } from "./provider.js";
 
-const TEST_DIR = ".test-omni";
+let TEST_DIR: string;
+const originalCwd = process.cwd();
 
 beforeEach(() => {
-	if (existsSync(TEST_DIR)) {
-		rmSync(TEST_DIR, { recursive: true });
-	}
-	mkdirSync(TEST_DIR, { recursive: true });
+	TEST_DIR = tmpdir("provider-test-");
+	process.chdir(TEST_DIR);
 });
 
 afterEach(() => {
+	process.chdir(originalCwd);
 	if (existsSync(TEST_DIR)) {
 		rmSync(TEST_DIR, { recursive: true });
 	}

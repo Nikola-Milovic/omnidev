@@ -3,6 +3,9 @@
  */
 
 import { expect } from "bun:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir as osTmpdir } from "node:os";
+import { join } from "node:path";
 
 /**
  * Expects an async function to throw an error
@@ -184,4 +187,13 @@ export async function captureConsole<T>(
 		console.error = originalError;
 		console.warn = originalWarn;
 	}
+}
+
+/**
+ * Creates a unique temporary directory for tests in /tmp
+ * @param prefix - Optional prefix for the directory name (default: "omnidev-test-")
+ * @returns Path to the created temporary directory
+ */
+export function tmpdir(prefix = "omnidev-test-"): string {
+	return mkdtempSync(join(osTmpdir(), prefix));
 }

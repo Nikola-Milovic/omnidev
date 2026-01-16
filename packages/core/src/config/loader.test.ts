@@ -1,23 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "../test-utils/index.js";
 import { loadConfig } from "./loader";
 
-const TEST_DIR = "/tmp/omnidev-test-loader";
 const CONFIG_PATH = "omni.toml";
 const LOCAL_CONFIG = "omni.local.toml";
 
 // Save and restore the current working directory
 let originalCwd: string;
+let TEST_DIR: string;
 
 beforeEach(() => {
 	// Save original cwd
 	originalCwd = process.cwd();
 
-	// Clean up test directory
-	if (existsSync(TEST_DIR)) {
-		rmSync(TEST_DIR, { recursive: true });
-	}
-	mkdirSync(TEST_DIR, { recursive: true });
+	// Create test directory in /tmp
+	TEST_DIR = tmpdir("loader-test-");
 	process.chdir(TEST_DIR);
 });
 

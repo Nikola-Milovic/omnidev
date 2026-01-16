@@ -1,23 +1,20 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { runServe } from "./serve";
 
-// Create test fixtures directory
-const testDir = join(process.cwd(), "test-fixtures-serve");
+let testDir: string;
+const originalCwd = process.cwd();
 
 beforeEach(() => {
-	// Clean up and create fresh test directory
-	if (existsSync(testDir)) {
-		rmSync(testDir, { recursive: true, force: true });
-	}
-	mkdirSync(testDir, { recursive: true });
+	// Create test directory in /tmp
+	testDir = tmpdir("serve-test-");
 	process.chdir(testDir);
 });
 
 afterEach(() => {
 	// Return to original directory and clean up
-	process.chdir(join(testDir, ".."));
+	process.chdir(originalCwd);
 	if (existsSync(testDir)) {
 		rmSync(testDir, { recursive: true, force: true });
 	}

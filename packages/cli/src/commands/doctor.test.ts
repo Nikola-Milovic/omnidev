@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { runDoctor } from "./doctor";
 
 describe("doctor command", () => {
@@ -41,16 +41,9 @@ sandbox/
 	}
 
 	beforeEach(() => {
-		// Create a unique test directory
-		testDir = join(
-			process.cwd(),
-			".test-tmp",
-			`doctor-test-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-		);
-		mkdirSync(testDir, { recursive: true });
-
-		// Change to test directory
+		// Create test directory in /tmp
 		originalCwd = process.cwd();
+		testDir = tmpdir("doctor-test-");
 		process.chdir(testDir);
 
 		// Mock process.exit

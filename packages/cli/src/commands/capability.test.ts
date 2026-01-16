@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { runCapabilityDisable, runCapabilityEnable, runCapabilityList } from "./capability";
 
 describe("capability list command", () => {
@@ -11,8 +12,7 @@ describe("capability list command", () => {
 
 	beforeEach(() => {
 		originalCwd = process.cwd();
-		testDir = join(import.meta.dir, `test-capability-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
+		testDir = tmpdir("capability-test-");
 		process.chdir(testDir);
 
 		// Mock process.exit

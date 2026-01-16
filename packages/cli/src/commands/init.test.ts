@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { runInit } from "./init";
 
 describe("init command", () => {
@@ -9,8 +9,7 @@ describe("init command", () => {
 
 	beforeEach(() => {
 		originalCwd = process.cwd();
-		testDir = join(import.meta.dir, `test-init-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
+		testDir = tmpdir("init-test-");
 		process.chdir(testDir);
 	});
 

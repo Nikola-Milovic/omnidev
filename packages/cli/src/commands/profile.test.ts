@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import { runProfileList, runProfileSet } from "./profile";
 
 describe("profile commands", () => {
@@ -12,10 +12,9 @@ describe("profile commands", () => {
 	let consoleErrors: string[];
 
 	beforeEach(() => {
-		// Create a unique test directory
-		testDir = join(import.meta.dir, "..", "..", "..", "test-temp", `profile-test-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
+		// Create test directory in /tmp
 		originalCwd = process.cwd();
+		testDir = tmpdir("profile-test-");
 		process.chdir(testDir);
 
 		// Mock process.exit

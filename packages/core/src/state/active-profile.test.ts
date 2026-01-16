@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "../test-utils/index.js";
 import {
 	clearActiveProfileState,
 	readActiveProfileState,
@@ -14,7 +14,7 @@ describe("active-profile state", () => {
 
 	beforeEach(() => {
 		originalCwd = process.cwd();
-		tempDir = mkdtempSync(join(tmpdir(), "active-profile-test-"));
+		tempDir = tmpdir("active-profile-test-");
 		mkdirSync(join(tempDir, ".omni"), { recursive: true });
 		process.chdir(tempDir);
 	});

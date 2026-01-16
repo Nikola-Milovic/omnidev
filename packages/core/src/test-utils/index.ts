@@ -15,6 +15,7 @@ export {
 	createSpy,
 	delay,
 	expectToThrowAsync,
+	tmpdir,
 	waitForCondition,
 } from "./helpers";
 // Re-export all mock factories

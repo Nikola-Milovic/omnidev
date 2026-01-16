@@ -2,7 +2,7 @@
  * Capability Export Types
  *
  * These types define the structure that capabilities use to export their features.
- * Capabilities should import these types from @omnidev/core and use them in their index.ts.
+ * Capabilities should import these types from @omnidev-ai/core and use them in their index.ts.
  */
 
 /**

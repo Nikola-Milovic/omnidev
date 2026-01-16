@@ -1,4 +1,4 @@
-import { getActiveProfile, loadConfig, syncAgentConfiguration } from "@omnidev/core";
+import { getActiveProfile, loadConfig, syncAgentConfiguration } from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
 
 export const syncCommand = buildCommand({

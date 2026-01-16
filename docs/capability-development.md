@@ -36,10 +36,10 @@ capabilities/my-capability/
 
 ### TypeScript Setup
 
-To get type checking and autocompletion for your capability, import the types from `@omnidev/core`:
+To get type checking and autocompletion for your capability, import the types from `@omnidev-ai/core`:
 
 ```typescript
-import type { CapabilityExport, SkillExport, DocExport, FileContent } from "@omnidev/core";
+import type { CapabilityExport, SkillExport, DocExport, FileContent } from "@omnidev-ai/core";
 ```
 
 **Available types:**
@@ -80,7 +80,7 @@ These files are automatically discovered and loaded during sync.
 Export content from `index.ts`:
 
 ```typescript
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 export default {
   cliCommands: { /* ... */ },
@@ -112,12 +112,12 @@ You can use **both** approaches! Static files and programmatic exports are merge
 
 Add CLI commands that appear in `omnidev <command>`:
 
-> **Important**: Always import `buildCommand` and `buildRouteMap` from `@omnidev/core`, not from `@stricli/core` directly. This ensures your capability uses the same Stricli instance as the CLI, avoiding "getRoutingTargetForInput is not a function" errors that occur when multiple Stricli instances are loaded.
+> **Important**: Always import `buildCommand` and `buildRouteMap` from `@omnidev-ai/core`, not from `@stricli/core` directly. This ensures your capability uses the same Stricli instance as the CLI, avoiding "getRoutingTargetForInput is not a function" errors that occur when multiple Stricli instances are loaded.
 
 ```typescript
-import { buildCommand, buildRouteMap } from "@omnidev/core";
+import { buildCommand, buildRouteMap } from "@omnidev-ai/core";
 
-// Define commands using stricli (re-exported from @omnidev/core)
+// Define commands using stricli (re-exported from @omnidev-ai/core)
 const myCommand = buildCommand({
   func: async (flags, arg1, arg2) => {
     // Command implementation
@@ -222,7 +222,7 @@ transport = "stdio"
 
 **index.ts:**
 ```typescript
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 export default {
   docs: [{
@@ -627,8 +627,8 @@ capabilities/deploy/
 
 **index.ts:**
 ```typescript
-// Import types from @omnidev/core for type checking
-import type { CapabilityExport } from "@omnidev/core";
+// Import types from @omnidev-ai/core for type checking
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 // Import your capability's CLI commands and sync hook
 import { deployRoutes } from "./cli.js";
@@ -659,8 +659,8 @@ export { getDeploymentStatus } from "./api.js";
 
 **index.ts:**
 ```typescript
-import { buildCommand, buildRouteMap } from "@omnidev/core";
-import type { CapabilityExport } from "@omnidev/core";
+import { buildCommand, buildRouteMap } from "@omnidev-ai/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 // Generate everything programmatically
 const deployCommand = buildCommand({
@@ -734,7 +734,7 @@ Run deployment process...`,
 ```typescript
 import { deployRoutes } from "./cli.js";
 import { sync } from "./sync.js";
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 export default {
   cliCommands: {
@@ -1001,7 +1001,7 @@ All fields in `CapabilityExport` are optional. Only export what your capability 
 
 ### Q: I'm getting "getRoutingTargetForInput is not a function" error
 
-This error occurs when your capability imports `buildCommand`/`buildRouteMap` from `@stricli/core` directly instead of from `@omnidev/core`. When capabilities install their own copy of `@stricli/core`, it creates duplicate module instances that are incompatible with each other.
+This error occurs when your capability imports `buildCommand`/`buildRouteMap` from `@stricli/core` directly instead of from `@omnidev-ai/core`. When capabilities install their own copy of `@stricli/core`, it creates duplicate module instances that are incompatible with each other.
 
 **Fix**: Change your imports from:
 ```typescript
@@ -1012,10 +1012,10 @@ import { buildCommand, buildRouteMap } from "@stricli/core";
 To:
 ```typescript
 // ✅ Correct - uses shared module instance
-import { buildCommand, buildRouteMap } from "@omnidev/core";
+import { buildCommand, buildRouteMap } from "@omnidev-ai/core";
 ```
 
-Also ensure your `package.json` does NOT list `@stricli/core` as a dependency - it's provided by `@omnidev/core`.
+Also ensure your `package.json` does NOT list `@stricli/core` as a dependency - it's provided by `@omnidev-ai/core`.
 
 ## Need Help?
 

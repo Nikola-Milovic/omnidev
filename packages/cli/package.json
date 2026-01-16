@@ -1,5 +1,5 @@
 {
-	"name": "@omnidev/cli",
+	"name": "@omnidev-ai/cli",
 	"version": "0.1.0",
 	"type": "module",
 	"license": "MIT",
@@ -28,7 +28,7 @@
 	},
 	"dependencies": {
 		"@inquirer/prompts": "^8.1.0",
-		"@omnidev/core": "workspace:*",
+		"@omnidev-ai/core": "workspace:*",
 		"@stricli/core": "^1.2.5"
 	},
 	"devDependencies": {}

@@ -1,5 +1,5 @@
 {
-	"name": "@omnidev/capability-tasks",
+	"name": "@omnidev-ai/capability-tasks",
 	"version": "1.0.0",
 	"private": true,
 	"type": "module",
@@ -8,7 +8,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@omnidev/core": "workspace:*"
+		"@omnidev-ai/core": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

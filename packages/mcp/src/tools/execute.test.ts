@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
-import type { CapabilityRegistry } from "@omnidev/core";
+import type { CapabilityRegistry } from "@omnidev-ai/core";
 import { handleOmniExecute } from "./execute";
 
 describe("handleOmniExecute", () => {

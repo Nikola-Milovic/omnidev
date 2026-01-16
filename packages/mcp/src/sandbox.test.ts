@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { readdir, readlink } from "node:fs/promises";
 import { join } from "node:path";
-import type { LoadedCapability } from "@omnidev/core";
+import type { LoadedCapability } from "@omnidev-ai/core";
 import { setupSandbox } from "./sandbox";
 
 describe("sandbox", () => {

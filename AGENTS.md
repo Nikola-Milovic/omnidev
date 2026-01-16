@@ -44,13 +44,13 @@ OmniDev: meta-MCP system exposing 2 tools to LLMs (omni_query, omni_execute) whi
 **Testing:**
 - Bun native test runner (`bun test`)
 - Tests co-located: `*.test.ts` next to source
-- Custom helpers: `@omnidev/core/test-utils` (expectToThrowAsync, waitForCondition)
+- Custom helpers: `@omnidev-ai/core/test-utils` (expectToThrowAsync, waitForCondition)
 - Pre-commit: typecheck → lint → format → test --bail
 
 **Module Organization:**
 - Packages export via `index.ts` with barrel exports
 - Capabilities must export `CapabilityExport` interface
-- Workspace paths: `@omnidev/core`, `@omnidev/cli`, `@omnidev/mcp`
+- Workspace paths: `@omnidev-ai/core`, `@omnidev-ai/cli`, `@omnidev-ai/mcp`
 
 ## ANTI-PATTERNS (THIS PROJECT)
 

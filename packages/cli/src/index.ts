@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @omnidev/cli - Command-line interface for OmniDev
+ * @omnidev-ai/cli - Command-line interface for OmniDev
  *
  * This package provides the CLI for managing OmniDev configuration,
  * capabilities, and the MCP server.

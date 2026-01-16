@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { LoadedCapability } from "@omnidev/core";
+import type { LoadedCapability } from "@omnidev-ai/core";
 import { generateWrapperModule } from "./codegen/index.js";
 import type { McpController } from "./controller/controller.js";
 

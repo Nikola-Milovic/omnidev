@@ -39,18 +39,18 @@ omnidev/
 
 ### Package Overview
 
-**`@omnidev/core`**
+**`@omnidev-ai/core`**
 - Configuration loading and parsing (`omni.toml`, `omni.local.toml`)
 - Capability registry and loader
 - Capability sources (Git and file protocols)
 - Lock file management
 - Type definitions
 
-**`@omnidev/cli`**
+**`@omnidev-ai/cli`**
 - Commands: `init`, `sync`, `doctor`, `profile`, `capability`, `serve`
 - Built with [Stricli](https://bloomberg.github.io/stricli/)
 
-**`@omnidev/mcp`**
+**`@omnidev-ai/mcp`**
 - MCP server implementation
 - Sandbox environment for code execution
 - Tool discovery and execution

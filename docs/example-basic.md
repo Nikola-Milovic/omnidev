@@ -327,7 +327,7 @@ When the LLM asks "What tools do I have?" via `omni_query`, OmniDev returns this
 This is the entry point OmniDev imports. Since capabilities are Bun packages, **everything can be programmatic**. Export what you want directly, or let OmniDev discover it from the filesystem.
 
 ```typescript
-import type { Skill, Rule, Doc } from '@omnidev/core';
+import type { Skill, Rule, Doc } from '@omnidev-ai/core';
 
 // ============================================
 // 1. SANDBOX TOOLS
@@ -575,7 +575,7 @@ export async function planSet(items: PlanItem[]): Promise<PlanItem[]> {
 CLI commands that extend `omnidev` with task management.
 
 ```typescript
-import type { CommandDefinition } from '@omnidev/core';
+import type { CommandDefinition } from '@omnidev-ai/core';
 import * as tasks from '../tools/taskManager';
 
 export const cliCommands: Record<string, CommandDefinition> = {

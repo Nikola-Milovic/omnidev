@@ -1,5 +1,5 @@
 /**
- * @omnidev/core - Core functionality for OmniDev
+ * @omnidev-ai/core - Core functionality for OmniDev
  *
  * This package contains shared types, utilities, and core logic
  * used across the CLI and MCP server packages.

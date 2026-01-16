@@ -39,9 +39,9 @@
 
 		// Workspace path mapping
 		"paths": {
-			"@omnidev/core": ["./packages/core/src/index.ts"],
-			"@omnidev/cli": ["./packages/cli/src/index.ts"],
-			"@omnidev/mcp": ["./packages/mcp/src/index.ts"]
+			"@omnidev-ai/core": ["./packages/core/src/index.ts"],
+			"@omnidev-ai/cli": ["./packages/cli/src/index.ts"],
+			"@omnidev-ai/mcp": ["./packages/mcp/src/index.ts"]
 		}
 	},
 	"include": ["packages/*/src/**/*", "capabilities/*/src/**/*", "capabilities/*/*.ts"],

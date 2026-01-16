@@ -7,7 +7,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { buildCapabilityRegistry, loadConfig } from "@omnidev/core";
+import { buildCapabilityRegistry, loadConfig } from "@omnidev-ai/core";
 import * as z from "zod";
 import { McpController } from "./controller/index.js";
 import { createRelayServer } from "./relay/index.js";

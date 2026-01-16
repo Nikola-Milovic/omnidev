@@ -5,7 +5,7 @@
  * Provides CLI commands and sandbox-accessible functions for managing tasks.
  */
 
-import type { CapabilityExport, SandboxToolExport } from "@omnidev/core";
+import type { CapabilityExport, SandboxToolExport } from "@omnidev-ai/core";
 import { taskRoutes } from "./cli.js";
 import { sync } from "./sync.js";
 

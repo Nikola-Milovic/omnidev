@@ -10,7 +10,7 @@ Static CLI commands built with Stricli framework for OmniDev project management.
 | Command | File | Purpose |
 |---------|------|---------|
 | `omnidev init` | init.ts | Creates .omni/ directory, config.toml, provider.toml, instructions.md, internal gitignore |
-| `omnidev serve` | serve.ts | Starts MCP server via @omnidev/mcp, optional --profile flag sets active profile |
+| `omnidev serve` | serve.ts | Starts MCP server via @omnidev-ai/mcp, optional --profile flag sets active profile |
 | `omnidev doctor` | doctor.ts | Validates Bun version (≥1.0), .omni/ directory, config.toml, internal gitignore |
 | `omnidev capability` | capability.ts | Subcommands: list, enable <name>, disable <name> (auto-syncs on enable/disable) |
 | `omnidev profile` | profile.ts | Subcommands: list, set <name> (auto-syncs on set, shows active with ● indicator) |
@@ -22,7 +22,7 @@ Static CLI commands built with Stricli framework for OmniDev project management.
 
 **Command Structure:**
 - All commands use Stricli's `buildCommand()` or `buildRouteMap()` from `@stricli/core`
-- Commands import from `@omnidev/core` for config loading, capability management
+- Commands import from `@omnidev-ai/core` for config loading, capability management
 - Route maps exported as `xxxRoutes` for subcommands (e.g., `capabilityRoutes`, `ralphRoutes`)
 
 **State Management:**

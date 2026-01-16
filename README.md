@@ -51,7 +51,7 @@ OmniDev generates configuration for whatever agent you use. Your capabilities wo
 
 ```bash
 # Install
-npm install -g @omnidev/cli
+npm install -g @omnidev-ai/cli
 
 # Initialize in your project
 omnidev init
@@ -143,7 +143,7 @@ Add to Claude Desktop config:
   "mcpServers": {
     "omnidev": {
       "command": "npx",
-      "args": ["-y", "@omnidev/cli", "serve"]
+      "args": ["-y", "@omnidev-ai/cli", "serve"]
     }
   }
 }

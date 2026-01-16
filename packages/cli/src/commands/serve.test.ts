@@ -110,11 +110,11 @@ capabilities = []
 			// Server started successfully, do nothing
 		});
 
-		// Mock the import of @omnidev/mcp
+		// Mock the import of @omnidev-ai/mcp
 		const originalImport = globalThis[Symbol.for("Bun.lazy")];
 		// biome-ignore lint/suspicious/noExplicitAny: Testing requires dynamic mocking
 		(globalThis as any).import = mock(async (module: string) => {
-			if (module === "@omnidev/mcp") {
+			if (module === "@omnidev-ai/mcp") {
 				return { startServer: mockStartServer };
 			}
 			throw new Error(`Unexpected import: ${module}`);

@@ -179,7 +179,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 For dynamic or complex configurations, export commands from `index.ts`:
 
 ```typescript
-import type { CapabilityExport, CommandExport } from "@omnidev/core";
+import type { CapabilityExport, CommandExport } from "@omnidev-ai/core";
 
 const optimizeCommand: CommandExport = {
   commandMd: `---

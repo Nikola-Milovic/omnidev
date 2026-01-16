@@ -1,5 +1,5 @@
 {
-	"name": "@omnidev/mcp",
+	"name": "@omnidev-ai/mcp",
 	"version": "0.1.0",
 	"type": "module",
 	"license": "MIT",
@@ -25,7 +25,7 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.25.2",
-		"@omnidev/core": "workspace:*",
+		"@omnidev-ai/core": "workspace:*",
 		"zod": "^4.0.1"
 	},
 	"devDependencies": {}

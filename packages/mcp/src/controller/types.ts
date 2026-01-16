@@ -1,5 +1,5 @@
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { McpTransport } from "@omnidev/core";
+import type { McpTransport } from "@omnidev-ai/core";
 
 export type McpChildStatus = "starting" | "connected" | "disconnected" | "error";
 

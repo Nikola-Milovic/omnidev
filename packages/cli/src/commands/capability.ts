@@ -5,7 +5,7 @@ import {
 	getEnabledCapabilities,
 	loadCapabilityConfig,
 	syncAgentConfiguration,
-} from "@omnidev/core";
+} from "@omnidev-ai/core";
 import { buildCommand, buildRouteMap } from "@stricli/core";
 
 /**

@@ -10,7 +10,7 @@
 
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { buildCommand, buildRouteMap, debug } from "@omnidev/core";
+import { buildCommand, buildRouteMap, debug } from "@omnidev-ai/core";
 import { buildDependencyGraph, canStartPRD } from "./state.js";
 import type { PRD, Story } from "./types";
 

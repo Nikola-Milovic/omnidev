@@ -477,7 +477,7 @@ The CLI package discovers capabilities with CLI commands and mounts them:
 ```typescript
 // packages/cli/src/commands/ralph.ts
 import { buildCommand } from "@stricli/core";
-import { loadRalphCapability } from "@omnidev/core";
+import { loadRalphCapability } from "@omnidev-ai/core";
 
 export const ralphCommand = buildCommand({
   name: "ralph",

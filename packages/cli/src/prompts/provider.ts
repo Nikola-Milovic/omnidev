@@ -1,5 +1,5 @@
 import { checkbox } from "@inquirer/prompts";
-import type { Provider } from "@omnidev/core";
+import type { Provider } from "@omnidev-ai/core";
 
 export async function promptForProvider(): Promise<Provider[]> {
 	const answers = await checkbox({

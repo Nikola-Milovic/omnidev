@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { getVersion, version } from "./index";
 
-describe("@omnidev/core", () => {
+describe("@omnidev-ai/core", () => {
 	describe("version", () => {
 		test("should be defined as a string", () => {
 			expect(typeof version).toBe("string");

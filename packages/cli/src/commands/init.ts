@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
-import type { Provider } from "@omnidev/core";
+import type { Provider } from "@omnidev-ai/core";
 import {
 	generateAgentsTemplate,
 	generateClaudeTemplate,
@@ -8,7 +8,7 @@ import {
 	setActiveProfile,
 	syncAgentConfiguration,
 	writeConfig,
-} from "@omnidev/core";
+} from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
 import { promptForProvider } from "../prompts/provider.js";
 
@@ -96,7 +96,7 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	console.log('     "mcpServers": {');
 	console.log('       "omnidev": {');
 	console.log('         "command": "npx",');
-	console.log('         "args": ["-y", "@omnidev/cli", "serve"]');
+	console.log('         "args": ["-y", "@omnidev-ai/cli", "serve"]');
 	console.log("       }");
 	console.log("     }");
 	console.log("   }");

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { setActiveProfile } from "@omnidev/core";
+import { setActiveProfile } from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
 
 interface ServeFlags {
@@ -20,7 +20,7 @@ export async function runServe(flags: ServeFlags): Promise<void> {
 		console.log(`Setting profile to: ${flags.profile}`);
 		try {
 			// Validate profile exists in config
-			const { loadConfig } = await import("@omnidev/core");
+			const { loadConfig } = await import("@omnidev-ai/core");
 			const config = await loadConfig();
 			if (!config.profiles?.[flags.profile]) {
 				console.error(`✗ Profile "${flags.profile}" not found in config`);
@@ -35,7 +35,7 @@ export async function runServe(flags: ServeFlags): Promise<void> {
 
 	// Import and start the MCP server
 	try {
-		const { startServer } = await import("@omnidev/mcp");
+		const { startServer } = await import("@omnidev-ai/mcp");
 		console.log("✓ Server starting...");
 		await startServer();
 	} catch (error) {

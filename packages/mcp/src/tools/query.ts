@@ -6,7 +6,7 @@
  */
 
 import { appendFileSync, mkdirSync } from "node:fs";
-import type { CapabilityRegistry } from "@omnidev/core";
+import type { CapabilityRegistry } from "@omnidev-ai/core";
 
 const LOG_FILE = ".omni/logs/mcp-server.log";
 

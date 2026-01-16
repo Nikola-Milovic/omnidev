@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 import { buildApplication, buildRouteMap } from "@stricli/core";
 import { capabilityRoutes } from "../commands/capability";
 // Core commands
@@ -81,7 +81,9 @@ export async function buildDynamicApp() {
  * Load CLI commands from enabled capabilities
  */
 async function loadCapabilityCommands(): Promise<Record<string, unknown>> {
-	const { buildCapabilityRegistry, installCapabilityDependencies } = await import("@omnidev/core");
+	const { buildCapabilityRegistry, installCapabilityDependencies } = await import(
+		"@omnidev-ai/core"
+	);
 
 	// Install dependencies first (silent to avoid noise during CLI startup)
 	await installCapabilityDependencies(true);

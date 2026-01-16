@@ -2,7 +2,7 @@
 
 ## Overview
 
-All capability export types are available from `@omnidev/core`. This provides TypeScript developers with autocompletion, type checking, and inline documentation.
+All capability export types are available from `@omnidev-ai/core`. This provides TypeScript developers with autocompletion, type checking, and inline documentation.
 
 ## Available Types
 
@@ -15,7 +15,7 @@ import type {
   DocExport,           // Documentation structure
   FileContent,         // File name and content pair
   McpToolExport        // MCP tool definition
-} from "@omnidev/core";
+} from "@omnidev-ai/core";
 ```
 
 ### Type Definitions
@@ -68,7 +68,7 @@ interface FileContent {
 ### Basic Usage
 
 ```typescript
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 import { myRoutes } from "./cli.js";
 
 export default {
@@ -82,7 +82,7 @@ export default {
 ### With Skills
 
 ```typescript
-import type { CapabilityExport, SkillExport } from "@omnidev/core";
+import type { CapabilityExport, SkillExport } from "@omnidev-ai/core";
 
 const mySkill: SkillExport = {
   skillMd: `---
@@ -111,7 +111,7 @@ export default {
 ### With Documentation
 
 ```typescript
-import type { CapabilityExport, DocExport } from "@omnidev/core";
+import type { CapabilityExport, DocExport } from "@omnidev-ai/core";
 
 const docs: DocExport[] = [
   {
@@ -139,7 +139,7 @@ import type {
   SkillExport,
   DocExport,
   FileContent
-} from "@omnidev/core";
+} from "@omnidev-ai/core";
 import { deployRoutes } from "./cli.js";
 import { sync } from "./sync.js";
 
@@ -263,7 +263,7 @@ If you're not using TypeScript, you can still benefit from JSDoc comments:
 
 ```javascript
 /**
- * @type {import("@omnidev/core").CapabilityExport}
+ * @type {import("@omnidev-ai/core").CapabilityExport}
  */
 export default {
   cliCommands: {

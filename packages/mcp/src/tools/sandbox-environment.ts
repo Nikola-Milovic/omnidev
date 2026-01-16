@@ -11,7 +11,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import type { CapabilityRegistry, JSONSchema, SandboxToolExport } from "@omnidev/core";
+import type { CapabilityRegistry, JSONSchema, SandboxToolExport } from "@omnidev-ai/core";
 
 const MCP_STATUS_FILE = ".omni/state/mcp-status.json";
 

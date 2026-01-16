@@ -509,7 +509,7 @@ Since capabilities are Bun packages, **everything can be programmatic**. The `in
 
 ```typescript
 // capabilities/ralph/index.ts
-import type { Capability, Skill, Rule, Doc } from '@omnidev/core';
+import type { Capability, Skill, Rule, Doc } from '@omnidev-ai/core';
 
 // ============================================
 // 1. SANDBOX TOOLS (functions LLMs can call)

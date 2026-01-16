@@ -129,7 +129,7 @@ Organize by priority:
 For dynamic or complex configurations, export subagents from `index.ts`:
 
 ```typescript
-import type { CapabilityExport, SubagentExport } from "@omnidev/core";
+import type { CapabilityExport, SubagentExport } from "@omnidev-ai/core";
 
 const mySubagent: SubagentExport = {
   subagentMd: `---

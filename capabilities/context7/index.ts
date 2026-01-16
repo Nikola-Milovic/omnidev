@@ -1,4 +1,4 @@
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 export default {
 	docs: [

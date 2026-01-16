@@ -2,7 +2,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import type { LoadedCapability } from "@omnidev/core";
+import type { LoadedCapability } from "@omnidev-ai/core";
 import type { McpChildProcess, McpConnection, McpStatusFile, McpToolInfo } from "./types.js";
 
 const STATUS_FILE = ".omni/state/mcp-status.json";

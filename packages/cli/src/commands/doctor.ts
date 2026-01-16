@@ -111,7 +111,7 @@ async function checkConfig(): Promise<Check> {
 	}
 
 	try {
-		const { loadConfig } = await import("@omnidev/core");
+		const { loadConfig } = await import("@omnidev-ai/core");
 		await loadConfig();
 		return {
 			name: "Configuration",

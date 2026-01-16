@@ -61,7 +61,7 @@ Capabilities export a **default structured object** from their `index.ts`:
 // capabilities/ralph/index.ts
 import { ralphRoutes } from "./cli.js";
 import { sync } from "./sync.js";
-import type { CapabilityExport } from "@omnidev/core";
+import type { CapabilityExport } from "@omnidev-ai/core";
 
 // Default export: Structured capability interface
 export default {
@@ -239,10 +239,10 @@ import type {
   DocExport,
   FileContent,
   McpToolExport
-} from "@omnidev/core";
+} from "@omnidev-ai/core";
 ```
 
-The main package index (`packages/core/src/index.ts`) already re-exports everything from `./types`, so these types are automatically available to any package that imports from `@omnidev/core`.
+The main package index (`packages/core/src/index.ts`) already re-exports everything from `./types`, so these types are automatically available to any package that imports from `@omnidev-ai/core`.
 
 #### 2. Define Capability Export Interface (Implementation Details)
 
@@ -399,7 +399,7 @@ export async function buildDynamicApp() {
  * Load CLI commands from enabled capabilities
  */
 async function loadCapabilityCommands(): Promise<Record<string, Command>> {
-  const { buildCapabilityRegistry } = await import("@omnidev/core");
+  const { buildCapabilityRegistry } = await import("@omnidev-ai/core");
 
   const registry = await buildCapabilityRegistry();
   const capabilities = registry.getAllCapabilities();

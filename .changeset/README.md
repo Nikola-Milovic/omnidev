@@ -52,7 +52,7 @@ cd ../mcp && npm publish --access public
 
 After packages exist on npm, for each package:
 
-1. Go to https://www.npmjs.com/package/@omnidev/core/access (replace with each package)
+1. Go to https://www.npmjs.com/package/@omnidev-ai/core/access (replace with each package)
 2. Find "Trusted Publisher" section
 3. Configure:
    - **Organization/user**: `Nikola-Milovic`
@@ -60,7 +60,7 @@ After packages exist on npm, for each package:
    - **Workflow filename**: `release.yml`
    - **Environment**: (leave empty)
 
-Repeat for `@omnidev/cli` and `@omnidev/mcp`.
+Repeat for `@omnidev-ai/cli` and `@omnidev-ai/mcp`.
 
 ## Security
 

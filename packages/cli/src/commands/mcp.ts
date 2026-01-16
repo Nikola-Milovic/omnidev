@@ -3,7 +3,7 @@ import { buildCommand, buildRouteMap } from "@stricli/core";
 
 const STATUS_FILE = ".omni/state/mcp-status.json";
 
-// Local type definition to avoid circular dependency with @omnidev/mcp
+// Local type definition to avoid circular dependency with @omnidev-ai/mcp
 interface McpChildProcess {
 	capabilityId: string;
 	pid: number | null;

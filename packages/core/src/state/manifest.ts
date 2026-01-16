@@ -2,6 +2,20 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import type { LoadedCapability } from "../types";
 
 /**
+ * MCP entry for a capability
+ */
+export interface McpEntry {
+	/** Server name in .mcp.json (e.g., "omni-{capabilityId}") */
+	serverName: string;
+	/** Command to run the MCP server */
+	command: string;
+	/** Arguments for the command */
+	args?: string[];
+	/** Environment variables */
+	env?: Record<string, string>;
+}
+
+/**
  * Resources provided by a single capability
  */
 export interface CapabilityResources {
@@ -9,6 +23,8 @@ export interface CapabilityResources {
 	rules: string[];
 	commands: string[];
 	subagents: string[];
+	/** MCP configuration if capability has [mcp] section */
+	mcp?: McpEntry;
 }
 
 /**
@@ -73,12 +89,29 @@ export function buildManifestFromCapabilities(capabilities: LoadedCapability[]):
 	};
 
 	for (const cap of capabilities) {
-		manifest.capabilities[cap.id] = {
+		const resources: CapabilityResources = {
 			skills: cap.skills.map((s) => s.name),
 			rules: cap.rules.map((r) => r.name),
 			commands: cap.commands.map((c) => c.name),
 			subagents: cap.subagents.map((s) => s.name),
 		};
+
+		// Track MCP if capability has one
+		if (cap.config.mcp) {
+			const mcpEntry: McpEntry = {
+				serverName: `omni-${cap.id}`,
+				command: cap.config.mcp.command,
+			};
+			if (cap.config.mcp.args) {
+				mcpEntry.args = cap.config.mcp.args;
+			}
+			if (cap.config.mcp.env) {
+				mcpEntry.env = cap.config.mcp.env;
+			}
+			resources.mcp = mcpEntry;
+		}
+
+		manifest.capabilities[cap.id] = resources;
 	}
 
 	return manifest;

@@ -204,8 +204,7 @@ VAR3 = "local3"
 		expect(config.env?.VAR3).toBe("local3");
 	});
 
-	test("preserves active_profile from main when not in local", async () => {
-		mkdirSync(".omni", { recursive: true });
+	test("reads active_profile from config.toml for backwards compatibility", async () => {
 		mkdirSync(".omni", { recursive: true });
 
 		writeFileSync(
@@ -215,36 +214,69 @@ active_profile = "production"
 `,
 		);
 
-		writeFileSync(
-			LOCAL_CONFIG,
-			`
-project = "local"
-`,
-		);
-
 		const config = await loadConfig();
+		// active_profile is still readable from config.toml for backwards compatibility
+		// but new writes go to state file via setActiveProfile()
 		expect(config.active_profile).toBe("production");
 	});
 
-	test("overrides active_profile with local value", async () => {
+	test("loads sandbox_enabled = true from config", async () => {
 		mkdirSync(".omni", { recursive: true });
+		writeFileSync(
+			CONFIG_PATH,
+			`
+sandbox_enabled = true
+`,
+		);
+
+		const config = await loadConfig();
+		expect(config.sandbox_enabled).toBe(true);
+	});
+
+	test("loads sandbox_enabled = false from config", async () => {
+		mkdirSync(".omni", { recursive: true });
+		writeFileSync(
+			CONFIG_PATH,
+			`
+sandbox_enabled = false
+`,
+		);
+
+		const config = await loadConfig();
+		expect(config.sandbox_enabled).toBe(false);
+	});
+
+	test("sandbox_enabled is undefined when not specified", async () => {
+		mkdirSync(".omni", { recursive: true });
+		writeFileSync(
+			CONFIG_PATH,
+			`
+project = "test"
+`,
+		);
+
+		const config = await loadConfig();
+		expect(config.sandbox_enabled).toBeUndefined();
+	});
+
+	test("local config can override sandbox_enabled", async () => {
 		mkdirSync(".omni", { recursive: true });
 
 		writeFileSync(
 			CONFIG_PATH,
 			`
-active_profile = "production"
+sandbox_enabled = true
 `,
 		);
 
 		writeFileSync(
 			LOCAL_CONFIG,
 			`
-active_profile = "development"
+sandbox_enabled = false
 `,
 		);
 
 		const config = await loadConfig();
-		expect(config.active_profile).toBe("development");
+		expect(config.sandbox_enabled).toBe(false);
 	});
 });

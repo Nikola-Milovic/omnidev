@@ -35,7 +35,8 @@ describe("init command", () => {
 
 		const content = readFileSync(".omni/config.toml", "utf-8");
 		expect(content).toContain('project = "my-project"');
-		expect(content).toContain('active_profile = "default"');
+		// active_profile is stored in state file, not config.toml
+		expect(content).not.toContain("active_profile");
 		// profiles should be in config.toml
 		expect(content).toContain("[profiles.default]");
 		expect(content).toContain("[profiles.planning]");
@@ -44,6 +45,15 @@ describe("init command", () => {
 		expect(content).toContain("[providers]");
 		// should have documentation comments
 		expect(content).toContain("# OmniDev Configuration");
+	});
+
+	test("creates active profile in state file", async () => {
+		await runInit({}, "claude");
+
+		expect(existsSync(".omni/state/active-profile")).toBe(true);
+
+		const content = readFileSync(".omni/state/active-profile", "utf-8");
+		expect(content).toBe("default");
 	});
 
 	test("does not create separate capabilities.toml file", async () => {

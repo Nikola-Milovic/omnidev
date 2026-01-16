@@ -133,9 +133,9 @@ capabilities = []
 				// Ignore the error from startServer
 			});
 
-			// Check that active profile was written in config.toml
-			const configContent = await Bun.file(".omni/config.toml").text();
-			expect(configContent).toContain('active_profile = "testing"');
+			// Check that active profile was written to state file (not config.toml)
+			const stateContent = await Bun.file(".omni/state/active-profile").text();
+			expect(stateContent).toBe("testing");
 		} finally {
 			process.exit = originalExit;
 			// biome-ignore lint/suspicious/noExplicitAny: Restore original import

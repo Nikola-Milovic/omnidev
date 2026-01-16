@@ -5,6 +5,7 @@ import {
 	generateClaudeTemplate,
 	generateInstructionsTemplate,
 	parseProviderFlag,
+	setActiveProfile,
 	syncAgentConfiguration,
 	writeConfig,
 } from "@omnidev/core";
@@ -37,7 +38,6 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	if (!existsSync(".omni/config.toml")) {
 		await writeConfig({
 			project: "my-project",
-			active_profile: "default",
 			providers: {
 				enabled: providers,
 			},
@@ -53,6 +53,8 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 				},
 			},
 		});
+		// Set active profile in state file (not config.toml)
+		await setActiveProfile("default");
 	}
 
 	// Create .omni/instructions.md

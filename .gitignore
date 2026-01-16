@@ -32,4 +32,9 @@ Thumbs.db
 *.swo
 
 .direnv
-.agent/settings.local.json
+
+.agent/
+.cursor/
+.claude/
+.mcp.json
+

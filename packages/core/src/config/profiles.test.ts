@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { readActiveProfileState } from "../state/active-profile.js";
 import type { OmniConfig } from "../types/index.js";
-import { parseOmniConfig } from "./parser.js";
 import { getActiveProfile, resolveEnabledCapabilities, setActiveProfile } from "./profiles.js";
 
 describe("getActiveProfile", () => {
@@ -26,18 +26,33 @@ describe("getActiveProfile", () => {
 		}
 	});
 
-	test("returns null when config does not exist", async () => {
+	test("returns null when no state file or config exists", async () => {
 		const profile = await getActiveProfile();
 		expect(profile).toBe(null);
 	});
 
-	test("returns profile name when active_profile is set in config", async () => {
-		writeFileSync(".omni/config.toml", 'active_profile = "dev"', "utf-8");
+	test("returns profile from state file when set", async () => {
+		mkdirSync(".omni/state", { recursive: true });
+		await Bun.write(".omni/state/active-profile", "dev");
 		const profile = await getActiveProfile();
 		expect(profile).toBe("dev");
 	});
 
-	test("returns null when active_profile is not set", async () => {
+	test("falls back to config.toml for backwards compatibility", async () => {
+		writeFileSync(".omni/config.toml", 'active_profile = "legacy"', "utf-8");
+		const profile = await getActiveProfile();
+		expect(profile).toBe("legacy");
+	});
+
+	test("state file takes precedence over config.toml", async () => {
+		mkdirSync(".omni/state", { recursive: true });
+		await Bun.write(".omni/state/active-profile", "from-state");
+		writeFileSync(".omni/config.toml", 'active_profile = "from-config"', "utf-8");
+		const profile = await getActiveProfile();
+		expect(profile).toBe("from-state");
+	});
+
+	test("returns null when config has no active_profile", async () => {
 		writeFileSync(".omni/config.toml", 'project = "test"', "utf-8");
 		const profile = await getActiveProfile();
 		expect(profile).toBe(null);
@@ -66,20 +81,25 @@ describe("setActiveProfile", () => {
 		}
 	});
 
-	test("sets active_profile in config.toml", async () => {
+	test("sets active_profile in state file", async () => {
+		await setActiveProfile("staging");
+		const stateProfile = await readActiveProfileState();
+		expect(stateProfile).toBe("staging");
+	});
+
+	test("overwrites existing active_profile in state file", async () => {
+		mkdirSync(".omni/state", { recursive: true });
+		await Bun.write(".omni/state/active-profile", "dev");
+		await setActiveProfile("prod");
+		const stateProfile = await readActiveProfileState();
+		expect(stateProfile).toBe("prod");
+	});
+
+	test("does not modify config.toml", async () => {
 		writeFileSync(".omni/config.toml", 'project = "test"', "utf-8");
 		await setActiveProfile("staging");
 		const content = await Bun.file(".omni/config.toml").text();
-		const config = parseOmniConfig(content);
-		expect(config.active_profile).toBe("staging");
-	});
-
-	test("overwrites existing active_profile", async () => {
-		writeFileSync(".omni/config.toml", 'active_profile = "dev"', "utf-8");
-		await setActiveProfile("prod");
-		const content = await Bun.file(".omni/config.toml").text();
-		const config = parseOmniConfig(content);
-		expect(config.active_profile).toBe("prod");
+		expect(content).not.toContain("active_profile");
 	});
 });
 

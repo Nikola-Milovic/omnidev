@@ -148,6 +148,146 @@ describe("manifest", () => {
 			expect(manifest.capabilities).toEqual({});
 			expect(manifest.syncedAt).toBeDefined();
 		});
+
+		test("includes MCP entry when capability has MCP config", () => {
+			const capabilities: LoadedCapability[] = [
+				{
+					id: "context7",
+					path: "/path/to/context7",
+					config: {
+						capability: {
+							id: "context7",
+							name: "Context7",
+							version: "1.0.0",
+							description: "",
+						},
+						mcp: {
+							command: "npx",
+							args: ["-y", "@upstash/context7-mcp"],
+						},
+					},
+					skills: [],
+					rules: [],
+					docs: [],
+					subagents: [],
+					commands: [],
+					exports: {},
+				},
+			];
+
+			const manifest = buildManifestFromCapabilities(capabilities);
+
+			expect(manifest.capabilities.context7.mcp).toEqual({
+				serverName: "omni-context7",
+				command: "npx",
+				args: ["-y", "@upstash/context7-mcp"],
+			});
+		});
+
+		test("includes MCP env when present", () => {
+			const capabilities: LoadedCapability[] = [
+				{
+					id: "my-mcp",
+					path: "/path/to/my-mcp",
+					config: {
+						capability: {
+							id: "my-mcp",
+							name: "My MCP",
+							version: "1.0.0",
+							description: "",
+						},
+						mcp: {
+							command: "node",
+							args: ["server.js"],
+							env: { API_KEY: "secret" },
+						},
+					},
+					skills: [],
+					rules: [],
+					docs: [],
+					subagents: [],
+					commands: [],
+					exports: {},
+				},
+			];
+
+			const manifest = buildManifestFromCapabilities(capabilities);
+
+			expect(manifest.capabilities["my-mcp"].mcp).toEqual({
+				serverName: "omni-my-mcp",
+				command: "node",
+				args: ["server.js"],
+				env: { API_KEY: "secret" },
+			});
+		});
+
+		test("does not include MCP entry when capability has no MCP config", () => {
+			const capabilities: LoadedCapability[] = [
+				{
+					id: "tasks",
+					path: "/path/to/tasks",
+					config: {
+						capability: { id: "tasks", name: "Tasks", version: "1.0.0", description: "" },
+					},
+					skills: [],
+					rules: [],
+					docs: [],
+					subagents: [],
+					commands: [],
+					exports: {},
+				},
+			];
+
+			const manifest = buildManifestFromCapabilities(capabilities);
+
+			expect(manifest.capabilities.tasks.mcp).toBeUndefined();
+		});
+
+		test("handles mixed capabilities with and without MCP", () => {
+			const capabilities: LoadedCapability[] = [
+				{
+					id: "tasks",
+					path: "/path/to/tasks",
+					config: {
+						capability: { id: "tasks", name: "Tasks", version: "1.0.0", description: "" },
+					},
+					skills: [],
+					rules: [],
+					docs: [],
+					subagents: [],
+					commands: [],
+					exports: {},
+				},
+				{
+					id: "context7",
+					path: "/path/to/context7",
+					config: {
+						capability: {
+							id: "context7",
+							name: "Context7",
+							version: "1.0.0",
+							description: "",
+						},
+						mcp: {
+							command: "npx",
+							args: ["context7-mcp"],
+						},
+					},
+					skills: [],
+					rules: [],
+					docs: [],
+					subagents: [],
+					commands: [],
+					exports: {},
+				},
+			];
+
+			const manifest = buildManifestFromCapabilities(capabilities);
+
+			expect(manifest.capabilities.tasks.mcp).toBeUndefined();
+			expect(manifest.capabilities.context7.mcp).toBeDefined();
+			expect(manifest.capabilities.context7.mcp?.serverName).toBe("omni-context7");
+		});
 	});
 
 	describe("saveManifest and loadManifest round-trip", () => {

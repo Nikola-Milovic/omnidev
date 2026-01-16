@@ -22,6 +22,8 @@ export * from "./capability";
 export * from "./config";
 // Export gitignore management
 export * from "./gitignore/manager";
+// Export MCP JSON management
+export * from "./mcp-json";
 // Export state management
 export * from "./state";
 // Export sync functionality

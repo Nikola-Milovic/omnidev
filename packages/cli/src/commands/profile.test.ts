@@ -239,7 +239,6 @@ capabilities = []
 			await Bun.write(
 				".omni/config.toml",
 				`project = "test-project"
-active_profile = "default"
 
 [profiles.default]
 capabilities = []
@@ -254,9 +253,9 @@ capabilities = ["planner"]
 			expect(exitCode).toBeUndefined();
 			expect(consoleOutput.join("\n")).toContain("Active profile set to: planning");
 
-			// Verify active_profile was updated in config.toml
-			const configContent = await Bun.file(".omni/config.toml").text();
-			expect(configContent).toContain('active_profile = "planning"');
+			// Verify active_profile was written to state file (not config.toml)
+			const stateContent = await Bun.file(".omni/state/active-profile").text();
+			expect(stateContent).toBe("planning");
 		});
 
 		test("should trigger agents sync after setting profile", async () => {

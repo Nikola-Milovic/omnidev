@@ -7,7 +7,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { buildCapabilityRegistry } from "@omnidev/core";
+import { buildCapabilityRegistry, loadConfig } from "@omnidev/core";
 import * as z from "zod";
 import { McpController } from "./controller/index.js";
 import { createRelayServer } from "./relay/index.js";
@@ -52,6 +52,18 @@ function debug(message: string, data?: unknown): void {
 export async function startServer(): Promise<void> {
 	try {
 		debug("Starting MCP server...");
+
+		// Check if sandbox mode is enabled
+		const config = await loadConfig();
+		const sandboxEnabled = config.sandbox_enabled !== false;
+
+		if (!sandboxEnabled) {
+			debug("Sandbox disabled - MCP server will not start");
+			console.error(
+				"[omnidev] Sandbox mode disabled. Capability MCPs are registered directly in .mcp.json",
+			);
+			process.exit(0);
+		}
 
 		// Build capability registry
 		debug("Building capability registry...");

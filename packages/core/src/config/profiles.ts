@@ -1,23 +1,30 @@
+import { readActiveProfileState, writeActiveProfileState } from "../state/active-profile.js";
 import type { OmniConfig, ProfileConfig } from "../types/index.js";
 import { loadConfig, writeConfig } from "./loader.js";
 
 /**
  * Gets the name of the currently active profile.
+ * Reads from state file first, falls back to config.toml for backwards compatibility.
  * Returns null if no profile is set.
  */
 export async function getActiveProfile(): Promise<string | null> {
+	// First check state file (new location)
+	const stateProfile = await readActiveProfileState();
+	if (stateProfile) {
+		return stateProfile;
+	}
+
+	// Fall back to config.toml for backwards compatibility
 	const config = await loadConfig();
 	return config.active_profile ?? null;
 }
 
 /**
- * Sets the active profile by writing to config.toml.
+ * Sets the active profile by writing to state file.
  * @param name - The name of the profile to activate
  */
 export async function setActiveProfile(name: string): Promise<void> {
-	const config = await loadConfig();
-	config.active_profile = name;
-	await writeConfig(config);
+	await writeActiveProfileState(name);
 }
 
 /**

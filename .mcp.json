@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "omnidev": {
+      "command": "bunx",
+      "args": [
+        "omnidev",
+        "serve"
+      ]
+    }
+  }
+}

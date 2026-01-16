@@ -6,6 +6,7 @@ import { writeRules } from "./capability/rules";
 import { fetchAllCapabilitySources } from "./capability/sources";
 import { loadConfig } from "./config/loader";
 import { rebuildGitignore } from "./gitignore/manager";
+import { syncMcpJson } from "./mcp-json/manager";
 import {
 	buildManifestFromCapabilities,
 	cleanupStaleResources,
@@ -190,6 +191,10 @@ ${skill.instructions}`,
 	// Save updated manifest for future cleanup
 	const newManifest = buildManifestFromCapabilities(capabilities);
 	await saveManifest(newManifest);
+
+	// Sync .mcp.json based on sandbox mode
+	const sandboxEnabled = config.sandbox_enabled !== false;
+	await syncMcpJson(capabilities, sandboxEnabled, { silent });
 
 	if (!silent) {
 		console.log("✓ Synced:");

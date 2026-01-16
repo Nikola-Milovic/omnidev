@@ -16,7 +16,9 @@ export async function loadSkills(capabilityPath: string, capabilityId: string): 
 	}
 
 	const skills: Skill[] = [];
-	const entries = readdirSync(skillsDir, { withFileTypes: true });
+	const entries = readdirSync(skillsDir, { withFileTypes: true }).sort((a, b) =>
+		a.name.localeCompare(b.name),
+	);
 
 	for (const entry of entries) {
 		if (entry.isDirectory()) {

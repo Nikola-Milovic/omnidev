@@ -24,7 +24,9 @@ export async function loadCommands(
 	}
 
 	const commands: Command[] = [];
-	const entries = readdirSync(commandsDir, { withFileTypes: true });
+	const entries = readdirSync(commandsDir, { withFileTypes: true }).sort((a, b) =>
+		a.name.localeCompare(b.name),
+	);
 
 	for (const entry of entries) {
 		if (entry.isDirectory()) {

@@ -123,139 +123,155 @@ describe("examples integration", () => {
 			continue;
 		}
 
-		test(`${exampleName}.toml syncs capabilities from GitHub`, async () => {
-			// Copy example file directly - no modifications
-			const examplePath = resolve(examplesDir, exampleFile);
-			const config = readFileSync(examplePath, "utf-8");
-			await Bun.write("omni.toml", config);
+		test(
+			`${exampleName}.toml syncs capabilities from GitHub`,
+			async () => {
+				// Copy example file directly - no modifications
+				const examplePath = resolve(examplesDir, exampleFile);
+				const config = readFileSync(examplePath, "utf-8");
+				await Bun.write("omni.toml", config);
 
-			// Run init
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
+				// Run init
+				await captureConsole(async () => {
+					await runInit({}, "claude");
+				});
 
-			// Run sync
-			const { stderr } = await captureConsole(async () => {
-				await runSync();
-			});
+				// Run sync
+				const { stderr } = await captureConsole(async () => {
+					await runSync();
+				});
 
-			// Verify basic structure was created
-			expect(existsSync(".omni")).toBe(true);
-			expect(existsSync(".omni/capabilities")).toBe(true);
-			expect(existsSync("CLAUDE.md")).toBe(true);
+				// Verify basic structure was created
+				expect(existsSync(".omni")).toBe(true);
+				expect(existsSync(".omni/capabilities")).toBe(true);
+				expect(existsSync("CLAUDE.md")).toBe(true);
 
-			// Verify expected capabilities were synced
-			const syncedCapabilities = existsSync(".omni/capabilities")
-				? readdirSync(".omni/capabilities")
-						.filter((f) => existsSync(`.omni/capabilities/${f}/capability.toml`))
-						.sort()
-				: [];
+				// Verify expected capabilities were synced
+				const syncedCapabilities = existsSync(".omni/capabilities")
+					? readdirSync(".omni/capabilities")
+							.filter((f) => existsSync(`.omni/capabilities/${f}/capability.toml`))
+							.sort()
+					: [];
 
-			for (const expectedCap of expectations.capabilities) {
-				expect(syncedCapabilities).toContain(expectedCap);
-			}
-
-			// Verify no critical errors in output
-			const criticalErrors = stderr.filter(
-				(line) =>
-					line.includes("Error:") && !line.includes("Warning:") && !line.includes("not found"),
-			);
-			expect(criticalErrors).toEqual([]);
-
-			// Verify fixture markers for each expected capability
-			for (const capId of expectations.capabilities) {
-				const markers = FIXTURE_MARKERS[capId as keyof typeof FIXTURE_MARKERS];
-				if (!markers) continue;
-
-				if ("skill" in markers) {
-					// Find files with the skill marker
-					const skillFiles = findFilesWithMarker(".", markers.skill);
-					expect(skillFiles.length).toBeGreaterThan(0);
+				for (const expectedCap of expectations.capabilities) {
+					expect(syncedCapabilities).toContain(expectedCap);
 				}
 
-				if ("rule" in markers) {
-					// Find files with the rule marker
-					const ruleFiles = findFilesWithMarker(".", markers.rule);
-					expect(ruleFiles.length).toBeGreaterThan(0);
+				// Verify no critical errors in output
+				const criticalErrors = stderr.filter(
+					(line) =>
+						line.includes("Error:") && !line.includes("Warning:") && !line.includes("not found"),
+				);
+				expect(criticalErrors).toEqual([]);
+
+				// Verify fixture markers for each expected capability
+				for (const capId of expectations.capabilities) {
+					const markers = FIXTURE_MARKERS[capId as keyof typeof FIXTURE_MARKERS];
+					if (!markers) continue;
+
+					if ("skill" in markers) {
+						// Find files with the skill marker
+						const skillFiles = findFilesWithMarker(".", markers.skill);
+						expect(skillFiles.length).toBeGreaterThan(0);
+					}
+
+					if ("rule" in markers) {
+						// Find files with the rule marker
+						const ruleFiles = findFilesWithMarker(".", markers.rule);
+						expect(ruleFiles.length).toBeGreaterThan(0);
+					}
 				}
-			}
-		});
+			},
+			{ timeout: 30000 },
+		);
 	}
 });
 
 describe("fixture markers validation", () => {
 	setupTestDir("fixture-markers-", { chdir: true });
 
-	test("standard fixture produces skill and rule output", async () => {
-		const config = `
+	test(
+		"standard fixture produces skill and rule output",
+		async () => {
+			const config = `
 [capabilities.sources]
 standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
 
 [profiles.default]
 capabilities = ["standard"]
 `;
-		await Bun.write("omni.toml", config);
+			await Bun.write("omni.toml", config);
 
-		await captureConsole(async () => {
-			await runInit({}, "claude");
-		});
+			await captureConsole(async () => {
+				await runInit({}, "claude");
+			});
 
-		await captureConsole(async () => {
-			await runSync();
-		});
+			await captureConsole(async () => {
+				await runSync();
+			});
 
-		// Verify skill marker is present
-		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.skill);
-		expect(skillFiles.length).toBeGreaterThan(0);
+			// Verify skill marker is present
+			const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.skill);
+			expect(skillFiles.length).toBeGreaterThan(0);
 
-		// Verify rule marker is present
-		const ruleFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.rule);
-		expect(ruleFiles.length).toBeGreaterThan(0);
-	});
+			// Verify rule marker is present
+			const ruleFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.rule);
+			expect(ruleFiles.length).toBeGreaterThan(0);
+		},
+		{ timeout: 30000 },
+	);
 
-	test("claude-plugin fixture is auto-wrapped", async () => {
-		const config = `
+	test(
+		"claude-plugin fixture is auto-wrapped",
+		async () => {
+			const config = `
 [capabilities.sources]
 claude-plugin = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/claude-plugin" }
 
 [profiles.default]
 capabilities = ["claude-plugin"]
 `;
-		await Bun.write("omni.toml", config);
+			await Bun.write("omni.toml", config);
 
-		await captureConsole(async () => {
-			await runInit({}, "claude");
-		});
+			await captureConsole(async () => {
+				await runInit({}, "claude");
+			});
 
-		await captureConsole(async () => {
-			await runSync();
-		});
+			await captureConsole(async () => {
+				await runSync();
+			});
 
-		// Verify skill marker is present
-		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["claude-plugin"].skill);
-		expect(skillFiles.length).toBeGreaterThan(0);
-	});
+			// Verify skill marker is present
+			const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["claude-plugin"].skill);
+			expect(skillFiles.length).toBeGreaterThan(0);
+		},
+		{ timeout: 30000 },
+	);
 
-	test("bare-skills fixture is auto-wrapped", async () => {
-		const config = `
+	test(
+		"bare-skills fixture is auto-wrapped",
+		async () => {
+			const config = `
 [capabilities.sources]
 bare-skills = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/bare-skills" }
 
 [profiles.default]
 capabilities = ["bare-skills"]
 `;
-		await Bun.write("omni.toml", config);
+			await Bun.write("omni.toml", config);
 
-		await captureConsole(async () => {
-			await runInit({}, "claude");
-		});
+			await captureConsole(async () => {
+				await runInit({}, "claude");
+			});
 
-		await captureConsole(async () => {
-			await runSync();
-		});
+			await captureConsole(async () => {
+				await runSync();
+			});
 
-		// Verify skill marker is present
-		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["bare-skills"].skill);
-		expect(skillFiles.length).toBeGreaterThan(0);
-	});
+			// Verify skill marker is present
+			const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["bare-skills"].skill);
+			expect(skillFiles.length).toBeGreaterThan(0);
+		},
+		{ timeout: 30000 },
+	);
 });

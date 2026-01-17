@@ -9,7 +9,9 @@
 		"directory": "packages/cli"
 	},
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./commands/init": "./src/commands/init.ts",
+		"./commands/sync": "./src/commands/sync.ts"
 	},
 	"bin": {
 		"omnidev": "./src/index.ts"

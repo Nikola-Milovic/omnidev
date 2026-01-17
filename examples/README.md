@@ -2,6 +2,8 @@
 
 This directory contains example `omni.toml` configurations demonstrating different ways to load and organize capabilities.
 
+> **CI Tested**: The fixtures are validated by `examples.test.ts` (co-located in this directory) on every push/PR. If you modify fixtures, update the tests accordingly.
+
 ## Files
 
 | File | Description |
@@ -11,6 +13,37 @@ This directory contains example `omni.toml` configurations demonstrating differe
 | `github-sources.toml` | Loading capabilities from GitHub with version pinning |
 | `local-dev.toml` | Loading from local directories for development |
 | `comprehensive.toml` | Mixed sources with advanced profile setup |
+| `mcp-direct.toml` | Direct MCP server definitions |
+| `mcp-wrapping.toml` | Wrapping MCP servers from external repos |
+| `examples.test.ts` | Integration tests for fixtures (CI-validated) |
+
+## Fixtures
+
+The `fixtures/` directory contains minimal working capabilities used for testing:
+
+| Fixture | Description |
+|---------|-------------|
+| `tasks/` | Basic capability with a task-planning skill |
+| `coding-rules/` | Capability with TypeScript coding rules |
+
+### Testing Locally
+
+To test the fixtures locally, create an `omni.toml` in your project:
+
+```toml
+[capabilities.sources]
+tasks = "file:///path/to/omnidev/examples/fixtures/tasks"
+
+[profiles.default]
+capabilities = ["tasks"]
+```
+
+Then run:
+
+```bash
+omnidev init
+omnidev sync
+```
 
 ## Quick Start
 

@@ -8,10 +8,8 @@ peer = true
 auto = "auto"
 
 [test]
-# Test file patterns - automatically discovers **/*.test.ts
-
- # Coverage settings
- coverage = true
+# Coverage settings
+coverage = true
  coverageThreshold = 0.0
  coverageSkipTestFiles = true
 # Exclude type definitions from coverage

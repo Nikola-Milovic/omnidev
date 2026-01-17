@@ -22,7 +22,7 @@ interface PackageJson {
 // Get all package versions from the monorepo
 function getWorkspaceVersions(): Map<string, string> {
 	const versions = new Map<string, string>();
-	const packages = ["cli", "core"];
+	const packages = ["adapters", "cli", "core"];
 
 	for (const pkg of packages) {
 		const pkgJsonPath = join(packagesDir, pkg, "package.json");
@@ -63,7 +63,7 @@ function main() {
 	console.log("Workspace versions:", Object.fromEntries(versions));
 	console.log("");
 
-	const packages = ["cli", "core"];
+	const packages = ["adapters", "cli", "core"];
 
 	for (const pkg of packages) {
 		const pkgJsonPath = join(packagesDir, pkg, "package.json");

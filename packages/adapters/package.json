@@ -1,8 +1,17 @@
 {
 	"name": "@omnidev-ai/adapters",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "module",
-	"private": true,
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nikola-Milovic/omnidev.git",
+		"directory": "packages/adapters"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
 	"exports": {
 		".": "./src/index.ts"
 	},

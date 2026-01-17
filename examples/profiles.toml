@@ -1,19 +1,27 @@
 # Profile-Based Configuration
 # Different capability sets for different workflows
 
+[capabilities.sources]
+# Active fixtures from this repository
+standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
+bare-skills = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/bare-skills" }
+
+# Example: External capabilities (commented - replace with real repos)
+# ralph = { source = "github:your-org/ralph-orchestrator", ref = "v1.0.0" }
+# frontend-tools = { source = "github:your-org/frontend-capability" }
+
 [profiles.default]
 # Standard profile for everyday development
-capabilities = ["tasks"]
+capabilities = ["standard"]
 
-[profiles.planning]
-# Profile for project planning and architecture work
-# Includes Ralph orchestrator for PRD-driven development
-capabilities = ["ralph", "tasks"]
+[profiles.extended]
+# Extended profile with auto-wrapped capabilities
+capabilities = ["standard", "bare-skills"]
 
-[profiles.frontend]
-# Frontend-focused profile with UI/UX capabilities
-capabilities = ["tasks", "ui-design", "accessibility"]
+# Example: Profile with external capabilities (commented)
+# [profiles.planning]
+# capabilities = ["standard", "ralph"]
 
-[profiles.backend]
-# Backend-focused profile with API and database tools
-capabilities = ["tasks", "api-design", "database"]
+# Example: Frontend-focused profile (commented)
+# [profiles.frontend]
+# capabilities = ["standard", "frontend-tools"]

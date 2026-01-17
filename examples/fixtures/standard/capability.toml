@@ -1,0 +1,8 @@
+# Standard capability fixture for testing
+# Contains skills and rules with identifiable markers
+
+[capability]
+id = "standard"
+name = "Standard Fixture"
+version = "1.0.0"
+description = "A standard capability fixture for OmniDev integration tests"

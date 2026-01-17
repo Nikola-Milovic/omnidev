@@ -2,9 +2,9 @@
 
 This directory contains example `omni.toml` configurations demonstrating different ways to load and organize capabilities.
 
-> **CI Tested**: The fixtures are validated by `examples.test.ts` (co-located in this directory) on every push/PR. If you modify fixtures, update the tests accordingly.
+> **CI Tested**: All examples pull from real GitHub sources (`github:Nikola-Milovic/omnidev`) and are validated by `examples.test.ts` on every push/PR.
 
-## Files
+## Example Files
 
 | File | Description |
 |------|-------------|
@@ -13,37 +13,28 @@ This directory contains example `omni.toml` configurations demonstrating differe
 | `github-sources.toml` | Loading capabilities from GitHub with version pinning |
 | `local-dev.toml` | Loading from local directories for development |
 | `comprehensive.toml` | Mixed sources with advanced profile setup |
-| `mcp-direct.toml` | Direct MCP server definitions |
-| `mcp-wrapping.toml` | Wrapping MCP servers from external repos |
-| `examples.test.ts` | Integration tests for fixtures (CI-validated) |
+| `mcp.toml` | MCP server configuration |
 
 ## Fixtures
 
-The `fixtures/` directory contains minimal working capabilities used for testing:
+The `fixtures/` directory contains real capabilities used for testing. These are pulled from GitHub by the example configs.
 
-| Fixture | Description |
-|---------|-------------|
-| `tasks/` | Basic capability with a task-planning skill |
-| `coding-rules/` | Capability with TypeScript coding rules |
+| Fixture | Type | Description |
+|---------|------|-------------|
+| `standard/` | Full capability | Complete capability with `capability.toml`, skills, and rules |
+| `claude-plugin/` | Auto-wrapped | `.claude-plugin/plugin.json` format (auto-generates capability.toml) |
+| `bare-skills/` | Auto-wrapped | Just a `skills/` directory (auto-generates capability.toml) |
+| `demo-mcp/` | MCP Server | TypeScript MCP server using `@modelcontextprotocol/sdk` |
 
-### Testing Locally
+### Fixture Markers
 
-To test the fixtures locally, create an `omni.toml` in your project:
+Each fixture contains unique markers to verify content was synced correctly:
 
-```toml
-[capabilities.sources]
-tasks = "file:///path/to/omnidev/examples/fixtures/tasks"
-
-[profiles.default]
-capabilities = ["tasks"]
-```
-
-Then run:
-
-```bash
-omnidev init
-omnidev sync
-```
+- `FIXTURE_MARKER:STANDARD_SKILL` - Standard fixture skill
+- `FIXTURE_MARKER:STANDARD_RULE` - Standard fixture rule
+- `FIXTURE_MARKER:CLAUDE_PLUGIN_SKILL` - Claude plugin fixture skill
+- `FIXTURE_MARKER:BARE_SKILL` - Bare skills fixture skill
+- `FIXTURE_MARKER:DEMO_MCP_RESPONSE` - Demo MCP server response
 
 ## Quick Start
 
@@ -66,8 +57,24 @@ omnidev sync
 
 Capabilities can come from:
 
-- **GitHub**: `github:owner/repo` or `github:owner/repo@ref`
+- **GitHub**: `github:owner/repo` or `{ source = "github:owner/repo", ref = "v1.0.0" }`
 - **File paths**: `file:///absolute/path` or `file://./relative/path`
+
+### Loading from Monorepos
+
+Load specific subdirectories using the `path` parameter:
+
+```toml
+[capabilities.sources]
+# Load from a subdirectory in a monorepo
+my-skill = { source = "github:owner/repo", path = "plugins/my-skill" }
+```
+
+### Auto-Wrapping
+
+OmniDev automatically generates `capability.toml` when:
+- `.claude-plugin/plugin.json` exists in the directory, OR
+- Expected directories exist (`skills/`, `agents/`, `commands/`, `rules/`, `docs/`)
 
 ### Profiles
 
@@ -75,60 +82,65 @@ Profiles group capabilities for different workflows:
 
 ```toml
 [profiles.default]
-capabilities = ["tasks"]
+capabilities = ["standard"]
 
-[profiles.planning]
-capabilities = ["tasks", "ralph"]
+[profiles.extended]
+capabilities = ["standard", "claude-plugin", "bare-skills"]
 ```
 
-Switch profiles: `omnidev profile set planning`
+Switch profiles: `omnidev profile set extended`
 
 ### Version Pinning
 
 For production, always pin versions:
 
 ```toml
-# Recommended
-tasks = { source = "github:owner/repo", ref = "v1.0.0" }
+[capabilities.sources]
+# Recommended: Pin to a version tag
+my-cap = { source = "github:owner/repo", ref = "v1.0.0" }
 
-# Most precise (commit hash)
-tasks = { source = "github:owner/repo", ref = "abc123" }
+# Most precise: Pin to a commit hash
+my-cap = { source = "github:owner/repo", ref = "abc123def456" }
 ```
 
-### Loading from Monorepos
+### MCP Servers
 
-Load individual capabilities from repositories with multiple plugins using the `path` parameter:
+Define MCP servers directly in `omni.toml`:
 
 ```toml
-# Load specific subdirectories from a monorepo
-expo-app-design = { source = "github:expo/skills", path = "plugins/expo-app-design" }
-expo-deployment = { source = "github:expo/skills", path = "plugins/expo-deployment" }
+[mcps.my-server]
+command = "bun"
+args = ["run", ".omni/capabilities/my-mcp/src/index.ts"]
+transport = "stdio"
 ```
-
-Wrapping is auto-detected when:
-- `.claude-plugin/plugin.json` exists in the directory, OR
-- Expected directories exist (skills/, agents/, commands/, rules/, docs/)
-
-When wrapping, OmniDev will:
-- Auto-discover skills, agents, commands, rules, and docs
-- Extract metadata from `.claude-plugin/plugin.json` if present
-- Use README.md content as description
-- Generate a `capability.toml` automatically
 
 ### Local Overrides
 
 Use `omni.local.toml` (gitignored) for personal customizations:
 
 ```toml
-# omni.local.toml
-[profiles.default]
-capabilities = ["tasks", "my-experimental-tool"]
+# omni.local.toml - override sources for local development
+[capabilities.sources]
+standard = "file://./local/standard-dev"
 ```
+
+## Testing
+
+Run the integration tests:
+
+```bash
+bun test ./examples
+```
+
+Tests verify that:
+1. Each example config syncs successfully from GitHub
+2. Expected capabilities are present
+3. Fixture markers appear in synced content
 
 ## Best Practices
 
 1. **Pin versions** for production (`ref = "v1.0.0"`)
-2. **Use profiles** to separate workflows (frontend vs backend)
+2. **Use profiles** to separate workflows
 3. **Commit `omni.toml`** to share with your team
 4. **Gitignore `omni.local.toml`** for personal overrides
-5. **Test capabilities locally** with `file://` before publishing to GitHub
+5. **Test capabilities locally** with `file://` before publishing

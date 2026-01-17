@@ -1,6 +1,8 @@
 # Basic OmniDev Configuration
-# Minimal setup with a single capability for general AI agent work
+# Minimal setup with a single capability
+
+[capabilities.sources]
+standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
 
 [profiles.default]
-# Load the tasks capability for task management
-capabilities = ["tasks"]
+capabilities = ["standard"]

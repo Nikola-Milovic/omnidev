@@ -1,16 +1,25 @@
 # Local Development Configuration
 # Loading capabilities from local directories for development and testing
+#
+# NOTE: All sources are commented because they require local directories.
+# Uncomment and adjust paths for your local setup.
 
 [capabilities.sources]
 # Load capability from local directory (absolute path)
-my-tool = "file:///home/user/projects/my-capability"
+# my-tool = "file:///home/user/projects/my-capability"
 
 # Load capability from relative path (relative to project root)
-local-exp = "file://./capabilities/experimental"
+# local-exp = "file://./capabilities/experimental"
 
 # Use local override for a GitHub capability while developing
 # When ready, switch back to github:source
-my-fork = "file://./forks/ralph-orchestrator"
+# my-fork = "file://./forks/some-capability"
+
+# Example: Override a capability for local development
+# In omni.local.toml (gitignored), you can override sources:
+# standard = "file://./local/standard-dev"
 
 [profiles.default]
-capabilities = ["my-tool", "local-exp", "my-fork"]
+# Uncomment capabilities as needed
+# capabilities = ["my-tool", "local-exp"]
+capabilities = []

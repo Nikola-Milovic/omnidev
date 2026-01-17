@@ -1,8 +1,0 @@
-# Example capability for task management
-# This is a minimal fixture capability for testing and demonstration
-
-[capability]
-id = "tasks"
-name = "Task Management"
-version = "1.0.0"
-description = "Simple task planning skill for AI agents"

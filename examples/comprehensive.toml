@@ -1,34 +1,34 @@
 # Comprehensive Configuration
-# Mixed sources with multiple profiles and advanced setup
+# Mixed sources demonstrating all OmniDev features
 
 [capabilities.sources]
-# GitHub sources with version pinning
-tasks = { source = "github:example-org/tasks-capability", ref = "v2.1.0" }
-ralph = { source = "github:example-org/ralph-orchestrator", ref = "v1.0.0" }
+# Active fixtures from this repository
+standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
+claude-plugin = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/claude-plugin" }
+bare-skills = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/bare-skills" }
 
-# Local development sources
-ui-components = "file://./capabilities/ui-components"
-my-tool = "file:///home/user/dev/my-capability"
+# Example: External GitHub sources (commented - replace with real repos)
+# tasks = { source = "github:your-org/tasks-capability", ref = "v2.1.0" }
+# ralph = { source = "github:your-org/ralph-orchestrator", ref = "v1.0.0" }
 
-# Community capabilities (latest)
-obsidian = "github:kepano/obsidian-skills"
+# Example: Local development sources (commented - requires local dirs)
+# ui-components = "file://./capabilities/ui-components"
+# my-tool = "file:///home/user/dev/my-capability"
+
+# Example: Community capabilities (commented)
+# obsidian = "github:kepano/obsidian-skills"
 
 # Profiles for different workflows
 [profiles.default]
-capabilities = ["tasks", "ui-components"]
+capabilities = ["standard"]
 
-[profiles.planning]
-# Profile for architecture and design work
-capabilities = ["tasks", "ralph", "obsidian"]
+[profiles.extended]
+# Extended profile with multiple capabilities
+capabilities = ["standard", "claude-plugin", "bare-skills"]
 
-[profiles.full-stack]
-# Full-stack development profile
-capabilities = ["tasks", "ralph", "ui-components", "my-tool"]
+# Example profiles (commented - require external capabilities)
+# [profiles.planning]
+# capabilities = ["standard", "ralph"]
 
-[profiles.minimal]
-# Lightweight profile for quick tasks
-capabilities = ["tasks"]
-
-# Profile for experimenting with new capabilities
-[profiles.experimental]
-capabilities = ["tasks", "ui-components", "obsidian"]
+# [profiles.full-stack]
+# capabilities = ["standard", "ralph", "ui-components", "my-tool"]

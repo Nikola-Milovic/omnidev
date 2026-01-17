@@ -1,33 +1,27 @@
 # GitHub Sources Configuration
-# Loading capabilities from GitHub repositories with version pinning
+# Loading capabilities from GitHub with version pinning
 
 [capabilities.sources]
-# Load from latest commit (main branch)
-obsidian = "github:kepano/obsidian-skills"
+# Active fixtures from this repository
+# Using path parameter to load from monorepo subdirectory
+standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
+claude-plugin = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/claude-plugin" }
 
-# Pin to specific version (recommended for production)
-tasks = { source = "github:example-org/tasks-capability", ref = "v2.1.0" }
+# Example: Version pinning with ref parameter (commented - replace with real repos)
+# Recommended: Pin to a specific version tag
+# my-capability = { source = "github:your-org/capability", ref = "v1.0.0" }
 
-# Pin to specific commit hash (absolute version control)
-ralph = { source = "github:example-org/ralph-orchestrator", ref = "abc123def456" }
+# Most precise: Pin to a specific commit hash
+# stable-tool = { source = "github:your-org/tool", ref = "abc123def456" }
 
-# Use a specific branch
-experimental = { source = "github:example-org/experimental-tools", ref = "feature/new-ui" }
+# Latest from a branch (not recommended for production)
+# experimental = { source = "github:your-org/experimental", ref = "main" }
 
-# Load individual capabilities from a monorepo using the path parameter
-# Example: Expo skills repository has multiple plugins under plugins/
-# Auto-detects wrapping based on .claude-plugin/plugin.json or directory structure
-expo-app-design = { source = "github:expo/skills", path = "plugins/expo-app-design" }
-expo-deployment = { source = "github:expo/skills", path = "plugins/expo-deployment" }
-upgrading-expo = { source = "github:expo/skills", path = "plugins/upgrading-expo" }
+# Simple format (latest from default branch)
+# community-tool = "github:community/awesome-tool"
+
+# Example: Load from monorepo with path parameter (commented)
+# expo-design = { source = "github:expo/skills", path = "plugins/expo-app-design" }
 
 [profiles.default]
-capabilities = ["tasks", "ralph", "obsidian"]
-
-[profiles.expo]
-# Use all Expo capabilities
-capabilities = ["expo-app-design", "expo-deployment", "upgrading-expo"]
-
-[profiles.development]
-# Development profile with experimental capabilities
-capabilities = ["tasks", "experimental", "obsidian"]
+capabilities = ["standard", "claude-plugin"]

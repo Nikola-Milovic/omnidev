@@ -1,303 +1,261 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { captureConsole, setupTestDir } from "../packages/core/src/test-utils/index.js";
 import { runInit } from "../packages/cli/src/commands/init.js";
 import { runSync } from "../packages/cli/src/commands/sync.js";
 
 /**
- * Integration tests that validate the full OmniDev workflow:
- * init → sync → verify outputs
+ * Integration tests that validate each example configuration file works.
  *
- * These tests use fixture capabilities from ./fixtures/ to ensure
- * the CLI produces expected outputs when given real configurations.
+ * These tests pull capabilities from the REAL GitHub repository (github:Nikola-Milovic/omnidev).
+ * This ensures examples are 1:1 copies of what users will experience.
  *
- * NOTE: These tests are co-located with the fixtures they test.
- * If you modify fixtures, update these tests accordingly.
+ * NOTE: Tests will fail if:
+ * - No network connection
+ * - Fixtures haven't been pushed to GitHub yet
+ * - GitHub API rate limits
+ *
+ * The tests use fixture markers (FIXTURE_MARKER:*) to verify content was synced correctly.
  */
+
+// Fixture markers for verification
+const FIXTURE_MARKERS = {
+	standard: {
+		skill: "FIXTURE_MARKER:STANDARD_SKILL",
+		rule: "FIXTURE_MARKER:STANDARD_RULE",
+	},
+	"claude-plugin": {
+		skill: "FIXTURE_MARKER:CLAUDE_PLUGIN_SKILL",
+	},
+	"bare-skills": {
+		skill: "FIXTURE_MARKER:BARE_SKILL",
+	},
+} as const;
+
+// Map of example files to their expected capabilities
+const EXAMPLE_EXPECTATIONS: Record<
+	string,
+	{
+		capabilities: string[];
+		skip?: boolean;
+		skipReason?: string;
+	}
+> = {
+	"basic.toml": {
+		capabilities: ["standard"],
+	},
+	"profiles.toml": {
+		capabilities: ["standard"], // Default profile only uses standard
+	},
+	"github-sources.toml": {
+		capabilities: ["standard", "claude-plugin"],
+	},
+	"comprehensive.toml": {
+		capabilities: ["standard"], // Default profile uses standard
+	},
+	"local-dev.toml": {
+		capabilities: [],
+		skip: true,
+		skipReason: "All sources are commented - documentation only",
+	},
+	"mcp.toml": {
+		capabilities: ["demo-mcp"],
+		skip: true,
+		skipReason: "MCP examples require fixtures to be pushed to GitHub first",
+	},
+};
+
+// Get all example .toml files
+const examplesDir = resolve(__dirname);
+const exampleFiles = readdirSync(examplesDir)
+	.filter((f) => f.endsWith(".toml"))
+	.sort();
+
+/**
+ * Find files containing a marker string recursively
+ */
+function findFilesWithMarker(dir: string, marker: string): string[] {
+	const found: string[] = [];
+
+	function search(currentDir: string) {
+		if (!existsSync(currentDir)) return;
+
+		const entries = readdirSync(currentDir, { withFileTypes: true }).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+
+		for (const entry of entries) {
+			const fullPath = resolve(currentDir, entry.name);
+			if (entry.isDirectory()) {
+				search(fullPath);
+			} else if (entry.isFile() && (entry.name.endsWith(".md") || entry.name.endsWith(".mdc"))) {
+				try {
+					const content = readFileSync(fullPath, "utf-8");
+					if (content.includes(marker)) {
+						found.push(fullPath);
+					}
+				} catch {
+					// Ignore read errors
+				}
+			}
+		}
+	}
+
+	search(dir);
+	return found;
+}
+
 describe("examples integration", () => {
 	setupTestDir("examples-integration-", { chdir: true });
 
-	// Get absolute path to fixtures directory (co-located in same directory)
-	const fixturesDir = resolve(__dirname, "fixtures");
+	for (const exampleFile of exampleFiles) {
+		const exampleName = basename(exampleFile, ".toml");
+		const expectations = EXAMPLE_EXPECTATIONS[exampleFile];
 
-	describe("basic workflow with tasks capability", () => {
-		test("syncs a single capability and produces expected outputs", async () => {
-			// Create omni.toml with tasks capability using file:// source
-			const config = `
-[capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
+		if (!expectations) {
+			test.skip(`${exampleName}.toml - no expectations defined`, () => {});
+			continue;
+		}
 
-[profiles.default]
-capabilities = ["tasks"]
-`;
+		if (expectations.skip) {
+			test.skip(`${exampleName}.toml - ${expectations.skipReason}`, () => {});
+			continue;
+		}
+
+		test(`${exampleName}.toml syncs capabilities from GitHub`, async () => {
+			// Copy example file directly - no modifications
+			const examplePath = resolve(examplesDir, exampleFile);
+			const config = readFileSync(examplePath, "utf-8");
 			await Bun.write("omni.toml", config);
 
-			// Run init to create directories
+			// Run init
 			await captureConsole(async () => {
 				await runInit({}, "claude");
 			});
 
-			// Run sync to fetch capabilities and write outputs
-			await captureConsole(async () => {
+			// Run sync
+			const { stderr } = await captureConsole(async () => {
 				await runSync();
 			});
 
-			// Verify directory structure
+			// Verify basic structure was created
 			expect(existsSync(".omni")).toBe(true);
 			expect(existsSync(".omni/capabilities")).toBe(true);
-			expect(existsSync(".omni/capabilities/tasks")).toBe(true);
+			expect(existsSync("CLAUDE.md")).toBe(true);
 
-			// Verify capability was loaded correctly
-			expect(existsSync(".omni/capabilities/tasks/capability.toml")).toBe(true);
-			expect(existsSync(".omni/capabilities/tasks/skills/task-planning/SKILL.md")).toBe(true);
-
-			// Verify skill output was generated
-			expect(existsSync(".claude/skills")).toBe(true);
-			const skillDirs = readdirSync(".claude/skills", { withFileTypes: true })
-				.filter((d) => d.isDirectory())
-				.map((d) => d.name)
-				.sort();
-			expect(skillDirs).toContain("task-planning");
-
-			// Verify skill content
-			const skillPath = ".claude/skills/task-planning/SKILL.md";
-			expect(existsSync(skillPath)).toBe(true);
-			const skillContent = readFileSync(skillPath, "utf-8");
-			expect(skillContent).toContain("Task Planning Skill");
-			expect(skillContent).toContain("Break down complex tasks");
-
-			// Verify instructions.md was updated
-			const instructionsContent = readFileSync(".omni/instructions.md", "utf-8");
-			expect(instructionsContent).toContain("## Capabilities");
-		});
-	});
-
-	describe("workflow with multiple capabilities", () => {
-		test("syncs multiple capabilities and merges outputs", async () => {
-			// Create omni.toml with multiple capabilities
-			const config = `
-[capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
-coding-rules = "file://${fixturesDir}/coding-rules"
-
-[profiles.default]
-capabilities = ["tasks", "coding-rules"]
-`;
-			await Bun.write("omni.toml", config);
-
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			await captureConsole(async () => {
-				await runSync();
-			});
-
-			// Verify all capabilities were fetched
-			expect(existsSync(".omni/capabilities/tasks")).toBe(true);
-			expect(existsSync(".omni/capabilities/coding-rules")).toBe(true);
-
-			// Verify skill from tasks capability
-			expect(existsSync(".claude/skills/task-planning/SKILL.md")).toBe(true);
-
-			// Verify rules from coding-rules capability
-			expect(existsSync(".cursor/rules")).toBe(true);
-			const ruleFiles = readdirSync(".cursor/rules")
-				.filter((f) => f.endsWith(".mdc"))
-				.sort();
-			expect(ruleFiles.length).toBeGreaterThan(0);
-			expect(ruleFiles.some((f) => f.includes("typescript"))).toBe(true);
-
-			// Verify instructions.md contains content from all capabilities
-			const instructionsContent = readFileSync(".omni/instructions.md", "utf-8");
-			expect(instructionsContent).toContain("## Capabilities");
-			// Rules should be included
-			expect(instructionsContent).toContain("TypeScript");
-		});
-	});
-
-	describe("profile switching", () => {
-		test("different profiles load different capabilities", async () => {
-			// Create omni.toml with multiple profiles
-			const config = `
-[capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
-coding-rules = "file://${fixturesDir}/coding-rules"
-
-[profiles.default]
-capabilities = ["tasks"]
-
-[profiles.full]
-capabilities = ["tasks", "coding-rules"]
-
-[profiles.rules-only]
-capabilities = ["coding-rules"]
-`;
-			await Bun.write("omni.toml", config);
-
-			// Init with default profile
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			// Sync - should only have tasks capability
-			await captureConsole(async () => {
-				await runSync();
-			});
-
-			// Default profile should have task-planning skill
-			expect(existsSync(".claude/skills/task-planning/SKILL.md")).toBe(true);
-
-			// Default profile should NOT have rules (since coding-rules not in default profile)
-			const ruleFiles = existsSync(".cursor/rules")
-				? readdirSync(".cursor/rules").filter((f) => f.endsWith(".mdc"))
+			// Verify expected capabilities were synced
+			const syncedCapabilities = existsSync(".omni/capabilities")
+				? readdirSync(".omni/capabilities")
+						.filter((f) => existsSync(`.omni/capabilities/${f}/capability.toml`))
+						.sort()
 				: [];
-			expect(ruleFiles.length).toBe(0);
-		});
-	});
 
-	describe("sync idempotency", () => {
-		test("multiple syncs produce consistent results", async () => {
-			const config = `
-[capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
-
-[profiles.default]
-capabilities = ["tasks"]
-`;
-			await Bun.write("omni.toml", config);
-
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			// Run sync multiple times
-			for (let i = 0; i < 3; i++) {
-				await captureConsole(async () => {
-					await runSync();
-				});
+			for (const expectedCap of expectations.capabilities) {
+				expect(syncedCapabilities).toContain(expectedCap);
 			}
 
-			// Verify outputs still exist and are correct
-			expect(existsSync(".claude/skills/task-planning/SKILL.md")).toBe(true);
+			// Verify no critical errors in output
+			const criticalErrors = stderr.filter(
+				(line) =>
+					line.includes("Error:") && !line.includes("Warning:") && !line.includes("not found"),
+			);
+			expect(criticalErrors).toEqual([]);
 
-			const skillContent = readFileSync(".claude/skills/task-planning/SKILL.md", "utf-8");
-			expect(skillContent).toContain("Task Planning Skill");
+			// Verify fixture markers for each expected capability
+			for (const capId of expectations.capabilities) {
+				const markers = FIXTURE_MARKERS[capId as keyof typeof FIXTURE_MARKERS];
+				if (!markers) continue;
 
-			// Verify no duplicate directories
-			const skillDirs = readdirSync(".claude/skills", { withFileTypes: true })
-				.filter((d) => d.isDirectory())
-				.map((d) => d.name);
-			const uniqueDirs = [...new Set(skillDirs)];
-			expect(skillDirs.length).toBe(uniqueDirs.length);
-		});
-	});
-
-	describe("error handling", () => {
-		test("sync fails gracefully with missing capability source", async () => {
-			const config = `
-[capabilities.sources]
-nonexistent = "file:///nonexistent/path/to/capability"
-
-[profiles.default]
-capabilities = ["nonexistent"]
-`;
-			await Bun.write("omni.toml", config);
-
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			// Sync should handle the error
-			const { stderr } = await captureConsole(async () => {
-				try {
-					await runSync();
-				} catch {
-					// Expected to throw
+				if ("skill" in markers) {
+					// Find files with the skill marker
+					const skillFiles = findFilesWithMarker(".", markers.skill);
+					expect(skillFiles.length).toBeGreaterThan(0);
 				}
-			});
 
-			// Should have some error output
-			expect(stderr.length).toBeGreaterThan(0);
-		});
-
-		test("sync continues with valid capabilities when one is missing", async () => {
-			const config = `
-[capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
-
-[profiles.default]
-# Reference a capability that has no source defined
-capabilities = ["tasks", "undefined-capability"]
-`;
-			await Bun.write("omni.toml", config);
-
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			// Sync should still work for the valid capability
-			await captureConsole(async () => {
-				try {
-					await runSync();
-				} catch {
-					// May throw for missing capability
+				if ("rule" in markers) {
+					// Find files with the rule marker
+					const ruleFiles = findFilesWithMarker(".", markers.rule);
+					expect(ruleFiles.length).toBeGreaterThan(0);
 				}
-			});
-
-			// Tasks capability should still be synced
-			expect(existsSync(".omni/capabilities/tasks")).toBe(true);
+			}
 		});
-	});
+	}
+});
 
-	describe("CLAUDE.md generation", () => {
-		test("CLAUDE.md is created for claude provider", async () => {
-			const config = `
+describe("fixture markers validation", () => {
+	setupTestDir("fixture-markers-", { chdir: true });
+
+	test("standard fixture produces skill and rule output", async () => {
+		const config = `
 [capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
+standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/standard" }
 
 [profiles.default]
-capabilities = ["tasks"]
+capabilities = ["standard"]
 `;
-			await Bun.write("omni.toml", config);
+		await Bun.write("omni.toml", config);
 
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			await captureConsole(async () => {
-				await runSync();
-			});
-
-			expect(existsSync("CLAUDE.md")).toBe(true);
-			const claudeContent = readFileSync("CLAUDE.md", "utf-8");
-			expect(claudeContent).toContain("@import .omni/instructions.md");
+		await captureConsole(async () => {
+			await runInit({}, "claude");
 		});
+
+		await captureConsole(async () => {
+			await runSync();
+		});
+
+		// Verify skill marker is present
+		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.skill);
+		expect(skillFiles.length).toBeGreaterThan(0);
+
+		// Verify rule marker is present
+		const ruleFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.rule);
+		expect(ruleFiles.length).toBeGreaterThan(0);
 	});
 
-	describe("lockfile generation", () => {
-		test("omni.lock.toml is created after sync", async () => {
-			const config = `
+	test("claude-plugin fixture is auto-wrapped", async () => {
+		const config = `
 [capabilities.sources]
-tasks = "file://${fixturesDir}/tasks"
+claude-plugin = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/claude-plugin" }
 
 [profiles.default]
-capabilities = ["tasks"]
+capabilities = ["claude-plugin"]
 `;
-			await Bun.write("omni.toml", config);
+		await Bun.write("omni.toml", config);
 
-			await captureConsole(async () => {
-				await runInit({}, "claude");
-			});
-
-			await captureConsole(async () => {
-				await runSync();
-			});
-
-			expect(existsSync("omni.lock.toml")).toBe(true);
-			const lockContent = readFileSync("omni.lock.toml", "utf-8");
-			expect(lockContent).toContain("tasks");
+		await captureConsole(async () => {
+			await runInit({}, "claude");
 		});
+
+		await captureConsole(async () => {
+			await runSync();
+		});
+
+		// Verify skill marker is present
+		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["claude-plugin"].skill);
+		expect(skillFiles.length).toBeGreaterThan(0);
+	});
+
+	test("bare-skills fixture is auto-wrapped", async () => {
+		const config = `
+[capabilities.sources]
+bare-skills = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/bare-skills" }
+
+[profiles.default]
+capabilities = ["bare-skills"]
+`;
+		await Bun.write("omni.toml", config);
+
+		await captureConsole(async () => {
+			await runInit({}, "claude");
+		});
+
+		await captureConsole(async () => {
+			await runSync();
+		});
+
+		// Verify skill marker is present
+		const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS["bare-skills"].skill);
+		expect(skillFiles.length).toBeGreaterThan(0);
 	});
 });

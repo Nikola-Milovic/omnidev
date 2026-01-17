@@ -1,0 +1,5 @@
+{
+	"name": "Claude Plugin Fixture",
+	"version": "1.0.0",
+	"description": "A claude-plugin format fixture for OmniDev integration tests"
+}

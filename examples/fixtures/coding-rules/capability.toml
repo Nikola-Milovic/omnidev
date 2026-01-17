@@ -1,8 +1,0 @@
-# Example capability with coding rules
-# Demonstrates how to provide rules for AI agents
-
-[capability]
-id = "coding-rules"
-name = "Coding Standards"
-version = "1.0.0"
-description = "Best practices and coding standards for TypeScript projects"

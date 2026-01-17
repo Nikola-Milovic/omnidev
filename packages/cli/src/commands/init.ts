@@ -1,18 +1,18 @@
 import { existsSync, mkdirSync } from "node:fs";
-import type { Provider } from "@omnidev-ai/core";
+import { getAllAdapters, getEnabledAdapters } from "@omnidev-ai/adapters";
+import type { ProviderId, ProviderContext } from "@omnidev-ai/core";
 import {
-	generateAgentsTemplate,
-	generateClaudeTemplate,
 	generateInstructionsTemplate,
-	parseProviderFlag,
+	loadConfig,
 	setActiveProfile,
 	syncAgentConfiguration,
 	writeConfig,
+	writeEnabledProviders,
 } from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
-import { promptForProvider } from "../prompts/provider.js";
+import { promptForProviders } from "../prompts/provider.js";
 
-export async function runInit(_flags: Record<string, never>, provider?: string) {
+export async function runInit(_flags: Record<string, never>, providerArg?: string) {
 	console.log("Initializing OmniDev...");
 
 	// Create .omni/ directory structure
@@ -26,20 +26,20 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	}
 
 	// Get provider selection
-	let providers: Provider[];
-	if (provider) {
-		providers = parseProviderFlag(provider);
+	let providerIds: ProviderId[];
+	if (providerArg) {
+		providerIds = parseProviderArg(providerArg);
 	} else {
-		providers = await promptForProvider();
+		providerIds = await promptForProviders();
 	}
 
-	// Create omni.toml at project root
+	// Save enabled providers to local state (not omni.toml)
+	await writeEnabledProviders(providerIds);
+
+	// Create omni.toml at project root (without provider config - that's in state)
 	if (!existsSync("omni.toml")) {
 		await writeConfig({
 			project: "my-project",
-			providers: {
-				enabled: providers,
-			},
 			profiles: {
 				default: {
 					capabilities: [],
@@ -52,7 +52,7 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 				},
 			},
 		});
-		// Set active profile in state file (not omni.toml)
+		// Set active profile in state file
 		await setActiveProfile("default");
 	}
 
@@ -61,28 +61,48 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 		await Bun.write(".omni/instructions.md", generateInstructionsTemplate());
 	}
 
-	// Create provider-specific files
-	const fileStatus = await createProviderFiles(providers);
+	// Load config and create provider context
+	const config = await loadConfig();
+	const ctx: ProviderContext = {
+		projectRoot: process.cwd(),
+		config,
+	};
 
-	// Run initial sync
-	await syncAgentConfiguration({ silent: false });
+	// Initialize enabled adapters (create their root files)
+	const allAdapters = getAllAdapters();
+	const selectedAdapters = allAdapters.filter((a) => providerIds.includes(a.id));
+	const filesCreated: string[] = [];
+	const filesExisting: string[] = [];
 
+	for (const adapter of selectedAdapters) {
+		if (adapter.init) {
+			const result = await adapter.init(ctx);
+			if (result.filesCreated) {
+				filesCreated.push(...result.filesCreated);
+			}
+		}
+	}
+
+	// Run initial sync with enabled adapters
+	const enabledAdapters = await getEnabledAdapters();
+	await syncAgentConfiguration({ silent: false, adapters: enabledAdapters });
+
+	// Output success message
 	console.log("");
-	console.log(`✓ OmniDev initialized for ${providers.join(" and ")}!`);
+	console.log(
+		`✓ OmniDev initialized for ${selectedAdapters.map((a) => a.displayName).join(" and ")}!`,
+	);
 	console.log("");
 
 	// Show appropriate message based on file status
-	const hasNewFiles = fileStatus.created.length > 0;
-	const hasExistingFiles = fileStatus.existing.length > 0;
-
-	if (hasNewFiles) {
+	if (filesCreated.length > 0) {
 		console.log("📝 Don't forget to add your project description to:");
 		console.log("   • .omni/instructions.md");
 	}
 
-	if (hasExistingFiles) {
+	if (filesExisting.length > 0) {
 		console.log("📝 Add this line to your existing file(s):");
-		for (const file of fileStatus.existing) {
+		for (const file of filesExisting) {
 			console.log(`   • ${file}: @import .omni/instructions.md`);
 		}
 	}
@@ -102,7 +122,7 @@ export const initCommand = buildCommand({
 			kind: "tuple" as const,
 			parameters: [
 				{
-					brief: "AI provider: claude, codex, or both",
+					brief: "AI provider(s): claude-code, cursor, codex, opencode, or comma-separated",
 					parse: String,
 					optional: true,
 				},
@@ -115,33 +135,33 @@ export const initCommand = buildCommand({
 	func: runInit,
 });
 
-async function createProviderFiles(
-	providers: Provider[],
-): Promise<{ created: string[]; existing: string[] }> {
-	const created: string[] = [];
-	const existing: string[] = [];
+function parseProviderArg(arg: string): ProviderId[] {
+	const allAdapters = getAllAdapters();
+	const validIds = new Set(allAdapters.map((a) => a.id));
 
-	// Create AGENTS.md for Codex
-	if (providers.includes("codex")) {
-		if (!existsSync("AGENTS.md")) {
-			await Bun.write("AGENTS.md", generateAgentsTemplate());
-			created.push("AGENTS.md");
-		} else {
-			existing.push("AGENTS.md");
-		}
+	// Handle legacy "both" argument
+	if (arg.toLowerCase() === "both") {
+		return ["claude-code", "cursor"];
 	}
 
-	// Create CLAUDE.md for Claude
-	if (providers.includes("claude")) {
-		if (!existsSync("CLAUDE.md")) {
-			await Bun.write("CLAUDE.md", generateClaudeTemplate());
-			created.push("CLAUDE.md");
-		} else {
-			existing.push("CLAUDE.md");
+	// Handle comma-separated list
+	const parts = arg.split(",").map((p) => p.trim().toLowerCase());
+	const result: ProviderId[] = [];
+
+	for (const part of parts) {
+		// Map legacy names
+		let id = part;
+		if (id === "claude") {
+			id = "claude-code";
 		}
+
+		if (!validIds.has(id)) {
+			throw new Error(`Invalid provider: ${part}. Valid providers: ${[...validIds].join(", ")}`);
+		}
+		result.push(id as ProviderId);
 	}
 
-	return { created, existing };
+	return result;
 }
 
 function internalGitignore(): string {

@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { getEnabledAdapters } from "@omnidev-ai/adapters";
 import {
 	getActiveProfile,
 	loadConfig,
@@ -142,8 +143,9 @@ export async function runProfileSet(profileName: string): Promise<void> {
 		console.log(`✓ Active profile set to: ${profileName}`);
 		console.log("");
 
-		// Auto-sync agent configuration
-		await syncAgentConfiguration();
+		// Auto-sync agent configuration with enabled adapters
+		const adapters = await getEnabledAdapters();
+		await syncAgentConfiguration({ adapters });
 	} catch (error) {
 		console.error("✗ Error setting profile:", error);
 		process.exit(1);

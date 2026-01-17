@@ -60,9 +60,7 @@ const EXAMPLE_EXPECTATIONS: Record<
 		skipReason: "All sources are commented - documentation only",
 	},
 	"mcp.toml": {
-		capabilities: ["demo-mcp"],
-		skip: true,
-		skipReason: "MCP examples require fixtures to be pushed to GitHub first",
+		capabilities: ["demo"],
 	},
 };
 

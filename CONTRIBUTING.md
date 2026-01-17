@@ -28,7 +28,8 @@ bun test --coverage
 omnidev/
 ├── packages/
 │   ├── core/           # Shared types, config loader, capability system
-│   └── cli/            # Command-line interface (Stricli)
+│   ├── cli/            # Command-line interface (Stricli)
+│   └── adapters/       # Provider adapters (Claude, Cursor, Codex, etc.)
 ├── capabilities/       # Built-in capabilities
 │   ├── ralph/          # AI orchestrator for PRD-driven development
 │   ├── tasks/          # Task management
@@ -43,10 +44,16 @@ omnidev/
 - Capability registry and loader
 - Capability sources (Git and file protocols)
 - Lock file management
-- Type definitions
+- Provider state management
+- Type definitions (including adapter interfaces)
+
+**`@omnidev-ai/adapters`**
+- Provider adapters: `claude-code`, `cursor`, `codex`, `opencode`
+- Adapter registry for discovery
+- Provider-specific file writing
 
 **`@omnidev-ai/cli`**
-- Commands: `init`, `sync`, `doctor`, `profile`, `capability`
+- Commands: `init`, `sync`, `doctor`, `profile`, `capability`, `provider`
 - Built with [Stricli](https://bloomberg.github.io/stricli/)
 
 ## Architecture
@@ -62,8 +69,40 @@ loadConfig() → OmniConfig
     ↓
 buildCapabilityRegistry() → discovers and loads capabilities
     ↓
-syncAgentConfiguration() → generates output files
+buildSyncBundle() → provider-agnostic bundle
+    ↓
+syncAgentConfiguration() → generates .omni/ files
+    ↓
+adapters.sync() → provider-specific files
 ```
+
+### Provider Adapter Layer
+
+OmniDev uses a **Provider Adapter** architecture to decouple core functionality from provider-specific file formats:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                          Core                                │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐      │
+│  │  Capability │───▶│ SyncBundle  │───▶│  Adapters   │      │
+│  │   Registry  │    │  (agnostic) │    │             │      │
+│  └─────────────┘    └─────────────┘    └─────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              ▼               ▼               ▼
+     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+     │ Claude Code │  │   Cursor    │  │    Codex    │
+     │   Adapter   │  │   Adapter   │  │   Adapter   │
+     └─────────────┘  └─────────────┘  └─────────────┘
+```
+
+**Key concepts:**
+- **SyncBundle**: Provider-agnostic data structure with all capabilities, skills, rules, etc.
+- **Adapters**: Transform SyncBundle into provider-specific files
+- **Provider State**: Stored in `.omni/state/providers.json` (gitignored, user-specific)
+
+See [docs/provider-adapters.md](docs/provider-adapters.md) for full documentation.
 
 ### Capability Sources
 
@@ -99,6 +138,8 @@ updated_at = "2026-01-16T..."
 | Runtime directory | `.omni/` | No |
 | Installed capabilities | `.omni/capabilities/` | No |
 | State files | `.omni/state/` | No |
+| Provider state | `.omni/state/providers.json` | No |
+| Active profile | `.omni/state/active-profile` | No |
 
 ## Key Files
 
@@ -110,8 +151,19 @@ updated_at = "2026-01-16T..."
 | `packages/core/src/capability/sources.ts` | Git and file source fetching |
 | `packages/core/src/capability/registry.ts` | Capability discovery and loading |
 | `packages/core/src/capability/loader.ts` | Individual capability loading |
-| `packages/core/src/sync.ts` | Orchestrates sync process |
-| `packages/core/src/types/index.ts` | Type definitions |
+| `packages/core/src/sync.ts` | Orchestrates sync process, builds SyncBundle |
+| `packages/core/src/state/providers.ts` | Provider state management |
+| `packages/core/src/types/index.ts` | Type definitions (incl. adapter interfaces) |
+
+### Adapters Package
+
+| File | Purpose |
+|------|---------|
+| `packages/adapters/src/registry.ts` | Adapter discovery and lookup |
+| `packages/adapters/src/claude-code/index.ts` | Claude Code adapter |
+| `packages/adapters/src/cursor/index.ts` | Cursor adapter |
+| `packages/adapters/src/codex/index.ts` | Codex adapter |
+| `packages/adapters/src/opencode/index.ts` | OpenCode adapter |
 
 ### CLI Package
 
@@ -120,6 +172,7 @@ updated_at = "2026-01-16T..."
 | `packages/cli/src/commands/init.ts` | Project initialization |
 | `packages/cli/src/commands/sync.ts` | Sync command |
 | `packages/cli/src/commands/profile.ts` | Profile management |
+| `packages/cli/src/commands/provider.ts` | Provider enable/disable/list |
 | `packages/cli/src/commands/doctor.ts` | Setup verification |
 
 

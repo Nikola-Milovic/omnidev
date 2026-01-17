@@ -1,3 +1,4 @@
+import { getEnabledAdapters } from "@omnidev-ai/adapters";
 import { getActiveProfile, loadConfig, syncAgentConfiguration } from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
 
@@ -19,21 +20,26 @@ export async function runSync(): Promise<void> {
 		const config = await loadConfig();
 		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
-		const result = await syncAgentConfiguration({ silent: false });
+		// Get enabled adapters for provider-specific sync
+		const adapters = await getEnabledAdapters();
+
+		const result = await syncAgentConfiguration({ silent: false, adapters });
 
 		console.log("");
 		console.log("✓ Sync completed successfully!");
 		console.log("");
 		console.log(`Profile: ${activeProfile}`);
 		console.log(`Capabilities: ${result.capabilities.join(", ") || "none"}`);
+		console.log(`Providers: ${adapters.map((a) => a.displayName).join(", ") || "none"}`);
 		console.log("");
 		console.log("Synced components:");
 		console.log("  • Capability registry");
 		console.log("  • Capability sync hooks");
 		console.log("  • .omni/.gitignore");
 		console.log("  • .omni/instructions.md");
-		console.log("  • .claude/skills/");
-		console.log("  • .cursor/rules/");
+		if (adapters.length > 0) {
+			console.log("  • Provider-specific files");
+		}
 	} catch (error) {
 		console.error("");
 		console.error("✗ Sync failed:");

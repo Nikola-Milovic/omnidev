@@ -1,19 +1,14 @@
 # MCP Server Configuration
 # Define MCP servers directly in omni.toml
 
-# Demo MCP server from fixtures
-# Note: This requires the fixtures to be pushed to GitHub first
+# Demo MCP server - defined inline, creates a capability named "demo"
 [mcps.demo]
-command = "bun"
-args = ["run", ".omni/capabilities/demo-mcp/src/index.ts"]
+command = "npx"
+args = ["-y", "@anthropic-ai/claude-code-mcp"]
 transport = "stdio"
 
-# The demo-mcp source provides the server code
-[capabilities.sources]
-demo-mcp = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures/demo-mcp" }
-
 [profiles.default]
-capabilities = ["demo-mcp"]
+capabilities = ["demo"]
 
 # Example: Other MCP server configurations (commented)
 #

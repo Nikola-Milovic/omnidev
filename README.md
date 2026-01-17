@@ -154,8 +154,34 @@ Core commands (always available):
 | `omnidev profile list` | Show profiles |
 | `omnidev profile set <name>` | Switch profile |
 | `omnidev capability list` | List capabilities |
+| `omnidev provider list` | Show available providers |
+| `omnidev provider enable <id>` | Enable a provider |
+| `omnidev provider disable <id>` | Disable a provider |
 
 Capabilities can extend the CLI with custom commands—for example, `omnidev ralph status` for workflow visualization.
+
+## Providers
+
+OmniDev supports multiple AI coding tools through **provider adapters**:
+
+| Provider | ID | Description |
+|----------|-----|-------------|
+| Claude Code | `claude-code` | Claude CLI (default) |
+| Cursor | `cursor` | Cursor IDE |
+| Codex | `codex` | GitHub Codex |
+| OpenCode | `opencode` | Open-source alternative |
+
+Enable providers during init or anytime:
+
+```bash
+# During initialization
+omnidev init claude-code,cursor
+
+# Or enable later
+omnidev provider enable cursor
+```
+
+See [docs/provider-adapters.md](docs/provider-adapters.md) for full documentation.
 
 ## Creating Capabilities
 
@@ -180,6 +206,10 @@ See [docs/capability-development.md](docs/capability-development.md) for the ful
 | `omni.local.toml` | Local overrides | Ignore |
 | `omni.lock.toml` | Version lock | Commit |
 | `.omni/` | Runtime directory | Ignore |
+
+## Roadmap
+
+- [ ] Support `.env` files for MCP environment variables (qualify of life feature)
 
 ## Contributing
 

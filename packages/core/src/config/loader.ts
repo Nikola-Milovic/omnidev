@@ -155,7 +155,9 @@ function generateConfigToml(config: OmniConfig): string {
 	lines.push("# MCP Servers");
 	lines.push("# =============================================================================");
 	lines.push("# Define MCP servers that automatically become capabilities.");
-	lines.push("# Reference in profiles using ID: _mcps-{name}");
+	lines.push(
+		'# Reference in profiles using the MCP name directly, e.g. capabilities = ["filesystem"]',
+	);
 	lines.push("#");
 	lines.push("# [mcps.filesystem]");
 	lines.push('# command = "npx"');

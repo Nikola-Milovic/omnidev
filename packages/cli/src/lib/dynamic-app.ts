@@ -7,6 +7,7 @@ import { capabilityRoutes } from "../commands/capability";
 import { doctorCommand } from "../commands/doctor";
 import { initCommand } from "../commands/init";
 import { profileRoutes } from "../commands/profile";
+import { providerRoutes } from "../commands/provider";
 import { syncCommand } from "../commands/sync";
 import { debug } from "./debug";
 
@@ -21,6 +22,7 @@ export async function buildDynamicApp() {
 		sync: syncCommand,
 		capability: capabilityRoutes,
 		profile: profileRoutes,
+		provider: providerRoutes,
 	};
 
 	debug("Core routes registered", Object.keys(routes));

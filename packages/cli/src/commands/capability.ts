@@ -1,3 +1,4 @@
+import { getEnabledAdapters } from "@omnidev-ai/adapters";
 import {
 	disableCapability,
 	discoverCapabilities,
@@ -75,8 +76,9 @@ export async function runCapabilityEnable(
 		console.log(`✓ Enabled capability: ${name}`);
 		console.log("");
 
-		// Auto-sync agent configuration
-		await syncAgentConfiguration();
+		// Auto-sync agent configuration with enabled adapters
+		const adapters = await getEnabledAdapters();
+		await syncAgentConfiguration({ adapters });
 	} catch (error) {
 		console.error("Error enabling capability:", error);
 		process.exit(1);
@@ -95,8 +97,9 @@ export async function runCapabilityDisable(
 		console.log(`✓ Disabled capability: ${name}`);
 		console.log("");
 
-		// Auto-sync agent configuration
-		await syncAgentConfiguration();
+		// Auto-sync agent configuration with enabled adapters
+		const adapters = await getEnabledAdapters();
+		await syncAgentConfiguration({ adapters });
 	} catch (error) {
 		console.error("Error disabling capability:", error);
 		process.exit(1);

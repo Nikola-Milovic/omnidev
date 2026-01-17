@@ -1,6 +1,5 @@
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { buildCapabilityRegistry } from "./capability/registry";
 import { writeRules } from "./capability/rules";
 import { fetchAllCapabilitySources } from "./capability/sources";
@@ -13,12 +12,19 @@ import {
 	loadManifest,
 	saveManifest,
 } from "./state/manifest";
+import type { ProviderAdapter, ProviderContext, SyncBundle } from "./types";
 
 export interface SyncResult {
 	capabilities: string[];
 	skillCount: number;
 	ruleCount: number;
 	docCount: number;
+}
+
+export interface SyncOptions {
+	silent?: boolean;
+	/** Optional list of adapters to run. If not provided, adapters are not run. */
+	adapters?: ProviderAdapter[];
 }
 
 /**
@@ -78,15 +84,13 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 }
 
 /**
- * Central sync function that regenerates all agent configuration files
- * Called automatically after any config change (init, capability enable/disable, profile change)
+ * Build a provider-agnostic SyncBundle from the capability registry.
+ * This bundle can then be passed to adapters for provider-specific materialization.
  */
-export async function syncAgentConfiguration(options?: { silent?: boolean }): Promise<SyncResult> {
+export async function buildSyncBundle(options?: {
+	silent?: boolean;
+}): Promise<{ bundle: SyncBundle }> {
 	const silent = options?.silent ?? false;
-
-	if (!silent) {
-		console.log("Syncing agent configuration...");
-	}
 
 	// Fetch capability sources from git repos FIRST (before discovery)
 	const config = await loadConfig();
@@ -101,6 +105,42 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
 	const skills = registry.getAllSkills();
 	const rules = registry.getAllRules();
 	const docs = registry.getAllDocs();
+	const commands = capabilities.flatMap((c) => c.commands);
+	const subagents = capabilities.flatMap((c) => c.subagents);
+
+	// Generate instructions content
+	const instructionsContent = generateInstructionsContent(rules, docs);
+
+	const bundle: SyncBundle = {
+		capabilities,
+		skills,
+		rules,
+		docs,
+		commands,
+		subagents,
+		instructionsPath: ".omni/instructions.md",
+		instructionsContent,
+	};
+
+	return { bundle };
+}
+
+/**
+ * Central sync function that regenerates all agent configuration files.
+ * Called automatically after any config change (init, capability enable/disable, profile change).
+ *
+ * If adapters are provided, they will be called after core sync to write provider-specific files.
+ */
+export async function syncAgentConfiguration(options?: SyncOptions): Promise<SyncResult> {
+	const silent = options?.silent ?? false;
+	const adapters = options?.adapters ?? [];
+
+	if (!silent) {
+		console.log("Syncing agent configuration...");
+	}
+
+	const { bundle } = await buildSyncBundle({ silent });
+	const capabilities = bundle.capabilities;
 
 	// Load previous manifest and cleanup stale resources from disabled capabilities
 	const previousManifest = await loadManifest();
@@ -161,32 +201,11 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
 		}
 	}
 
-	// Ensure directories exist
-	mkdirSync(".claude/skills", { recursive: true });
-	mkdirSync(".cursor/rules", { recursive: true });
+	// Ensure core directories exist
+	mkdirSync(".omni", { recursive: true });
 
-	// Write rules and docs to .omni/instructions.md
-	await writeRules(rules, docs);
-
-	// Write skills to .claude/skills/
-	for (const skill of skills) {
-		const skillDir = `.claude/skills/${skill.name}`;
-		mkdirSync(skillDir, { recursive: true });
-		await Bun.write(
-			join(skillDir, "SKILL.md"),
-			`---
-name: ${skill.name}
-description: "${skill.description}"
----
-
-${skill.instructions}`,
-		);
-	}
-
-	// Write rules to .cursor/rules/
-	for (const rule of rules) {
-		await Bun.write(`.cursor/rules/omnidev-${rule.name}.mdc`, rule.content);
-	}
+	// Write rules and docs to .omni/instructions.md (provider-agnostic)
+	await writeRules(bundle.rules, bundle.docs);
 
 	// Sync .mcp.json with capability MCP servers (before saving manifest)
 	await syncMcpJson(capabilities, previousManifest, { silent });
@@ -195,18 +214,86 @@ ${skill.instructions}`,
 	const newManifest = buildManifestFromCapabilities(capabilities);
 	await saveManifest(newManifest);
 
+	// Run enabled adapters to write provider-specific files
+	if (adapters.length > 0) {
+		const config = await loadConfig();
+		const ctx: ProviderContext = {
+			projectRoot: process.cwd(),
+			config,
+		};
+
+		for (const adapter of adapters) {
+			try {
+				const result = await adapter.sync(bundle, ctx);
+				if (!silent && result.filesWritten.length > 0) {
+					console.log(`  - ${adapter.displayName}: ${result.filesWritten.length} files`);
+				}
+			} catch (error) {
+				console.error(`Error running ${adapter.displayName} adapter:`, error);
+			}
+		}
+	}
+
 	if (!silent) {
 		console.log("✓ Synced:");
 		console.log("  - .omni/.gitignore (capability patterns)");
-		console.log(`  - .omni/instructions.md (${docs.length} docs, ${rules.length} rules)`);
-		console.log(`  - .claude/skills/ (${skills.length} skills)`);
-		console.log(`  - .cursor/rules/ (${rules.length} rules)`);
+		console.log(
+			`  - .omni/instructions.md (${bundle.docs.length} docs, ${bundle.rules.length} rules)`,
+		);
+		if (adapters.length > 0) {
+			console.log(`  - Provider adapters: ${adapters.map((a) => a.displayName).join(", ")}`);
+		}
 	}
 
 	return {
 		capabilities: capabilities.map((c) => c.id),
-		skillCount: skills.length,
-		ruleCount: rules.length,
-		docCount: docs.length,
+		skillCount: bundle.skills.length,
+		ruleCount: bundle.rules.length,
+		docCount: bundle.docs.length,
 	};
+}
+
+/**
+ * Generate instructions.md content from rules and docs.
+ */
+function generateInstructionsContent(rules: SyncBundle["rules"], docs: SyncBundle["docs"]): string {
+	if (rules.length === 0 && docs.length === 0) {
+		return `## Capabilities
+
+No capabilities enabled yet. Run \`omnidev capability enable <name>\` to enable capabilities.`;
+	}
+
+	let content = `## Capabilities
+
+`;
+
+	// Add documentation section if there are docs
+	if (docs.length > 0) {
+		content += `### Documentation
+
+`;
+		for (const doc of docs) {
+			content += `#### ${doc.name} (from ${doc.capabilityId})
+
+${doc.content}
+
+`;
+		}
+	}
+
+	// Add rules section if there are rules
+	if (rules.length > 0) {
+		content += `### Rules
+
+`;
+		for (const rule of rules) {
+			content += `#### ${rule.name} (from ${rule.capabilityId})
+
+${rule.content}
+
+`;
+		}
+	}
+
+	return content.trim();
 }

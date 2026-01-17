@@ -185,16 +185,16 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config);
 
-		const capabilityDir = join(".omni", "capabilities", "_mcps-context7");
+		const capabilityDir = join(".omni", "capabilities", "context7");
 		expect(existsSync(capabilityDir)).toBe(true);
 
 		const tomlPath = join(capabilityDir, "capability.toml");
 		expect(existsSync(tomlPath)).toBe(true);
 
 		const tomlContent = await readFile(tomlPath, "utf-8");
-		const parsed = parseToml(tomlContent) as CapabilityConfig;
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
 
-		expect(parsed.capability.id).toBe("_mcps-context7");
+		expect(parsed.capability.id).toBe("context7");
 		expect(parsed.capability.name).toBe("context7 (MCP)");
 		expect(parsed.capability.version).toBe("1.0.0");
 		expect(parsed.capability.metadata?.wrapped).toBe(true);
@@ -224,8 +224,8 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config);
 
-		const context7Dir = join(".omni", "capabilities", "_mcps-context7");
-		const filesystemDir = join(".omni", "capabilities", "_mcps-filesystem");
+		const context7Dir = join(".omni", "capabilities", "context7");
+		const filesystemDir = join(".omni", "capabilities", "filesystem");
 
 		expect(existsSync(context7Dir)).toBe(true);
 		expect(existsSync(filesystemDir)).toBe(true);
@@ -237,9 +237,9 @@ describe("MCP capability generation", () => {
 		expect(existsSync(filesystemTomlPath)).toBe(true);
 
 		const filesystemToml = await readFile(filesystemTomlPath, "utf-8");
-		const parsed = parseToml(filesystemToml) as CapabilityConfig;
+		const parsed = parseToml(filesystemToml) as unknown as CapabilityConfig;
 
-		expect(parsed.capability.id).toBe("_mcps-filesystem");
+		expect(parsed.capability.id).toBe("filesystem");
 		expect(parsed.mcp?.cwd).toBe("./mcp-servers/filesystem");
 	});
 
@@ -260,8 +260,8 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config1);
 
-		const context7Dir = join(".omni", "capabilities", "_mcps-context7");
-		const filesystemDir = join(".omni", "capabilities", "_mcps-filesystem");
+		const context7Dir = join(".omni", "capabilities", "context7");
+		const filesystemDir = join(".omni", "capabilities", "filesystem");
 
 		expect(existsSync(context7Dir)).toBe(true);
 		expect(existsSync(filesystemDir)).toBe(true);
@@ -298,7 +298,7 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config1);
 
-		const context7Dir = join(".omni", "capabilities", "_mcps-context7");
+		const context7Dir = join(".omni", "capabilities", "context7");
 		expect(existsSync(context7Dir)).toBe(true);
 
 		// Second generation with no MCPs
@@ -325,7 +325,7 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config1);
 
-		const context7Dir = join(".omni", "capabilities", "_mcps-context7");
+		const context7Dir = join(".omni", "capabilities", "context7");
 		expect(existsSync(context7Dir)).toBe(true);
 
 		// Second generation with undefined mcps
@@ -348,14 +348,14 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config);
 
-		const capabilityDir = join(".omni", "capabilities", "_mcps-simple");
+		const capabilityDir = join(".omni", "capabilities", "simple");
 		expect(existsSync(capabilityDir)).toBe(true);
 
 		const tomlPath = join(capabilityDir, "capability.toml");
 		const tomlContent = await readFile(tomlPath, "utf-8");
-		const parsed = parseToml(tomlContent) as CapabilityConfig;
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
 
-		expect(parsed.capability.id).toBe("_mcps-simple");
+		expect(parsed.capability.id).toBe("simple");
 		expect(parsed.mcp?.command).toBe("simple-mcp");
 		expect(parsed.mcp?.args).toBeUndefined();
 		expect(parsed.mcp?.env).toBeUndefined();
@@ -380,9 +380,9 @@ describe("MCP capability generation", () => {
 
 		await generateMcpCapabilities(config);
 
-		const tomlPath = join(".omni", "capabilities", "_mcps-github", "capability.toml");
+		const tomlPath = join(".omni", "capabilities", "github", "capability.toml");
 		const tomlContent = await readFile(tomlPath, "utf-8");
-		const parsed = parseToml(tomlContent) as CapabilityConfig;
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
 
 		// biome-ignore lint/suspicious/noTemplateCurlyInString: Testing literal env var syntax
 		expect(parsed.mcp?.env?.GITHUB_TOKEN).toBe("${GITHUB_TOKEN}");

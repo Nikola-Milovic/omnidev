@@ -28,8 +28,7 @@ bun test --coverage
 omnidev/
 ├── packages/
 │   ├── core/           # Shared types, config loader, capability system
-│   ├── cli/            # Command-line interface (Stricli)
-│   └── mcp/            # MCP server (sandbox tools)
+│   └── cli/            # Command-line interface (Stricli)
 ├── capabilities/       # Built-in capabilities
 │   ├── ralph/          # AI orchestrator for PRD-driven development
 │   ├── tasks/          # Task management
@@ -47,13 +46,8 @@ omnidev/
 - Type definitions
 
 **`@omnidev-ai/cli`**
-- Commands: `init`, `sync`, `doctor`, `profile`, `capability`, `serve`
+- Commands: `init`, `sync`, `doctor`, `profile`, `capability`
 - Built with [Stricli](https://bloomberg.github.io/stricli/)
-
-**`@omnidev-ai/mcp`**
-- MCP server implementation
-- Sandbox environment for code execution
-- Tool discovery and execution
 
 ## Architecture
 
@@ -128,13 +122,6 @@ updated_at = "2026-01-16T..."
 | `packages/cli/src/commands/profile.ts` | Profile management |
 | `packages/cli/src/commands/doctor.ts` | Setup verification |
 
-### MCP Package
-
-| File | Purpose |
-|------|---------|
-| `packages/mcp/src/server.ts` | MCP server entry |
-| `packages/mcp/src/tools/execute.ts` | Sandbox execution |
-| `packages/mcp/src/sandbox.ts` | Sandbox environment |
 
 ## Testing
 
@@ -228,9 +215,7 @@ add file:// protocol support for capability sources
 - Core types and configuration
 - Capability system (loader, skills, rules, docs)
 - CLI package (Stricli)
-- MCP server package
 - Ralph capability (AI orchestrator)
-- MCP server wrapping
 - Capability sources (Git and file protocols)
 
 ### Planned
@@ -245,7 +230,6 @@ add file:// protocol support for capability sources
 |-----------|------------|
 | Runtime | [Bun](https://bun.sh) |
 | CLI Framework | [Stricli](https://bloomberg.github.io/stricli/) |
-| MCP Server | [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk) |
 | Configuration | TOML ([smol-toml](https://github.com/nicolo-ribaudo/smol-toml)) |
 | Linting | [Biome](https://biomejs.dev/) |
 | Git Hooks | [Lefthook](https://github.com/evilmartians/lefthook) |

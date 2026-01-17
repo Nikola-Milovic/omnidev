@@ -12,7 +12,7 @@ AI coding assistants are fragmenting into incompatible ecosystems:
 - `.cursor/` for Cursor
 - `.claude/` for Claude Code
 - `.agent/` for other agents
-- Various MCP servers that don't talk to each other
+- Provider-specific tool servers that don't talk to each other
 
 This makes it hard to:
 - **Share setups with your team** — Everyone uses different tools
@@ -106,12 +106,10 @@ Capabilities can:
 - Add subagents and custom commands to the CLI
 - Define skills for agent behaviors and workflows
 - Add rules and guidelines for AI agents
-- Export sandboxed TypeScript functions
 - Manage custom documentation
-- Add and manage MCP servers
 
 **See examples:**
-- [examples/](examples/) — Configuration examples for different setups (basic, profiles, MCP wrapping, monorepos, etc.)
+- [examples/](examples/) — Configuration examples for different setups (basic, profiles, monorepos, etc.)
 - [omnidev-capabilities](https://github.com/Nikola-Milovic/omnidev-capabilities) — Capability examples (playthings to showcase capabilities—community library will grow over time)
 
 ### Profiles
@@ -156,34 +154,8 @@ Core commands (always available):
 | `omnidev profile list` | Show profiles |
 | `omnidev profile set <name>` | Switch profile |
 | `omnidev capability list` | List capabilities |
-| `omnidev serve` | Start MCP server |
 
 Capabilities can extend the CLI with custom commands—for example, `omnidev ralph status` for workflow visualization.
-
-## MCP Server (Optional)
-
-The MCP server is optional—it provides a sandboxed execution environment for capabilities that need to run code safely. This can help reduce token usage when working with multiple MCP servers, though with OmniDev this is rarely an issue.
-
-**Note:** The MCP server is added automatically by `omnidev sync` unless you disable the sandbox.
-
-Add to Claude Desktop config:
-
-```json
-{
-  "mcpServers": {
-    "omnidev": {
-      "command": "npx",
-      "args": ["-y", "@omnidev-ai/cli", "serve"]
-    }
-  }
-}
-```
-
-The server exposes:
-- **`omni_sandbox_environment`** — Discover available capabilities
-- **`omni_execute`** — Run TypeScript in a sandboxed environment
-
-Most capabilities work through the CLI directly—MCP is only needed for sandboxed code execution.
 
 ## Creating Capabilities
 
@@ -195,7 +167,7 @@ my-capability/
 ├── skills/             # Agent behaviors
 ├── rules/              # Guidelines
 ├── cli.ts              # CLI command exports (optional)
-└── index.ts            # Sandbox exports
+└── index.ts            # Programmatic exports (optional)
 ```
 
 See [docs/capability-development.md](docs/capability-development.md) for the full guide.

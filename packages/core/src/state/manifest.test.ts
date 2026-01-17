@@ -31,6 +31,7 @@ describe("manifest", () => {
 						rules: ["rule1"],
 						commands: ["cmd1"],
 						subagents: ["agent1"],
+						mcps: [],
 					},
 				},
 			};
@@ -54,6 +55,7 @@ describe("manifest", () => {
 						rules: ["r1"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -104,6 +106,7 @@ describe("manifest", () => {
 					rules: [],
 					docs: [],
 					subagents: [],
+					mcps: [],
 					commands: [],
 					exports: {},
 				},
@@ -117,12 +120,14 @@ describe("manifest", () => {
 				rules: ["rule-a"],
 				commands: ["cmd-a"],
 				subagents: ["agent-a"],
+				mcps: [],
 			});
 			expect(manifest.capabilities.cap2).toEqual({
 				skills: [],
 				rules: [],
 				commands: [],
 				subagents: [],
+				mcps: [],
 			});
 		});
 
@@ -133,146 +138,6 @@ describe("manifest", () => {
 			expect(manifest.capabilities).toEqual({});
 			expect(manifest.syncedAt).toBeDefined();
 		});
-
-		test("includes MCP entry when capability has MCP config", () => {
-			const capabilities: LoadedCapability[] = [
-				{
-					id: "context7",
-					path: "/path/to/context7",
-					config: {
-						capability: {
-							id: "context7",
-							name: "Context7",
-							version: "1.0.0",
-							description: "",
-						},
-						mcp: {
-							command: "npx",
-							args: ["-y", "@upstash/context7-mcp"],
-						},
-					},
-					skills: [],
-					rules: [],
-					docs: [],
-					subagents: [],
-					commands: [],
-					exports: {},
-				},
-			];
-
-			const manifest = buildManifestFromCapabilities(capabilities);
-
-			expect(manifest.capabilities.context7.mcp).toEqual({
-				serverName: "omni-context7",
-				command: "npx",
-				args: ["-y", "@upstash/context7-mcp"],
-			});
-		});
-
-		test("includes MCP env when present", () => {
-			const capabilities: LoadedCapability[] = [
-				{
-					id: "my-mcp",
-					path: "/path/to/my-mcp",
-					config: {
-						capability: {
-							id: "my-mcp",
-							name: "My MCP",
-							version: "1.0.0",
-							description: "",
-						},
-						mcp: {
-							command: "node",
-							args: ["server.js"],
-							env: { API_KEY: "secret" },
-						},
-					},
-					skills: [],
-					rules: [],
-					docs: [],
-					subagents: [],
-					commands: [],
-					exports: {},
-				},
-			];
-
-			const manifest = buildManifestFromCapabilities(capabilities);
-
-			expect(manifest.capabilities["my-mcp"].mcp).toEqual({
-				serverName: "omni-my-mcp",
-				command: "node",
-				args: ["server.js"],
-				env: { API_KEY: "secret" },
-			});
-		});
-
-		test("does not include MCP entry when capability has no MCP config", () => {
-			const capabilities: LoadedCapability[] = [
-				{
-					id: "tasks",
-					path: "/path/to/tasks",
-					config: {
-						capability: { id: "tasks", name: "Tasks", version: "1.0.0", description: "" },
-					},
-					skills: [],
-					rules: [],
-					docs: [],
-					subagents: [],
-					commands: [],
-					exports: {},
-				},
-			];
-
-			const manifest = buildManifestFromCapabilities(capabilities);
-
-			expect(manifest.capabilities.tasks.mcp).toBeUndefined();
-		});
-
-		test("handles mixed capabilities with and without MCP", () => {
-			const capabilities: LoadedCapability[] = [
-				{
-					id: "tasks",
-					path: "/path/to/tasks",
-					config: {
-						capability: { id: "tasks", name: "Tasks", version: "1.0.0", description: "" },
-					},
-					skills: [],
-					rules: [],
-					docs: [],
-					subagents: [],
-					commands: [],
-					exports: {},
-				},
-				{
-					id: "context7",
-					path: "/path/to/context7",
-					config: {
-						capability: {
-							id: "context7",
-							name: "Context7",
-							version: "1.0.0",
-							description: "",
-						},
-						mcp: {
-							command: "npx",
-							args: ["context7-mcp"],
-						},
-					},
-					skills: [],
-					rules: [],
-					docs: [],
-					subagents: [],
-					commands: [],
-					exports: {},
-				},
-			];
-
-			const manifest = buildManifestFromCapabilities(capabilities);
-
-			expect(manifest.capabilities.tasks.mcp).toBeUndefined();
-			expect(manifest.capabilities.context7.mcp).toBeDefined();
-			expect(manifest.capabilities.context7.mcp?.serverName).toBe("omni-context7");
-		});
 	});
 
 	describe("saveManifest and loadManifest round-trip", () => {
@@ -281,8 +146,8 @@ describe("manifest", () => {
 				version: 1,
 				syncedAt: "2025-01-01T00:00:00.000Z",
 				capabilities: {
-					cap1: { skills: ["s1"], rules: ["r1"], commands: ["c1"], subagents: ["a1"] },
-					cap2: { skills: [], rules: [], commands: [], subagents: [] },
+					cap1: { skills: ["s1"], rules: ["r1"], commands: ["c1"], subagents: ["a1"], mcps: [] },
+					cap2: { skills: [], rules: [], commands: [], subagents: [], mcps: [] },
 				},
 			};
 
@@ -296,12 +161,16 @@ describe("manifest", () => {
 			const manifest1: ResourceManifest = {
 				version: 1,
 				syncedAt: "2025-01-01T00:00:00.000Z",
-				capabilities: { old: { skills: ["old"], rules: [], commands: [], subagents: [] } },
+				capabilities: {
+					old: { skills: ["old"], rules: [], commands: [], subagents: [], mcps: [] },
+				},
 			};
 			const manifest2: ResourceManifest = {
 				version: 1,
 				syncedAt: "2025-01-02T00:00:00.000Z",
-				capabilities: { new: { skills: ["new"], rules: [], commands: [], subagents: [] } },
+				capabilities: {
+					new: { skills: ["new"], rules: [], commands: [], subagents: [], mcps: [] },
+				},
 			};
 
 			await saveManifest(manifest1);
@@ -330,12 +199,14 @@ describe("manifest", () => {
 						rules: ["old-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 					"enabled-cap": {
 						skills: ["keep-skill"],
 						rules: ["keep-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -367,6 +238,7 @@ describe("manifest", () => {
 						rules: [],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -392,6 +264,7 @@ describe("manifest", () => {
 						rules: ["nonexistent-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -441,6 +314,7 @@ describe("manifest", () => {
 						rules: ["rule-1", "rule-2"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -476,18 +350,21 @@ describe("manifest", () => {
 						rules: ["cap1-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 					cap2: {
 						skills: ["cap2-skill"],
 						rules: ["cap2-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 					cap3: {
 						skills: ["cap3-skill"],
 						rules: [],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};
@@ -517,6 +394,7 @@ describe("manifest", () => {
 						rules: ["only-rule"],
 						commands: [],
 						subagents: [],
+						mcps: [],
 					},
 				},
 			};

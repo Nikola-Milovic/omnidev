@@ -21,22 +21,6 @@ expo-app-design = { source = "github:expo/skills", path = "plugins/expo-app-desi
 expo-deployment = { source = "github:expo/skills", path = "plugins/expo-deployment" }
 upgrading-expo = { source = "github:expo/skills", path = "plugins/upgrading-expo" }
 
-# Wrapping MCP Servers
-# MCP servers are automatically wrapped and exposed as capabilities
-# The repository structure is detected and capability.toml is generated
-
-# Standalone MCP server - wraps the entire repository as one capability
-filesystem-mcp = { source = "github:modelcontextprotocol/servers", path = "src/filesystem" }
-github-mcp = { source = "github:modelcontextprotocol/servers", path = "src/github" }
-postgres-mcp = { source = "github:modelcontextprotocol/servers", path = "src/postgres" }
-
-# Community MCP servers
-playwright-mcp = { source = "github:executeautomation/mcp-playwright" }
-browser-use-mcp = { source = "github:browser-use/mcp" }
-
-# Custom MCP from your organization
-internal-mcp = { source = "github:your-org/internal-mcp-server", ref = "v1.2.0" }
-
 [profiles.default]
 capabilities = ["tasks", "ralph", "obsidian"]
 
@@ -45,9 +29,5 @@ capabilities = ["tasks", "ralph", "obsidian"]
 capabilities = ["expo-app-design", "expo-deployment", "upgrading-expo"]
 
 [profiles.development]
-# Development profile with MCP tools
-capabilities = ["tasks", "filesystem-mcp", "github-mcp", "playwright-mcp"]
-
-[profiles.database]
-# Database development with MCP
-capabilities = ["postgres-mcp", "tasks"]
+# Development profile with experimental capabilities
+capabilities = ["tasks", "experimental", "obsidian"]

@@ -1,5 +1,5 @@
 {
-  description = "OmniDev - Meta-CLI/MCP for AI agents";
+  description = "OmniDev - Meta-CLI for AI agents";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";

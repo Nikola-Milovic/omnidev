@@ -13,8 +13,7 @@ import type {
   CapabilityExport,    // Main capability export interface
   SkillExport,         // Skill definition structure
   DocExport,           // Documentation structure
-  FileContent,         // File name and content pair
-  McpToolExport        // MCP tool definition
+  FileContent          // File name and content pair
 } from "@omnidev-ai/core";
 ```
 
@@ -25,7 +24,6 @@ import type {
 ```typescript
 interface CapabilityExport {
   cliCommands?: Record<string, unknown>;
-  mcpTools?: Record<string, McpToolExport>;
   docs?: DocExport[];
   rules?: string[];
   skills?: SkillExport[];

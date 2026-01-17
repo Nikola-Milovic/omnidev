@@ -188,13 +188,12 @@ ${skill.instructions}`,
 		await Bun.write(`.cursor/rules/omnidev-${rule.name}.mdc`, rule.content);
 	}
 
+	// Sync .mcp.json with capability MCP servers (before saving manifest)
+	await syncMcpJson(capabilities, previousManifest, { silent });
+
 	// Save updated manifest for future cleanup
 	const newManifest = buildManifestFromCapabilities(capabilities);
 	await saveManifest(newManifest);
-
-	// Sync .mcp.json based on sandbox mode
-	const sandboxEnabled = config.sandbox_enabled !== false;
-	await syncMcpJson(capabilities, sandboxEnabled, { silent });
 
 	if (!silent) {
 		console.log("✓ Synced:");

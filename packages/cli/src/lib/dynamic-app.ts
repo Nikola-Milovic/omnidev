@@ -6,9 +6,7 @@ import { capabilityRoutes } from "../commands/capability";
 // Core commands
 import { doctorCommand } from "../commands/doctor";
 import { initCommand } from "../commands/init";
-import { mcpRoutes } from "../commands/mcp";
 import { profileRoutes } from "../commands/profile";
-import { serveCommand } from "../commands/serve";
 import { syncCommand } from "../commands/sync";
 import { debug } from "./debug";
 
@@ -20,11 +18,9 @@ export async function buildDynamicApp() {
 	const routes: Record<string, unknown> = {
 		init: initCommand,
 		doctor: doctorCommand,
-		serve: serveCommand,
 		sync: syncCommand,
 		capability: capabilityRoutes,
 		profile: profileRoutes,
-		mcp: mcpRoutes,
 	};
 
 	debug("Core routes registered", Object.keys(routes));

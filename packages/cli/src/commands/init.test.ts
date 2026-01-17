@@ -60,7 +60,6 @@ describe("init command", () => {
 
 		expect(existsSync(".omni")).toBe(true);
 		expect(existsSync(".omni/state")).toBe(true);
-		expect(existsSync(".omni/sandbox")).toBe(true);
 	});
 
 	test("does not create separate provider.toml file", async () => {
@@ -163,7 +162,6 @@ describe("init command", () => {
 		expect(content).toContain("# OmniDev working files - always ignored");
 		expect(content).toContain(".env");
 		expect(content).toContain("state/");
-		expect(content).toContain("sandbox/");
 		expect(content).toContain("*.log");
 	});
 
@@ -227,7 +225,6 @@ describe("init command", () => {
 		expect(existsSync(".omni/capabilities")).toBe(true);
 		expect(existsSync(".omni")).toBe(true);
 		expect(existsSync(".omni/state")).toBe(true);
-		expect(existsSync(".omni/sandbox")).toBe(true);
 	});
 
 	test("accepts provider via positional parameter", async () => {

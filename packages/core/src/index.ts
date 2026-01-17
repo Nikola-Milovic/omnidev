@@ -2,7 +2,7 @@
  * @omnidev-ai/core - Core functionality for OmniDev
  *
  * This package contains shared types, utilities, and core logic
- * used across the CLI and MCP server packages.
+ * used across the CLI and capability tooling packages.
  */
 
 // Re-export @stricli/core for capabilities to use

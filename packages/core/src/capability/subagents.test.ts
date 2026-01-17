@@ -163,7 +163,7 @@ tools: Read, Glob, Grep, Bash
 disallowedTools: Write, Edit
 model: sonnet
 permissionMode: acceptEdits
-skills: prd, ralph, mcp-builder
+skills: prd, ralph, capability-builder
 ---
 
 You are a fully configured subagent.`;
@@ -179,7 +179,7 @@ You are a fully configured subagent.`;
 		expect(subagents[0]?.disallowedTools).toEqual(["Write", "Edit"]);
 		expect(subagents[0]?.model).toBe("sonnet");
 		expect(subagents[0]?.permissionMode).toBe("acceptEdits");
-		expect(subagents[0]?.skills).toEqual(["prd", "ralph", "mcp-builder"]);
+		expect(subagents[0]?.skills).toEqual(["prd", "ralph", "capability-builder"]);
 		expect(subagents[0]?.systemPrompt).toBe("You are a fully configured subagent.");
 	});
 

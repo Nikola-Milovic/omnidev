@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import type { LoadedCapability, McpConfig } from "../types";
+import type { ResourceManifest } from "../state/manifest";
 
 /**
  * MCP server configuration in .mcp.json
@@ -18,13 +19,6 @@ export interface McpJsonConfig {
 }
 
 const MCP_JSON_PATH = ".mcp.json";
-
-/**
- * Check if a server name is managed by OmniDev
- */
-export function isOmniDevMcp(serverName: string): boolean {
-	return serverName === "omnidev" || serverName.startsWith("omni-");
-}
 
 /**
  * Read .mcp.json or return empty config if doesn't exist
@@ -70,49 +64,43 @@ function buildMcpServerConfig(mcp: McpConfig): McpServerConfig {
 }
 
 /**
- * Sync .mcp.json based on sandbox mode
+ * Sync .mcp.json with enabled capability MCP servers
  *
- * When sandboxEnabled = true (default):
- *   - Only "omnidev" MCP server is registered
- *   - Capability MCPs run as children of OmniDev server
- *
- * When sandboxEnabled = false:
- *   - Each capability's MCP is registered as "omni-{capabilityId}"
- *   - OmniDev server is NOT registered
+ * Each capability with an [mcp] section is registered using its capability ID.
+ * Uses the previous manifest to track which MCPs were managed by OmniDev.
  */
 export async function syncMcpJson(
 	capabilities: LoadedCapability[],
-	sandboxEnabled: boolean,
+	previousManifest: ResourceManifest,
 	options: { silent?: boolean } = {},
 ): Promise<void> {
 	const mcpJson = await readMcpJson();
 
-	// Remove all OmniDev-managed MCPs first
-	for (const serverName of Object.keys(mcpJson.mcpServers)) {
-		if (isOmniDevMcp(serverName)) {
-			delete mcpJson.mcpServers[serverName];
+	// Collect all MCP server names from previous manifest
+	const previouslyManagedMcps = new Set<string>();
+	for (const resources of Object.values(previousManifest.capabilities)) {
+		for (const mcpName of resources.mcps) {
+			previouslyManagedMcps.add(mcpName);
 		}
 	}
 
-	if (sandboxEnabled) {
-		// Add only OmniDev MCP server
-		mcpJson.mcpServers["omnidev"] = {
-			command: "bunx",
-			args: ["omnidev", "serve"],
-		};
-	} else {
-		// Add MCPs from all enabled capabilities
-		for (const cap of capabilities) {
-			if (cap.config.mcp) {
-				mcpJson.mcpServers[`omni-${cap.id}`] = buildMcpServerConfig(cap.config.mcp);
-			}
+	// Remove previously managed MCPs
+	for (const serverName of previouslyManagedMcps) {
+		delete mcpJson.mcpServers[serverName];
+	}
+
+	// Add MCPs from all enabled capabilities
+	let addedCount = 0;
+	for (const cap of capabilities) {
+		if (cap.config.mcp) {
+			mcpJson.mcpServers[cap.id] = buildMcpServerConfig(cap.config.mcp);
+			addedCount++;
 		}
 	}
 
 	await writeMcpJson(mcpJson);
 
 	if (!options.silent) {
-		const count = Object.keys(mcpJson.mcpServers).filter(isOmniDevMcp).length;
-		console.log(`  - .mcp.json (${count} MCP server(s))`);
+		console.log(`  - .mcp.json (${addedCount} MCP server(s))`);
 	}
 }

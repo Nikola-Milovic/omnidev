@@ -1,15 +1,14 @@
 # PROJECT KNOWLEDGE BASE
 
 ## OVERVIEW
-OmniDev: CLI capability management system for AI agents. Manages external capabilities through profiles + optional MCP server for sandboxed TypeScript execution.
+OmniDev: CLI capability management system for AI agents. Manages external capabilities through profiles and sync-driven configuration.
 
 ## STRUCTURE
 ```
 ./
 ├── packages/
 │   ├── core/           # Shared types, config loader, capability registry
-│   ├── cli/            # CLI commands (init, sync, doctor, profile, serve)
-│   └── mcp/            # MCP server (optional, omni_sandbox_environment, omni_execute)
+│   └── cli/            # CLI commands (init, sync, doctor, profile, capability)
 ├── scripts/            # Development & build scripts
 ├── docs/               # Documentation
 └── .agent/             # AI agent configuration
@@ -20,8 +19,7 @@ OmniDev: CLI capability management system for AI agents. Manages external capabi
 |------|----------|-------|
 | Config loader | packages/core/src/config/ | Loads omni.toml, omni.local.toml |
 | Capability registry | packages/core/src/capability/ | Discovers & loads from external sources |
-| CLI commands | packages/cli/src/commands/ | init, sync, doctor, profile, capability, serve |
-| MCP tools | packages/mcp/src/tools/ | omni_sandbox_environment, omni_execute |
+| CLI commands | packages/cli/src/commands/ | init, sync, doctor, profile, capability |
 | Build/test | package.json scripts | Uses bun test, biome for linting |
 
 ## CONVENTIONS
@@ -41,7 +39,7 @@ OmniDev: CLI capability management system for AI agents. Manages external capabi
 - Tests co-located: `*.test.ts` next to source
 - Custom helpers: `@omnidev-ai/core/test-utils` (expectToThrowAsync, waitForCondition)
 - Pre-commit: typecheck → lint → format → test --bail
-- Test organization: 33 test files across packages (21 core, 5 cli, 5 mcp, 2 test-utils)
+- Test organization: core + cli tests live alongside source files
 
 **Test Setup Pattern (STANDARD):**
 ```typescript
@@ -79,7 +77,7 @@ describe("feature being tested", () => {
 
 **Import Consistency:**
 - Core package: `import { tmpdir } from "../test-utils/index.js";` (relative)
-- MCP/CLI packages: `import { tmpdir } from "@omnidev-ai/core/test-utils";` (workspace)
+- CLI package: `import { tmpdir } from "@omnidev-ai/core/test-utils";` (workspace)
 - PREFERENCE: Use workspace import `@omnidev-ai/core/test-utils` for new code
 
 **Working Directory Management:**
@@ -111,20 +109,20 @@ const entries = readdirSync(dirPath, { withFileTypes: true }).sort((a, b) =>
 
 **Existing Inconsistencies (Legacy):**
 - Variable naming: 3 patterns exist (`testDir`, `TEST_DIR`, `tempDir`)
-- Import style: core uses relative imports, mcp/cli use workspace
+- Import style: core uses relative imports, cli uses workspace
 - originalCwd: 5 files use `const`, 20 use `let`
 - Cleanup: 15 files check existence, 10 don't
 - These should be normalized to standard pattern over time
 
 **Module Organization:**
 - Packages export via `index.ts` with barrel exports
-- Workspace paths: `@omnidev-ai/core`, `@omnidev-ai/cli`, `@omnidev-ai/mcp`
+- Workspace paths: `@omnidev-ai/core`, `@omnidev-ai/cli`
 
 **Changesets:**
 - Use `bun run changeset` to create changesets for any publishable change
 - Group changes: patch (fix), minor (feature), major (breaking)
 - Changesets are tracked in `.changeset/` and applied during release
-- Core + CLI are "fixed" (released together), MCP is ignored (not published)
+- Core + CLI are "fixed" (released together)
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
@@ -152,7 +150,7 @@ bun run release        # Build + prepare + publish to npm
 **Capability System:**
 - Capabilities loaded from external sources (Git, file://) to `.omni/capabilities/`
 - Managed via omni.toml, locked via omni.lock.toml
-- Can export CLI commands and sandbox-accessible functions
+- Can export CLI commands, skills, rules, docs, and subagents
 
 **TOML Configuration:**
 - All config files use TOML (not JSON/YAML)

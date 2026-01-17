@@ -51,7 +51,6 @@ Subagents can use any of Claude Code's internal tools:
 - **Execution**: `Bash`, `Task`
 - **Web**: `WebFetch`, `WebSearch`
 - **User Interaction**: `AskUserQuestion`
-- **MCP Tools**: Any tools from configured MCP servers
 
 ### Restricting Tools
 

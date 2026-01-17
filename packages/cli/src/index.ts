@@ -2,8 +2,8 @@
 /**
  * @omnidev-ai/cli - Command-line interface for OmniDev
  *
- * This package provides the CLI for managing OmniDev configuration,
- * capabilities, and the MCP server.
+ * This package provides the CLI for managing OmniDev configuration
+ * and capabilities.
  */
 
 import { run } from "@stricli/core";

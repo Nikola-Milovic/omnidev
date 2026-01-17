@@ -33,7 +33,6 @@ capabilities = []
 .env
 generated/
 state/
-sandbox/
 *.log
 `,
 		);

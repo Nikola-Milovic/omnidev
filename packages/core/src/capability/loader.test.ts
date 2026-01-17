@@ -202,27 +202,6 @@ secret = true`,
 		expect(config.env?.[0]?.secret).toBe(true);
 	});
 
-	test("loads capability config with optional mcp field", async () => {
-		const capPath = join(".omni", "capabilities", "with-mcp");
-		mkdirSync(capPath, { recursive: true });
-		writeFileSync(
-			join(capPath, "capability.toml"),
-			`[capability]
-id = "with-mcp"
-name = "With MCP"
-version = "1.0.0"
-description = "Has MCP tools"
-
-[mcp]
-tools = ["test_tool"]`,
-		);
-
-		const config = await loadCapabilityConfig(capPath);
-
-		expect(config.capability.id).toBe("with-mcp");
-		expect(config.mcp?.tools).toEqual(["test_tool"]);
-	});
-
 	test("throws error for reserved capability name (fs)", async () => {
 		const capPath = join(".omni", "capabilities", "fs");
 		mkdirSync(capPath, { recursive: true });
@@ -352,9 +331,7 @@ key = "VAR2"
 description = "Variable 2"
 required = false
 secret = true
-
-[mcp]
-tools = ["tool1", "tool2"]`,
+`,
 		);
 
 		const config = await loadCapabilityConfig(capPath);
@@ -362,7 +339,6 @@ tools = ["tool1", "tool2"]`,
 		expect(config.capability.id).toBe("complete-cap");
 		expect(config.exports?.functions).toEqual(["fn1", "fn2"]);
 		expect(config.env).toHaveLength(2);
-		expect(config.mcp?.tools).toEqual(["tool1", "tool2"]);
 	});
 });
 

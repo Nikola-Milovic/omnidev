@@ -220,8 +220,6 @@ export interface OmniConfig {
 	};
 	/** Capabilities configuration (enable/disable, sources) */
 	capabilities?: CapabilitiesConfig;
-	/** Enable sandbox mode (default: true). When false, MCPs are written directly to .mcp.json */
-	sandbox_enabled?: boolean;
 }
 
 // Provider Types

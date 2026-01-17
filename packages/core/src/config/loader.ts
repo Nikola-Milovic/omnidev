@@ -82,13 +82,6 @@ function generateConfigToml(config: OmniConfig): string {
 	// Note: active_profile is stored in .omni/state/active-profile, not in config.toml
 	// We still read it from config.toml for backwards compatibility, but don't write it here
 
-	// Sandbox mode
-	if (config.sandbox_enabled !== undefined) {
-		lines.push(`sandbox_enabled = ${config.sandbox_enabled}`);
-	}
-
-	lines.push("");
-
 	// Providers
 	if (config.providers?.enabled && config.providers.enabled.length > 0) {
 		lines.push("[providers]");

@@ -1,33 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import type { LoadedCapability } from "../types";
+import type { ResourceManifest } from "../state/manifest";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import { isOmniDevMcp, readMcpJson, syncMcpJson, writeMcpJson } from "./manager";
+import { readMcpJson, syncMcpJson, writeMcpJson } from "./manager";
 
 describe("mcp-json manager", () => {
 	setupTestDir("mcp-json-test-", { chdir: true, createOmniDir: true });
 
-	describe("isOmniDevMcp", () => {
-		test("returns true for 'omnidev' server name", () => {
-			expect(isOmniDevMcp("omnidev")).toBe(true);
-		});
-
-		test("returns true for 'omni-' prefixed server names", () => {
-			expect(isOmniDevMcp("omni-tasks")).toBe(true);
-			expect(isOmniDevMcp("omni-context7")).toBe(true);
-			expect(isOmniDevMcp("omni-my-capability")).toBe(true);
-		});
-
-		test("returns false for non-OmniDev server names", () => {
-			expect(isOmniDevMcp("myserver")).toBe(false);
-			expect(isOmniDevMcp("playwright")).toBe(false);
-			expect(isOmniDevMcp("custom-mcp")).toBe(false);
-		});
-
-		test("returns false for similar but different names", () => {
-			expect(isOmniDevMcp("omnidev-extra")).toBe(false);
-			expect(isOmniDevMcp("my-omnidev")).toBe(false);
-			expect(isOmniDevMcp("omnisomething")).toBe(false);
-		});
+	const createEmptyManifest = (): ResourceManifest => ({
+		version: 1,
+		syncedAt: new Date().toISOString(),
+		capabilities: {},
 	});
 
 	describe("readMcpJson", () => {
@@ -132,68 +115,8 @@ describe("mcp-json manager", () => {
 			exports: {},
 		});
 
-		describe("sandbox enabled mode (default)", () => {
-			test("adds only omnidev server when sandbox enabled", async () => {
-				const capabilities = [createMockCapability("tasks")];
-
-				await syncMcpJson(capabilities, true, { silent: true });
-
-				const config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omnidev");
-				expect(config.mcpServers.omnidev).toEqual({
-					command: "bunx",
-					args: ["omnidev", "serve"],
-				});
-			});
-
-			test("removes omni- prefixed servers when switching to sandbox enabled", async () => {
-				// Pre-populate with omni- entries
-				await Bun.write(
-					".mcp.json",
-					JSON.stringify({
-						mcpServers: {
-							"omni-tasks": { command: "npx", args: ["tasks-mcp"] },
-							"omni-context7": { command: "npx", args: ["context7-mcp"] },
-						},
-					}),
-				);
-
-				const capabilities = [
-					createMockCapability("tasks", { command: "npx", args: ["tasks-mcp"] }),
-				];
-
-				await syncMcpJson(capabilities, true, { silent: true });
-
-				const config = await readMcpJson();
-				expect(config.mcpServers).not.toHaveProperty("omni-tasks");
-				expect(config.mcpServers).not.toHaveProperty("omni-context7");
-				expect(config.mcpServers).toHaveProperty("omnidev");
-			});
-
-			test("preserves user MCPs when sandbox enabled", async () => {
-				await Bun.write(
-					".mcp.json",
-					JSON.stringify({
-						mcpServers: {
-							myserver: { command: "node", args: ["my-server.js"] },
-							playwright: { command: "npx", args: ["@playwright/mcp"] },
-						},
-					}),
-				);
-
-				const capabilities = [createMockCapability("tasks")];
-
-				await syncMcpJson(capabilities, true, { silent: true });
-
-				const config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("myserver");
-				expect(config.mcpServers).toHaveProperty("playwright");
-				expect(config.mcpServers).toHaveProperty("omnidev");
-			});
-		});
-
-		describe("sandbox disabled mode", () => {
-			test("adds omni- prefixed servers for MCP capabilities", async () => {
+		describe("MCP wrapping", () => {
+			test("adds MCP servers using capability ID", async () => {
 				const capabilities = [
 					createMockCapability("context7", {
 						command: "npx",
@@ -201,15 +124,14 @@ describe("mcp-json manager", () => {
 					}),
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
-				expect(config.mcpServers["omni-context7"]).toEqual({
+				expect(config.mcpServers).toHaveProperty("context7");
+				expect(config.mcpServers["context7"]).toEqual({
 					command: "npx",
 					args: ["-y", "@upstash/context7-mcp"],
 				});
-				expect(config.mcpServers).not.toHaveProperty("omnidev");
 			});
 
 			test("does not add entries for capabilities without MCP", async () => {
@@ -218,11 +140,11 @@ describe("mcp-json manager", () => {
 					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers).not.toHaveProperty("omni-tasks");
-				expect(config.mcpServers).toHaveProperty("omni-context7");
+				expect(config.mcpServers).not.toHaveProperty("tasks");
+				expect(config.mcpServers).toHaveProperty("context7");
 			});
 
 			test("includes env when present in MCP config", async () => {
@@ -234,37 +156,49 @@ describe("mcp-json manager", () => {
 					}),
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers["omni-my-cap"].env).toEqual({
+				expect(config.mcpServers["my-cap"].env).toEqual({
 					API_KEY: "secret",
 					DEBUG: "true",
 				});
 			});
 
-			test("removes omnidev server when switching to sandbox disabled", async () => {
+			test("removes previously managed MCP from manifest", async () => {
+				// Setup: pre-populate .mcp.json with an old MCP
 				await Bun.write(
 					".mcp.json",
 					JSON.stringify({
 						mcpServers: {
-							omnidev: { command: "bunx", args: ["omnidev", "serve"] },
+							oldcap: { command: "npx", args: ["old-mcp"] },
+							userserver: { command: "node", args: ["user.js"] },
 						},
 					}),
 				);
+
+				// Previous manifest tracks oldcap as managed
+				const previousManifest: ResourceManifest = {
+					version: 1,
+					syncedAt: new Date().toISOString(),
+					capabilities: {
+						oldcap: { skills: [], rules: [], commands: [], subagents: [], mcps: ["oldcap"] },
+					},
+				};
 
 				const capabilities = [
 					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, previousManifest, { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers).not.toHaveProperty("omnidev");
-				expect(config.mcpServers).toHaveProperty("omni-context7");
+				expect(config.mcpServers).not.toHaveProperty("oldcap"); // Removed (was managed)
+				expect(config.mcpServers).toHaveProperty("userserver"); // Preserved (not managed)
+				expect(config.mcpServers).toHaveProperty("context7"); // Added
 			});
 
-			test("preserves user MCPs when sandbox disabled", async () => {
+			test("preserves user MCPs", async () => {
 				await Bun.write(
 					".mcp.json",
 					JSON.stringify({
@@ -278,122 +212,98 @@ describe("mcp-json manager", () => {
 					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
 				expect(config.mcpServers).toHaveProperty("myserver");
-				expect(config.mcpServers).toHaveProperty("omni-context7");
+				expect(config.mcpServers).toHaveProperty("context7");
 			});
 
-			test("results in empty omni entries when no MCP capabilities", async () => {
+			test("does not add entries when no MCP capabilities", async () => {
 				const capabilities = [
 					createMockCapability("tasks"), // No MCP
 					createMockCapability("ralph"), // No MCP
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				const omniEntries = Object.keys(config.mcpServers).filter(isOmniDevMcp);
-				expect(omniEntries).toHaveLength(0);
+				expect(config.mcpServers).not.toHaveProperty("tasks");
+				expect(config.mcpServers).not.toHaveProperty("ralph");
 			});
 		});
 
-		describe("mode switching", () => {
-			test("switching from sandbox disabled to enabled cleans up correctly", async () => {
-				// Start in sandbox disabled mode
-				const capabilities = [
-					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
-				];
-				await syncMcpJson(capabilities, false, { silent: true });
-
-				let config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
-				expect(config.mcpServers).not.toHaveProperty("omnidev");
-
-				// Switch to sandbox enabled
-				await syncMcpJson(capabilities, true, { silent: true });
-
-				config = await readMcpJson();
-				expect(config.mcpServers).not.toHaveProperty("omni-context7");
-				expect(config.mcpServers).toHaveProperty("omnidev");
-			});
-
-			test("switching from sandbox enabled to disabled cleans up correctly", async () => {
-				// Start in sandbox enabled mode
-				const capabilities = [
-					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
-				];
-				await syncMcpJson(capabilities, true, { silent: true });
-
-				let config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omnidev");
-				expect(config.mcpServers).not.toHaveProperty("omni-context7");
-
-				// Switch to sandbox disabled
-				await syncMcpJson(capabilities, false, { silent: true });
-
-				config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
-				expect(config.mcpServers).not.toHaveProperty("omnidev");
-			});
-		});
-
-		describe("capability toggle (sandbox disabled)", () => {
+		describe("capability toggle", () => {
 			test("enabling MCP capability adds its entry", async () => {
 				// Start with no MCP capabilities
-				await syncMcpJson([createMockCapability("tasks")], false, { silent: true });
+				let manifest = createEmptyManifest();
+				await syncMcpJson([createMockCapability("tasks")], manifest, { silent: true });
 
 				let config = await readMcpJson();
-				expect(Object.keys(config.mcpServers).filter(isOmniDevMcp)).toHaveLength(0);
+				expect(Object.keys(config.mcpServers)).toHaveLength(0);
 
-				// Enable MCP capability
+				// Enable MCP capability - update manifest to track tasks (no mcps)
+				manifest = {
+					version: 1,
+					syncedAt: new Date().toISOString(),
+					capabilities: {
+						tasks: { skills: [], rules: [], commands: [], subagents: [], mcps: [] },
+					},
+				};
 				await syncMcpJson(
 					[
 						createMockCapability("tasks"),
 						createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
 					],
-					false,
+					manifest,
 					{ silent: true },
 				);
 
 				config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
+				expect(config.mcpServers).toHaveProperty("context7");
 			});
 
 			test("disabling MCP capability removes its entry", async () => {
 				// Start with MCP capability
+				let manifest = createEmptyManifest();
 				await syncMcpJson(
 					[createMockCapability("context7", { command: "npx", args: ["context7-mcp"] })],
-					false,
+					manifest,
 					{ silent: true },
 				);
 
 				let config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
+				expect(config.mcpServers).toHaveProperty("context7");
 
-				// Disable the capability (only non-MCP capabilities remain)
-				await syncMcpJson([createMockCapability("tasks")], false, { silent: true });
+				// Disable the capability - manifest now tracks context7 with its MCP
+				manifest = {
+					version: 1,
+					syncedAt: new Date().toISOString(),
+					capabilities: {
+						context7: { skills: [], rules: [], commands: [], subagents: [], mcps: ["context7"] },
+					},
+				};
+				await syncMcpJson([createMockCapability("tasks")], manifest, { silent: true });
 
 				config = await readMcpJson();
-				expect(config.mcpServers).not.toHaveProperty("omni-context7");
+				expect(config.mcpServers).not.toHaveProperty("context7");
 			});
 		});
 
 		describe("multiple MCP capabilities", () => {
-			test("adds all MCP capabilities when sandbox disabled", async () => {
+			test("adds all MCP capabilities", async () => {
 				const capabilities = [
 					createMockCapability("context7", { command: "npx", args: ["context7-mcp"] }),
 					createMockCapability("playwright", { command: "npx", args: ["playwright-mcp"] }),
 					createMockCapability("tasks"), // No MCP
 				];
 
-				await syncMcpJson(capabilities, false, { silent: true });
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers).toHaveProperty("omni-context7");
-				expect(config.mcpServers).toHaveProperty("omni-playwright");
-				expect(config.mcpServers).not.toHaveProperty("omni-tasks");
+				expect(config.mcpServers).toHaveProperty("context7");
+				expect(config.mcpServers).toHaveProperty("playwright");
+				expect(config.mcpServers).not.toHaveProperty("tasks");
 			});
 		});
 	});

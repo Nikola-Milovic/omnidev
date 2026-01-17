@@ -19,7 +19,6 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	mkdirSync(".omni", { recursive: true });
 	mkdirSync(".omni/capabilities", { recursive: true });
 	mkdirSync(".omni/state", { recursive: true });
-	mkdirSync(".omni/sandbox", { recursive: true });
 
 	// Create .omni/.gitignore for internal working files
 	if (!existsSync(".omni/.gitignore")) {
@@ -89,29 +88,6 @@ export async function runInit(_flags: Record<string, never>, provider?: string) 
 	}
 
 	console.log("");
-	console.log("🔌 Add OmniDev MCP Server to your AI provider:");
-	console.log("");
-	console.log("   Add to Claude Desktop config:");
-	console.log("   {");
-	console.log('     "mcpServers": {');
-	console.log('       "omnidev": {');
-	console.log('         "command": "npx",');
-	console.log('         "args": ["-y", "@omnidev-ai/cli", "serve"]');
-	console.log("       }");
-	console.log("     }");
-	console.log("   }");
-	console.log("");
-	console.log("   Or for local development:");
-	console.log("   {");
-	console.log('     "mcpServers": {');
-	console.log('       "omnidev": {');
-	console.log('         "command": "bun",');
-	console.log('         "args": ["run", "omnidev", "serve"],');
-	console.log('         "cwd": "/path/to/your/project"');
-	console.log("       }");
-	console.log("     }");
-	console.log("   }");
-	console.log("");
 	console.log("📁 File structure:");
 	console.log("   • omni.toml - Main config (commit to share with team)");
 	console.log("   • omni.lock.toml - Lock file (commit for reproducibility)");
@@ -178,14 +154,8 @@ function internalGitignore(): string {
 # Runtime state
 state/
 
-# Sandbox execution
-sandbox/
-
 # Logs
 *.log
-
-# MCP server process ID
-server.pid
 
 # Capability-specific patterns are appended below by each capability
 `;

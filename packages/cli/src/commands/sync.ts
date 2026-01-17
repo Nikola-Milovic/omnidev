@@ -3,7 +3,7 @@ import { buildCommand } from "@stricli/core";
 
 export const syncCommand = buildCommand({
 	docs: {
-		brief: "Manually sync all capabilities, roles, instructions, and MCP configuration",
+		brief: "Manually sync all capabilities, roles, and instructions",
 	},
 	parameters: {},
 	async func() {

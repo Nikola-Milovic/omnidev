@@ -10,13 +10,11 @@ Static CLI commands built with Stricli framework for OmniDev project management.
 | Command | File | Purpose |
 |---------|------|---------|
 | `omnidev init` | init.ts | Creates .omni/ directory, config.toml, provider.toml, instructions.md, internal gitignore |
-| `omnidev serve` | serve.ts | Starts MCP server via @omnidev-ai/mcp, optional --profile flag sets active profile |
 | `omnidev doctor` | doctor.ts | Validates Bun version (≥1.0), .omni/ directory, config.toml, internal gitignore |
 | `omnidev capability` | capability.ts | Subcommands: list, enable <name>, disable <name> (auto-syncs on enable/disable) |
 | `omnidev profile` | profile.ts | Subcommands: list, set <name> (auto-syncs on set, shows active with ● indicator) |
 | `omnidev ralph` | ralph.ts | Orchestrator: init, start [--agent/--iterations/--prd], stop, status; prd/story/spec/log/patterns subcommands |
 | `omnidev sync` | sync.ts | Manual agent configuration sync (capabilities, skills, rules, .omni/.gitignore) |
-| `omnidev mcp status` | mcp.ts | Shows MCP controller status from .omni/state/mcp-status.json |
 
 ## CONVENTIONS
 

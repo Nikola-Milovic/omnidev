@@ -9,7 +9,6 @@ This directory contains example `omni.toml` configurations demonstrating differe
 | `basic.toml` | Minimal setup with a single capability |
 | `profiles.toml` | Multiple profiles for different workflows |
 | `github-sources.toml` | Loading capabilities from GitHub with version pinning |
-| `mcp-wrapping.toml` | Wrapping MCP servers from Git repositories |
 | `local-dev.toml` | Loading from local directories for development |
 | `comprehensive.toml` | Mixed sources with advanced profile setup |
 
@@ -82,29 +81,6 @@ When wrapping, OmniDev will:
 - Extract metadata from `.claude-plugin/plugin.json` if present
 - Use README.md content as description
 - Generate a `capability.toml` automatically
-
-### Wrapping MCP Servers
-
-MCP (Model Context Protocol) servers can be loaded from Git repositories and automatically wrapped as capabilities:
-
-```toml
-# From the official MCP servers monorepo
-filesystem-mcp = { source = "github:modelcontextprotocol/servers", path = "src/filesystem" }
-github-mcp = { source = "github:modelcontextprotocol/servers", path = "src/github" }
-
-# Community MCP servers
-playwright-mcp = { source = "github:executeautomation/mcp-playwright" }
-
-# Custom MCP from your organization
-internal-mcp = { source = "github:your-org/internal-mcp-server", ref = "v1.2.0" }
-```
-
-MCP servers are auto-detected by:
-- Presence of MCP server configuration files
-- `package.json` with MCP-related dependencies
-- Standard MCP directory structure
-
-Once wrapped, the MCP server becomes available as a capability and its tools are exposed through OmniDev's MCP controller.
 
 ### Local Overrides
 

@@ -183,31 +183,6 @@ default = "https://api.example.com"
 		});
 	});
 
-	test("parses capability with MCP config", () => {
-		const toml = `
-[capability]
-id = "custom"
-name = "Custom Capability"
-version = "1.0.0"
-description = "Custom MCP"
-
-[mcp]
-command = "node"
-args = ["server.js"]
-transport = "stdio"
-
-[mcp.env]
-PORT = "3000"
-		`;
-
-		const config = parseCapabilityConfig(toml);
-
-		expect(config.mcp?.command).toBe("node");
-		expect(config.mcp?.args).toEqual(["server.js"]);
-		expect(config.mcp?.transport).toBe("stdio");
-		expect(config.mcp?.env?.PORT).toBe("3000");
-	});
-
 	test("throws error when capability.id is missing", () => {
 		const toml = `
 [capability]

@@ -36,15 +36,6 @@
         "smol-toml": "^1.6.0",
       },
     },
-    "packages/mcp": {
-      "name": "@omnidev-ai/mcp",
-      "version": "0.1.0",
-      "dependencies": {
-        "@modelcontextprotocol/sdk": "^1.25.2",
-        "@omnidev-ai/core": "workspace:*",
-        "zod": "^4.0.1",
-      },
-    },
   },
   "packages": {
     "@babel/runtime": ["@babel/runtime@7.28.6", "", {}, "sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA=="],
@@ -152,8 +143,6 @@
     "@omnidev-ai/cli": ["@omnidev-ai/cli@workspace:packages/cli"],
 
     "@omnidev-ai/core": ["@omnidev-ai/core@workspace:packages/core"],
-
-    "@omnidev-ai/mcp": ["@omnidev-ai/mcp@workspace:packages/mcp"],
 
     "@stricli/core": ["@stricli/core@1.2.5", "", {}, "sha512-+afyztQW7fwWkqmU2WQZbdc3LjnZThWYdtE0l+hykZ1Rvy7YGxZSvsVCS/wZ/2BNv117pQ9TU1GZZRIcPnB4tw=="],
 

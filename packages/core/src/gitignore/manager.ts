@@ -18,9 +18,6 @@ generated/
 # Runtime state
 state/
 
-# Sandbox execution
-sandbox/
-
 # Logs
 *.log
 

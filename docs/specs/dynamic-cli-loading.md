@@ -5,7 +5,7 @@
 This spec describes a **structured export** approach for capabilities to extend OmniDev with all their features:
 
 - **Structured export**: Capabilities export a single default object containing all their exports
-- **Unified interface**: CLI commands, MCP tools, docs, rules, skills, gitignore all in one place
+- **Unified interface**: CLI commands, docs, rules, skills, gitignore all in one place
 - **Type-safe**: Well-defined TypeScript interface for capability exports
 - **Auto-discovery**: System inspects enabled capabilities' exports on invocation
 
@@ -23,7 +23,7 @@ Currently, capability CLI commands are hardcoded in `packages/cli/src/app.ts`. W
 - It MUST automatically register any exports ending with `Routes` as CLI commands
 
 **FR-2: No Hardcoded Capability Commands**
-- Core OmniDev commands (init, doctor, serve, sync, capability, profile) remain hardcoded
+- Core OmniDev commands (init, doctor, sync, capability, profile) remain hardcoded
 - ALL capability commands MUST be loaded dynamically
 - No capability-specific imports in `packages/cli/src/app.ts`
 
@@ -68,11 +68,6 @@ export default {
   // CLI commands
   cliCommands: {
     ralph: ralphRoutes
-  },
-
-  // MCP tools (if any)
-  mcpTools: {
-    // ...
   },
 
   // Programmatic docs (OPTIONAL - can also use static docs/ directory)
@@ -224,7 +219,6 @@ This file contains all the TypeScript interfaces that capability developers will
 - `SkillExport` - Skill definition structure
 - `DocExport` - Documentation structure
 - `FileContent` - File name and content pair
-- `McpToolExport` - MCP tool definition
 
 **Exported from:** `packages/core/src/types/index.ts`
 ```typescript
@@ -237,8 +231,7 @@ import type {
   CapabilityExport,
   SkillExport,
   DocExport,
-  FileContent,
-  McpToolExport
+  FileContent
 } from "@omnidev-ai/core";
 ```
 
@@ -287,16 +280,6 @@ export interface SkillExport {
 }
 
 /**
- * MCP Tool export structure
- */
-export interface McpToolExport {
-  name: string;
-  description: string;
-  // ... MCP tool schema
-  [key: string]: unknown;
-}
-
-/**
  * Complete capability export structure
  *
  * Capabilities export this as their default export from index.ts.
@@ -307,9 +290,6 @@ export interface McpToolExport {
 export interface CapabilityExport {
   /** CLI commands provided by this capability */
   cliCommands?: Record<string, Command>;
-
-  /** MCP tools provided by this capability */
-  mcpTools?: Record<string, McpToolExport>;
 
   /** Documentation (programmatic - optional, can also use docs/ directory) */
   docs?: DocExport[];
@@ -832,11 +812,7 @@ When creating a capability:
    - How to handle skill references and additional files?
    - How to support skill templates and examples?
 
-3. **MCP Tools structure**: Need to define `McpToolExport` interface
-   - Follow MCP protocol specification
-   - Support tool schemas, input/output types
-
-4. **Docs export**: Should docs be file paths or inline content?
+3. **Docs export**: Should docs be file paths or inline content?
    - **Current**: File paths (relative to capability root)
    - Alternative: Allow both paths and inline markdown strings
 
@@ -853,7 +829,6 @@ This guide should document the complete `CapabilityExport` interface and how to 
 2. **Capability Structure**: Directory layout and required files
 3. **Export Interface**: Complete documentation of `CapabilityExport`
    - `cliCommands`: How to create CLI commands with stricli
-   - `mcpTools`: How to define MCP tools
    - `docs`: Documentation file conventions
    - `rules`: Rule file format and usage
    - `skills`: Skill structure, metadata, references

@@ -24,15 +24,15 @@
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",
-		"build": "tsdown"
+		"build": "bunup"
 	},
 	"dependencies": {
 		"@inquirer/prompts": "^8.1.0",
 		"@omnidev-ai/core": "workspace:*",
-		"@omnidev-ai/adapters": "workspace:*",
-		"@stricli/core": "^1.2.5"
+		"@stricli/core": "^1.2.5",
+		"@omnidev-ai/adapters": "workspace:*"
 	},
 	"devDependencies": {
-		"tsdown": "^0.12.5"
+		"bunup": "^0.16.20"
 	}
 }

@@ -128,6 +128,26 @@ content_hash = "sha256:..."
 updated_at = "2026-01-16T..."
 ```
 
+### Package Exports
+
+Packages use **conditional exports** to serve TypeScript to Bun and JavaScript to Node.js:
+
+```json
+"exports": {
+  ".": {
+    "types": "./dist/index.d.ts",
+    "bun": "./src/index.ts",
+    "default": "./dist/index.js"
+  }
+}
+```
+
+- **`bun`** — Bun loads TypeScript directly (no build needed for dev/tests)
+- **`default`** — Node.js gets built JavaScript from `dist/`
+- **`types`** — TypeScript gets declaration files
+
+This allows running tests without building while ensuring npm users get working JavaScript.
+
 ### File Conventions
 
 | File | Location | Committed |

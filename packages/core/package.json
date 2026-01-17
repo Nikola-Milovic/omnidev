@@ -30,13 +30,13 @@
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit",
-		"build": "tsdown"
+		"build": "bunup"
 	},
 	"dependencies": {
 		"@stricli/core": "^1.2.5",
 		"smol-toml": "^1.6.0"
 	},
 	"devDependencies": {
-		"tsdown": "^0.12.5"
+		"bunup": "^0.16.20"
 	}
 }

@@ -21,12 +21,13 @@
 		"prepare": "lefthook install",
 		"changeset": "changeset",
 		"version": "changeset version",
-		"release": "bun run build && changeset publish"
+		"release": "bun run build && bun publish --filter '@omnidev-ai/*' --access public"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.11",
 		"@changesets/cli": "^2.29.8",
 		"@types/bun": "^1.1.17",
+		"bunup": "^0.16.20",
 		"lefthook": "^2.0.13",
 		"typescript": "^5.7.2"
 	},

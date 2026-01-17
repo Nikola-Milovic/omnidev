@@ -2,8 +2,8 @@
  * Helper functions for testing
  */
 
-import { expect } from "bun:test";
-import { mkdtempSync } from "node:fs";
+import { afterEach, beforeEach, expect } from "bun:test";
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir as osTmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -196,4 +196,89 @@ export async function captureConsole<T>(
  */
 export function tmpdir(prefix = "omnidev-test-"): string {
 	return mkdtempSync(join(osTmpdir(), prefix));
+}
+
+export type TestDirOptions = {
+	chdir?: boolean;
+	createOmniDir?: boolean;
+};
+
+export type TestDirController = {
+	readonly path: string;
+	readonly originalCwd: string;
+	setPath: (path: string, options?: TestDirOptions) => void;
+	reset: (prefix?: string, options?: TestDirOptions & { cleanupPrevious?: boolean }) => string;
+};
+
+/**
+ * Sets up a temporary directory for each test and cleans it up automatically.
+ * Registers beforeEach/afterEach hooks on call.
+ */
+export function setupTestDir(
+	prefix = "omnidev-test-",
+	options: TestDirOptions = {},
+): TestDirController {
+	let currentDir = "";
+	let originalCwd = "";
+	let shouldChdir = options.chdir ?? false;
+	let shouldCreateOmniDir = options.createOmniDir ?? false;
+
+	const applyOptions = (dir: string, nextOptions?: TestDirOptions) => {
+		if (nextOptions) {
+			if (typeof nextOptions.chdir === "boolean") {
+				shouldChdir = nextOptions.chdir;
+			}
+			if (typeof nextOptions.createOmniDir === "boolean") {
+				shouldCreateOmniDir = nextOptions.createOmniDir;
+			}
+		}
+
+		if (shouldCreateOmniDir) {
+			mkdirSync(join(dir, ".omni"), { recursive: true });
+		}
+
+		if (shouldChdir) {
+			process.chdir(dir);
+		}
+	};
+
+	beforeEach(() => {
+		originalCwd = process.cwd();
+		currentDir = tmpdir(prefix);
+		applyOptions(currentDir);
+	});
+
+	afterEach(() => {
+		if (shouldChdir) {
+			process.chdir(originalCwd);
+		}
+		if (currentDir && existsSync(currentDir)) {
+			rmSync(currentDir, { recursive: true, force: true });
+		}
+	});
+
+	return {
+		get path() {
+			return currentDir;
+		},
+		get originalCwd() {
+			return originalCwd;
+		},
+		setPath(path: string, nextOptions?: TestDirOptions) {
+			currentDir = path;
+			applyOptions(currentDir, nextOptions);
+		},
+		reset(nextPrefix = prefix, nextOptions?: TestDirOptions & { cleanupPrevious?: boolean }) {
+			const cleanupPrevious = nextOptions?.cleanupPrevious ?? true;
+			if (cleanupPrevious && currentDir && existsSync(currentDir)) {
+				if (shouldChdir) {
+					process.chdir(originalCwd);
+				}
+				rmSync(currentDir, { recursive: true, force: true });
+			}
+			currentDir = tmpdir(nextPrefix);
+			applyOptions(currentDir, nextOptions);
+			return currentDir;
+		},
+	};
 }

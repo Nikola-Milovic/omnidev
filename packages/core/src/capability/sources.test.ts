@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import {
 	parseSourceConfig,
 	sourceToGitUrl,
@@ -61,12 +61,10 @@ describe("parseSourceConfig", () => {
 		const config = parseSourceConfig({
 			source: "github:user/repo",
 			ref: "v2.0.0",
-			type: "wrap",
 		}) as GitCapabilitySourceConfig;
 
 		expect(config.source).toBe("github:user/repo");
 		expect(config.ref).toBe("v2.0.0");
-		expect(config.type).toBe("wrap");
 	});
 
 	test("passes through config with path", () => {
@@ -135,23 +133,7 @@ describe("getLockFilePath", () => {
 });
 
 describe("loadLockFile", () => {
-	let testDir: string;
-	let originalCwd: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = mkdtempSync(join(tmpdir(), "test-lock-file-"));
-		mkdirSync(join(testDir, ".omni"), { recursive: true });
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
-	});
-
+	setupTestDir("test-lock-file-", { chdir: true, createOmniDir: true });
 	test("returns empty capabilities when lock file does not exist", async () => {
 		const lockFile = await loadLockFile();
 
@@ -213,23 +195,7 @@ updated_at = "2026-01-02T00:00:00Z"
 });
 
 describe("saveLockFile", () => {
-	let testDir: string;
-	let originalCwd: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = mkdtempSync(join(tmpdir(), "test-save-lock-"));
-		mkdirSync(join(testDir, ".omni"), { recursive: true });
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
-	});
-
+	setupTestDir("test-save-lock-", { chdir: true, createOmniDir: true });
 	test("creates lock file with single capability", async () => {
 		const lockFile: CapabilitiesLockFile = {
 			capabilities: {
@@ -332,7 +298,142 @@ describe("saveLockFile", () => {
 	});
 });
 
-// Note: Tests for fetchCapabilitySource and fetchAllCapabilitySources require
-// network access and git operations. These should be tested via integration tests
+describe("wrapping detection", () => {
+	const testDir = setupTestDir("test-wrapping-", { chdir: true, createOmniDir: true });
+
+	beforeEach(() => {
+		mkdirSync(join(testDir.path, ".omni", "capabilities"), { recursive: true });
+	});
+	test("detects wrapping needed when .claude-plugin/plugin.json exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, ".claude-plugin"), { recursive: true });
+
+		writeFileSync(
+			join(capDir, ".claude-plugin", "plugin.json"),
+			JSON.stringify({
+				name: "test-capability",
+				version: "1.0.0",
+				description: "Test capability",
+				author: {
+					name: "Test Author",
+					email: "test@example.com",
+				},
+			}),
+		);
+
+		// Should be detected as needing wrapping since no capability.toml exists
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, ".claude-plugin", "plugin.json"))).toBe(true);
+	});
+
+	test("detects wrapping needed when skills directory exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "skills"), { recursive: true });
+
+		writeFileSync(join(capDir, "skills", "example-skill.md"), "# Example Skill\n");
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, "skills"))).toBe(true);
+	});
+
+	test("detects wrapping needed when agents directory exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "agents"), { recursive: true });
+
+		writeFileSync(join(capDir, "agents", "example-agent.md"), "# Example Agent\n");
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, "agents"))).toBe(true);
+	});
+
+	test("detects wrapping needed when commands directory exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "commands"), { recursive: true });
+
+		writeFileSync(join(capDir, "commands", "example-command.md"), "# Example Command\n");
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, "commands"))).toBe(true);
+	});
+
+	test("detects wrapping needed when rules directory exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "rules"), { recursive: true });
+
+		writeFileSync(join(capDir, "rules", "example-rule.md"), "# Example Rule\n");
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, "rules"))).toBe(true);
+	});
+
+	test("detects wrapping needed when docs directory exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "docs"), { recursive: true });
+
+		writeFileSync(join(capDir, "docs", "getting-started.md"), "# Getting Started\n");
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, "docs"))).toBe(true);
+	});
+
+	test("does not wrap when capability.toml exists", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "skills"), { recursive: true });
+
+		writeFileSync(
+			join(capDir, "capability.toml"),
+			`[capability]
+id = "test-cap"
+name = "Test Capability"
+version = "1.0.0"
+description = "Test"
+`,
+		);
+
+		writeFileSync(join(capDir, "skills", "example-skill.md"), "# Example Skill\n");
+
+		// Has capability.toml, so should NOT be wrapped even with skills dir
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(true);
+		expect(existsSync(join(capDir, "skills"))).toBe(true);
+	});
+
+	test("does not wrap directory with no recognized structure", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(capDir, { recursive: true });
+
+		// Create some random files/dirs that shouldn't trigger wrapping
+		writeFileSync(join(capDir, "README.md"), "# Test\n");
+		writeFileSync(join(capDir, "package.json"), "{}");
+		mkdirSync(join(capDir, "src"));
+
+		expect(existsSync(join(capDir, "capability.toml"))).toBe(false);
+		expect(existsSync(join(capDir, ".claude-plugin"))).toBe(false);
+		expect(existsSync(join(capDir, "skills"))).toBe(false);
+		// Should not trigger wrapping
+	});
+
+	test("recognizes singular directory names", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "skill"), { recursive: true });
+
+		writeFileSync(join(capDir, "skill", "example.md"), "# Example\n");
+
+		// Singular 'skill' should also be detected
+		expect(existsSync(join(capDir, "skill"))).toBe(true);
+	});
+
+	test("recognizes alternative directory names", () => {
+		const capDir = join(testDir.path, ".omni", "capabilities", "test-cap");
+		mkdirSync(join(capDir, "subagents"), { recursive: true });
+
+		writeFileSync(join(capDir, "subagents", "example.md"), "# Example\n");
+
+		// 'subagents' should also be detected as agent dir
+		expect(existsSync(join(capDir, "subagents"))).toBe(true);
+	});
+});
+
+// Note: Tests for fetchCapabilitySource and fetchAllCapabilitySources with actual
+// git operations require network access. These should be tested via integration tests
 // or with mocked git commands. The manual test in /tmp/omni-test verified the
 // full flow works correctly with the real obsidian-skills repository.

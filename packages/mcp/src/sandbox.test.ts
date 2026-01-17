@@ -1,31 +1,13 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { readdir, readlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { LoadedCapability } from "@omnidev-ai/core";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { setupSandbox } from "./sandbox";
 
 describe("sandbox", () => {
-	let testDir: string;
-	let originalCwd: string;
-
-	beforeEach(() => {
-		// Create a temporary test directory
-		testDir = join("/tmp", `omnidev-sandbox-test-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
-		originalCwd = process.cwd();
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		// Restore original working directory
-		process.chdir(originalCwd);
-
-		// Clean up test directory
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
-	});
+	const testDir = setupTestDir("omnidev-sandbox-test-", { chdir: true });
 
 	test("creates sandbox directories", async () => {
 		await setupSandbox([]);
@@ -37,8 +19,8 @@ describe("sandbox", () => {
 	test("creates symlink for single capability", async () => {
 		// Create a mock capability directory
 		const capPath = "omni/capabilities/test-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "test-cap",
@@ -71,10 +53,10 @@ describe("sandbox", () => {
 		// Create mock capability directories
 		const cap1Path = "omni/capabilities/cap1";
 		const cap2Path = "omni/capabilities/cap2";
-		mkdirSync(join(testDir, cap1Path), { recursive: true });
-		mkdirSync(join(testDir, cap2Path), { recursive: true });
-		writeFileSync(join(testDir, cap1Path, "index.ts"), "export {}");
-		writeFileSync(join(testDir, cap2Path, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, cap1Path), { recursive: true });
+		mkdirSync(join(testDir.path, cap2Path), { recursive: true });
+		writeFileSync(join(testDir.path, cap1Path, "index.ts"), "export {}");
+		writeFileSync(join(testDir.path, cap2Path, "index.ts"), "export {}");
 
 		const capabilities: LoadedCapability[] = [
 			{
@@ -119,8 +101,8 @@ describe("sandbox", () => {
 
 	test("uses custom module name from exports config", async () => {
 		const capPath = "omni/capabilities/my-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "my-cap",
@@ -154,8 +136,8 @@ describe("sandbox", () => {
 	test("cleans existing symlinks before creating new ones", async () => {
 		// Create initial setup
 		const capPath = "omni/capabilities/cap1";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap1: LoadedCapability = {
 			id: "cap1",
@@ -181,8 +163,8 @@ describe("sandbox", () => {
 
 		// Create new capability and run setup again
 		const cap2Path = "omni/capabilities/cap2";
-		mkdirSync(join(testDir, cap2Path), { recursive: true });
-		writeFileSync(join(testDir, cap2Path, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, cap2Path), { recursive: true });
+		writeFileSync(join(testDir.path, cap2Path, "index.ts"), "export {}");
 
 		const cap2: LoadedCapability = {
 			id: "cap2",
@@ -219,8 +201,8 @@ describe("sandbox", () => {
 
 	test("is idempotent - can be called multiple times", async () => {
 		const capPath = "omni/capabilities/test-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "test-cap",
@@ -255,8 +237,8 @@ describe("sandbox", () => {
 		// This test verifies that the symlinks point to the correct location
 		// relative to .omni/sandbox/node_modules/
 		const capPath = "omni/capabilities/my-capability";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export const test = true;");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export const test = true;");
 
 		const cap: LoadedCapability = {
 			id: "my-capability",
@@ -291,8 +273,8 @@ describe("sandbox", () => {
 	test("handles capability path with different depth", async () => {
 		// Test that symlinks work regardless of capability path structure
 		const capPath = "capabilities/nested/deep/test-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "test-cap",
@@ -352,8 +334,8 @@ describe("sandbox", () => {
 		writeFileSync(".omni/sandbox/node_modules/regular-file.txt", "test content");
 
 		const capPath = "omni/capabilities/test-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "test-cap",
@@ -387,8 +369,8 @@ describe("sandbox", () => {
 		writeFileSync(".omni/sandbox/node_modules/old-dir/nested/file.txt", "test");
 
 		const capPath = "omni/capabilities/test-cap";
-		mkdirSync(join(testDir, capPath), { recursive: true });
-		writeFileSync(join(testDir, capPath, "index.ts"), "export {}");
+		mkdirSync(join(testDir.path, capPath), { recursive: true });
+		writeFileSync(join(testDir.path, capPath, "index.ts"), "export {}");
 
 		const cap: LoadedCapability = {
 			id: "test-cap",

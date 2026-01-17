@@ -15,6 +15,9 @@ export {
 	createSpy,
 	delay,
 	expectToThrowAsync,
+	setupTestDir,
+	type TestDirController,
+	type TestDirOptions,
 	tmpdir,
 	waitForCondition,
 } from "./helpers";

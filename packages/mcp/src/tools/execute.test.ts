@@ -1,12 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
 import type { CapabilityRegistry } from "@omnidev-ai/core";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { handleOmniExecute } from "./execute";
 
 describe("handleOmniExecute", () => {
-	let testDir: string;
-	let originalCwd: string;
+	const testDir = setupTestDir("execute-test-", { chdir: true });
 
 	const mockRegistry = {
 		getAllCapabilities: () => [],
@@ -17,21 +16,10 @@ describe("handleOmniExecute", () => {
 	} as CapabilityRegistry;
 
 	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = tmpdir("execute-test-");
-		process.chdir(testDir);
-
 		// Initialize git repo for diff tests
-		Bun.spawnSync(["git", "init"], { cwd: testDir });
-		Bun.spawnSync(["git", "config", "user.email", "test@test.com"], { cwd: testDir });
-		Bun.spawnSync(["git", "config", "user.name", "Test User"], { cwd: testDir });
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		Bun.spawnSync(["git", "init"], { cwd: testDir.path });
+		Bun.spawnSync(["git", "config", "user.email", "test@test.com"], { cwd: testDir.path });
+		Bun.spawnSync(["git", "config", "user.name", "Test User"], { cwd: testDir.path });
 	});
 
 	test("should throw error when code is missing", async () => {
@@ -124,8 +112,8 @@ describe("handleOmniExecute", () => {
 	test("should detect changed files after code execution", async () => {
 		// Create initial commit
 		await Bun.write("test.txt", "initial");
-		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir });
-		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir });
+		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir.path });
+		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir.path });
 
 		// Code that modifies a file
 		const code = `
@@ -147,8 +135,8 @@ export async function main(): Promise<number> {
 	test("should track insertions in diff_stat", async () => {
 		// Create initial commit
 		await Bun.write("test.txt", "");
-		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir });
-		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir });
+		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir.path });
+		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir.path });
 
 		// Code that adds lines
 		const code = `
@@ -169,8 +157,8 @@ export async function main(): Promise<number> {
 	test("should track deletions in diff_stat", async () => {
 		// Create initial commit with content
 		await Bun.write("test.txt", "line1\nline2\nline3");
-		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir });
-		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir });
+		Bun.spawnSync(["git", "add", "test.txt"], { cwd: testDir.path });
+		Bun.spawnSync(["git", "commit", "-m", "initial"], { cwd: testDir.path });
 
 		// Code that removes content
 		const code = `
@@ -269,7 +257,7 @@ export async function main(): Promise<number> {
 
 	test("should handle code that creates files", async () => {
 		// Create initial commit
-		Bun.spawnSync(["git", "commit", "--allow-empty", "-m", "initial"], { cwd: testDir });
+		Bun.spawnSync(["git", "commit", "--allow-empty", "-m", "initial"], { cwd: testDir.path });
 
 		const code = `
 export async function main(): Promise<number> {
@@ -291,6 +279,6 @@ export async function main(): Promise<number> {
 		const code = 'export async function main(): Promise<number> { console.log("test"); return 0; }';
 		await handleOmniExecute(mockRegistry, { code });
 
-		expect(process.cwd()).toBe(testDir);
+		expect(process.cwd()).toBe(testDir.path);
 	});
 });

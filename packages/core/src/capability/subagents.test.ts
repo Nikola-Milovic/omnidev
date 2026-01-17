@@ -1,20 +1,16 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { loadSubagents } from "./subagents";
 
 describe("loadSubagents", () => {
-	const testDir = join(process.cwd(), "test-subagents-temp");
-	const capabilityPath = join(testDir, "test-capability");
+	const testDir = setupTestDir("capability-subagents-test-");
+	let capabilityPath: string;
 
 	beforeEach(() => {
+		capabilityPath = join(testDir.path, "test-capability");
 		mkdirSync(capabilityPath, { recursive: true });
-	});
-
-	afterEach(() => {
-		if (testDir) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("returns empty array when subagents directory does not exist", async () => {

@@ -1,20 +1,16 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { loadCommands } from "./commands";
 
 describe("loadCommands", () => {
-	const testDir = join(process.cwd(), "test-commands-temp");
-	const capabilityPath = join(testDir, "test-capability");
+	const testDir = setupTestDir("capability-commands-test-");
+	let capabilityPath: string;
 
 	beforeEach(() => {
+		capabilityPath = join(testDir.path, "test-capability");
 		mkdirSync(capabilityPath, { recursive: true });
-	});
-
-	afterEach(() => {
-		if (testDir) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("returns empty array when commands directory does not exist", async () => {

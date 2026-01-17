@@ -1,27 +1,12 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { readActiveProfileState } from "../state/active-profile.js";
 import type { OmniConfig } from "../types/index.js";
 import { getActiveProfile, resolveEnabledCapabilities, setActiveProfile } from "./profiles.js";
 
 describe("getActiveProfile", () => {
-	let TEST_DIR: string;
-	let originalCwd: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		TEST_DIR = tmpdir("profiles-test-");
-		process.chdir(TEST_DIR);
-		mkdirSync(".omni", { recursive: true });
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(TEST_DIR)) {
-			rmSync(TEST_DIR, { recursive: true, force: true });
-		}
-	});
+	setupTestDir("profiles-test-", { chdir: true, createOmniDir: true });
 
 	test("returns null when no state file or config exists", async () => {
 		const profile = await getActiveProfile();
@@ -57,26 +42,7 @@ describe("getActiveProfile", () => {
 });
 
 describe("setActiveProfile", () => {
-	const TEST_DIR = ".omni-test-profiles-set";
-	let originalCwd: string;
-
-	beforeEach(() => {
-		if (!existsSync(TEST_DIR)) {
-			mkdirSync(TEST_DIR, { recursive: true });
-		}
-		originalCwd = process.cwd();
-		process.chdir(TEST_DIR);
-		if (!existsSync(".omni")) {
-			mkdirSync(".omni", { recursive: true });
-		}
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(TEST_DIR)) {
-			rmSync(TEST_DIR, { recursive: true, force: true });
-		}
-	});
+	setupTestDir("profiles-set-test-", { chdir: true, createOmniDir: true });
 
 	test("sets active_profile in state file", async () => {
 		await setActiveProfile("staging");

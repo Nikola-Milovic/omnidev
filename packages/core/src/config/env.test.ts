@@ -1,25 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import type { EnvDeclaration } from "../types";
 import { isSecretEnvVar, loadEnvironment, validateEnv } from "./env";
 
 describe("loadEnvironment", () => {
-	const originalCwd = process.cwd();
-	let testDir: string;
-
-	beforeEach(() => {
-		// Create test directory in /tmp
-		testDir = tmpdir("env-test-");
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true });
-		}
-	});
+	setupTestDir("env-test-", { chdir: true });
 
 	test("returns empty object when no .omni/.env file exists", async () => {
 		const env = await loadEnvironment();

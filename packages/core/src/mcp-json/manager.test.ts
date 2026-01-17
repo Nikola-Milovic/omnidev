@@ -1,25 +1,10 @@
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import type { LoadedCapability } from "../types";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { isOmniDevMcp, readMcpJson, syncMcpJson, writeMcpJson } from "./manager";
 
 describe("mcp-json manager", () => {
-	let originalCwd: string;
-	let tempDir: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		tempDir = mkdtempSync(join(tmpdir(), "mcp-json-test-"));
-		mkdirSync(join(tempDir, ".omni"), { recursive: true });
-		process.chdir(tempDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		rmSync(tempDir, { recursive: true, force: true });
-	});
+	setupTestDir("mcp-json-test-", { chdir: true, createOmniDir: true });
 
 	describe("isOmniDevMcp", () => {
 		test("returns true for 'omnidev' server name", () => {

@@ -1,28 +1,23 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { buildCapabilityRegistry } from "./registry";
 
 describe("buildCapabilityRegistry", () => {
-	const testDir = "test-capability-registry";
-	const omniDir = join(testDir, ".omni");
-	const capabilitiesDir = join(testDir, ".omni", "capabilities");
-	let originalCwd: string;
+	const testDir = setupTestDir("capability-registry-test-", { chdir: true, createOmniDir: true });
+	let omniDir: string;
+	let capabilitiesDir: string;
 
 	beforeEach(() => {
-		// Save current working directory
-		originalCwd = process.cwd();
-
 		// Create test directory structure
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		omniDir = join(testDir.path, ".omni");
+		capabilitiesDir = join(omniDir, "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
-		mkdirSync(omniDir, { recursive: true });
 
 		// Create default config with profiles
 		writeFileSync(
-			join(testDir, "omni.toml"),
+			join(testDir.path, "omni.toml"),
 			`project = "test"
 active_profile = "default"
 
@@ -30,19 +25,6 @@ active_profile = "default"
 capabilities = ["cap1", "cap2"]
 `,
 		);
-
-		// Change to test directory
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Cleanup
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("builds empty registry when no capabilities exist", async () => {

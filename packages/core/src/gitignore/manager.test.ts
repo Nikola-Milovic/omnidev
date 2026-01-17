@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import {
 	addCapabilityPatterns,
 	buildGitignoreContent,
@@ -11,25 +10,8 @@ import {
 	writeGitignore,
 } from "./manager.js";
 
-let TEST_DIR: string;
-const originalCwd = process.cwd();
-
 describe("Gitignore Manager", () => {
-	beforeEach(() => {
-		// Create test directory in /tmp
-		TEST_DIR = tmpdir("gitignore-test-");
-		process.chdir(TEST_DIR);
-	});
-
-	afterEach(() => {
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Clean up test directory
-		if (existsSync(TEST_DIR)) {
-			rmSync(TEST_DIR, { recursive: true });
-		}
-	});
+	setupTestDir("gitignore-test-", { chdir: true });
 
 	describe("readGitignore", () => {
 		test("returns base content when file doesn't exist", async () => {

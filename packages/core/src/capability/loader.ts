@@ -76,7 +76,9 @@ export async function discoverCapabilities(): Promise<string[]> {
 
 	// Discover built-in capabilities (from capabilities/ directory)
 	if (existsSync(BUILTIN_CAPABILITIES_DIR)) {
-		const entries = readdirSync(BUILTIN_CAPABILITIES_DIR, { withFileTypes: true });
+		const entries = readdirSync(BUILTIN_CAPABILITIES_DIR, { withFileTypes: true }).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
 
 		for (const entry of entries) {
 			const entryPath = join(BUILTIN_CAPABILITIES_DIR, entry.name);
@@ -91,7 +93,9 @@ export async function discoverCapabilities(): Promise<string[]> {
 
 	// Discover project-specific capabilities (from .omni/capabilities/)
 	if (existsSync(CAPABILITIES_DIR)) {
-		const entries = readdirSync(CAPABILITIES_DIR, { withFileTypes: true });
+		const entries = readdirSync(CAPABILITIES_DIR, { withFileTypes: true }).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
 
 		for (const entry of entries) {
 			const entryPath = join(CAPABILITIES_DIR, entry.name);

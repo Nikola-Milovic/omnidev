@@ -1,22 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { mkdirSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runProfileList, runProfileSet } from "./profile";
 
 describe("profile commands", () => {
-	let testDir: string;
-	let originalCwd: string;
+	setupTestDir("profile-test-", { chdir: true });
 	let originalExit: typeof process.exit;
 	let exitCode: number | undefined;
 	let consoleOutput: string[];
 	let consoleErrors: string[];
+	let originalLog: typeof console.log;
+	let originalError: typeof console.error;
 
 	beforeEach(() => {
-		// Create test directory in /tmp
-		originalCwd = process.cwd();
-		testDir = tmpdir("profile-test-");
-		process.chdir(testDir);
-
 		// Mock process.exit
 		exitCode = undefined;
 		originalExit = process.exit;
@@ -28,28 +24,20 @@ describe("profile commands", () => {
 		// Mock console
 		consoleOutput = [];
 		consoleErrors = [];
-		const originalLog = console.log;
-		const originalError = console.error;
+		originalLog = console.log;
+		originalError = console.error;
 		console.log = (...args: unknown[]) => {
 			consoleOutput.push(args.join(" "));
 		};
 		console.error = (...args: unknown[]) => {
 			consoleErrors.push(args.join(" "));
 		};
-
-		// Restore after test (in afterEach)
-		return () => {
-			console.log = originalLog;
-			console.error = originalError;
-		};
 	});
 
 	afterEach(() => {
 		process.exit = originalExit;
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
+		console.log = originalLog;
+		console.error = originalError;
 	});
 
 	describe("runProfileList", () => {

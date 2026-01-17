@@ -1,35 +1,13 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { loadConfig } from "./loader";
 
 const CONFIG_PATH = "omni.toml";
 const LOCAL_CONFIG = "omni.local.toml";
 
-// Save and restore the current working directory
-let originalCwd: string;
-let TEST_DIR: string;
-
-beforeEach(() => {
-	// Save original cwd
-	originalCwd = process.cwd();
-
-	// Create test directory in /tmp
-	TEST_DIR = tmpdir("loader-test-");
-	process.chdir(TEST_DIR);
-});
-
-afterEach(() => {
-	// Restore original cwd
-	process.chdir(originalCwd);
-
-	// Clean up test directory
-	if (existsSync(TEST_DIR)) {
-		rmSync(TEST_DIR, { recursive: true });
-	}
-});
-
 describe("loadConfig", () => {
+	setupTestDir("loader-test-", { chdir: true });
 	test("returns empty config when no files exist", async () => {
 		const config = await loadConfig();
 		expect(config).toEqual({

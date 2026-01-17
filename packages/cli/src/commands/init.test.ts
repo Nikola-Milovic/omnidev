@@ -1,24 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runInit } from "./init";
 
 describe("init command", () => {
-	let testDir: string;
-	let originalCwd: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = tmpdir("init-test-");
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
-	});
+	setupTestDir("init-test-", { chdir: true });
 
 	test("creates .omni/ directory", async () => {
 		await runInit({}, "claude");

@@ -1,20 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { mkdirSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runCapabilityDisable, runCapabilityEnable, runCapabilityList } from "./capability";
 
 describe("capability list command", () => {
-	let testDir: string;
-	let originalCwd: string;
+	setupTestDir("capability-test-", { chdir: true });
 	let originalExit: typeof process.exit;
 	let exitCode: number | undefined;
 
 	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = tmpdir("capability-test-");
-		process.chdir(testDir);
-
 		// Mock process.exit
 		exitCode = undefined;
 		originalExit = process.exit;
@@ -26,10 +20,6 @@ describe("capability list command", () => {
 
 	afterEach(() => {
 		process.exit = originalExit;
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("shows message when no capabilities found", async () => {
@@ -307,17 +297,11 @@ capabilities = ["alpha", "beta", "gamma"]
 });
 
 describe("capability enable command", () => {
-	let testDir: string;
-	let originalCwd: string;
+	setupTestDir("capability-enable-test-", { chdir: true });
 	let originalExit: typeof process.exit;
 	let exitCode: number | undefined;
 
 	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = join(import.meta.dir, `test-capability-enable-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
-		process.chdir(testDir);
-
 		// Mock process.exit
 		exitCode = undefined;
 		originalExit = process.exit;
@@ -329,10 +313,6 @@ describe("capability enable command", () => {
 
 	afterEach(() => {
 		process.exit = originalExit;
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("enables a capability", async () => {
@@ -419,17 +399,11 @@ capabilities = []
 });
 
 describe("capability disable command", () => {
-	let testDir: string;
-	let originalCwd: string;
+	setupTestDir("capability-disable-test-", { chdir: true });
 	let originalExit: typeof process.exit;
 	let _exitCode: number | undefined;
 
 	beforeEach(() => {
-		originalCwd = process.cwd();
-		testDir = join(import.meta.dir, `test-capability-disable-${Date.now()}`);
-		mkdirSync(testDir, { recursive: true });
-		process.chdir(testDir);
-
 		// Mock process.exit
 		_exitCode = undefined;
 		originalExit = process.exit;
@@ -441,10 +415,6 @@ describe("capability disable command", () => {
 
 	afterEach(() => {
 		process.exit = originalExit;
-		process.chdir(originalCwd);
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("disables a capability", async () => {

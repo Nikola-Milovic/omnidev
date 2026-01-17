@@ -16,7 +16,9 @@ export async function loadRules(capabilityPath: string, capabilityId: string): P
 	}
 
 	const rules: Rule[] = [];
-	const entries = readdirSync(rulesDir, { withFileTypes: true });
+	const entries = readdirSync(rulesDir, { withFileTypes: true }).sort((a, b) =>
+		a.name.localeCompare(b.name),
+	);
 
 	for (const entry of entries) {
 		if (entry.isFile() && entry.name.endsWith(".md")) {

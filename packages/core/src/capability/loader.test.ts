@@ -1,35 +1,17 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { discoverCapabilities, loadCapability, loadCapabilityConfig } from "./loader";
 
 describe("discoverCapabilities", () => {
-	let testDir: string;
+	const testDir = setupTestDir("test-capabilities-", { chdir: true });
 	let capabilitiesDir: string;
-	let originalCwd: string;
 
 	beforeEach(() => {
-		// Save current working directory
-		originalCwd = process.cwd();
-
 		// Create test directory in os temp dir
-		testDir = mkdtempSync(join(tmpdir(), "test-capabilities-"));
-		capabilitiesDir = join(testDir, "omni", "capabilities");
+		capabilitiesDir = join(testDir.path, "omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
-
-		// Change to test directory
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Cleanup
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("returns empty array when capabilities directory does not exist", async () => {
@@ -143,31 +125,13 @@ describe("discoverCapabilities", () => {
 });
 
 describe("loadCapabilityConfig", () => {
-	let testDir: string;
+	const testDir = setupTestDir("test-capability-config-", { chdir: true });
 	let capabilitiesDir: string;
-	let originalCwd: string;
 
 	beforeEach(() => {
-		// Save current working directory
-		originalCwd = process.cwd();
-
 		// Create test directory in os temp dir
-		testDir = mkdtempSync(join(tmpdir(), "test-capability-config-"));
-		capabilitiesDir = join(testDir, ".omni", "capabilities");
+		capabilitiesDir = join(testDir.path, ".omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
-
-		// Change to test directory
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Cleanup
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("loads valid capability config with all required fields", async () => {
@@ -403,31 +367,13 @@ tools = ["tool1", "tool2"]`,
 });
 
 describe("loadCapability", () => {
-	let testDir: string;
+	const testDir = setupTestDir("test-load-capability-", { chdir: true });
 	let capabilitiesDir: string;
-	let originalCwd: string;
 
 	beforeEach(() => {
-		// Save current working directory
-		originalCwd = process.cwd();
-
 		// Create test directory in os temp dir
-		testDir = mkdtempSync(join(tmpdir(), "test-load-capability-"));
-		capabilitiesDir = join(testDir, "omni", "capabilities");
+		capabilitiesDir = join(testDir.path, "omni", "capabilities");
 		mkdirSync(capabilitiesDir, { recursive: true });
-
-		// Change to test directory
-		process.chdir(testDir);
-	});
-
-	afterEach(() => {
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Cleanup
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("loads capability with minimal config (no optional fields)", async () => {

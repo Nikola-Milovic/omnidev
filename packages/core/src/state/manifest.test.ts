@@ -1,7 +1,5 @@
-import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import type { LoadedCapability } from "../types";
 import {
 	buildManifestFromCapabilities,
@@ -12,20 +10,7 @@ import {
 } from "./manifest";
 
 describe("manifest", () => {
-	let originalCwd: string;
-	let tempDir: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		tempDir = mkdtempSync(join(tmpdir(), "manifest-test-"));
-		mkdirSync(join(tempDir, ".omni"), { recursive: true });
-		process.chdir(tempDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		rmSync(tempDir, { recursive: true, force: true });
-	});
+	setupTestDir("manifest-test-", { chdir: true, createOmniDir: true });
 
 	describe("loadManifest", () => {
 		test("returns empty manifest when file does not exist", async () => {

@@ -1,31 +1,24 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { loadDocs } from "./docs";
 
 describe("loadDocs", () => {
-	let testDir: string;
-
-	beforeEach(() => {
-		testDir = join(process.cwd(), "test-capability-docs");
-		mkdirSync(testDir, { recursive: true });
-	});
-
-	afterEach(() => {
-		if (testDir) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
-	});
+	const testDir = setupTestDir("capability-docs-test-");
 
 	test("returns empty array when no docs exist", async () => {
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toEqual([]);
 	});
 
 	test("loads only definition.md when docs directory does not exist", async () => {
-		writeFileSync(join(testDir, "definition.md"), "# Test Capability\n\nThis is the definition.");
+		writeFileSync(
+			join(testDir.path, "definition.md"),
+			"# Test Capability\n\nThis is the definition.",
+		);
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.name).toBe("definition");
 		expect(docs[0]?.content).toBe("# Test Capability\n\nThis is the definition.");
@@ -33,11 +26,11 @@ describe("loadDocs", () => {
 	});
 
 	test("loads only docs from docs directory when definition.md does not exist", async () => {
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "# Guide\n\nGuide content.");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.name).toBe("guide");
 		expect(docs[0]?.content).toBe("# Guide\n\nGuide content.");
@@ -45,14 +38,14 @@ describe("loadDocs", () => {
 	});
 
 	test("loads both definition.md and docs from docs directory", async () => {
-		writeFileSync(join(testDir, "definition.md"), "# Definition");
+		writeFileSync(join(testDir.path, "definition.md"), "# Definition");
 
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "# Guide");
 		writeFileSync(join(docsDir, "examples.md"), "# Examples");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(3);
 
 		const names = docs.map((d) => d.name).sort();
@@ -60,37 +53,37 @@ describe("loadDocs", () => {
 	});
 
 	test("trims whitespace from doc content", async () => {
-		writeFileSync(join(testDir, "definition.md"), "\n\n  # Definition\n\nContent.\n\n  ");
+		writeFileSync(join(testDir.path, "definition.md"), "\n\n  # Definition\n\nContent.\n\n  ");
 
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "  \n# Guide\n\nGuide content.\n  ");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(2);
 		expect(docs[0]?.content).toBe("# Definition\n\nContent.");
 		expect(docs[1]?.content).toBe("# Guide\n\nGuide content.");
 	});
 
 	test("ignores non-markdown files in docs directory", async () => {
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "# Guide");
 		writeFileSync(join(docsDir, "readme.txt"), "Not markdown");
 		writeFileSync(join(docsDir, "config.json"), "{}");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.name).toBe("guide");
 	});
 
 	test("ignores directories in docs directory", async () => {
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		mkdirSync(join(docsDir, "subdir"));
 		writeFileSync(join(docsDir, "guide.md"), "# Guide");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.name).toBe("guide");
 	});
@@ -115,46 +108,46 @@ const code = "example";
 |----------|----------|
 | Cell 1   | Cell 2   |`;
 
-		writeFileSync(join(testDir, "definition.md"), complexMarkdown);
+		writeFileSync(join(testDir.path, "definition.md"), complexMarkdown);
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.content).toBe(complexMarkdown);
 	});
 
 	test("handles empty doc files", async () => {
-		writeFileSync(join(testDir, "definition.md"), "");
+		writeFileSync(join(testDir.path, "definition.md"), "");
 
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(2);
 		expect(docs[0]?.content).toBe("");
 		expect(docs[1]?.content).toBe("");
 	});
 
 	test("handles docs with only whitespace", async () => {
-		writeFileSync(join(testDir, "definition.md"), "   \n\n   ");
+		writeFileSync(join(testDir.path, "definition.md"), "   \n\n   ");
 
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "guide.md"), "\n\n\n");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(2);
 		expect(docs[0]?.content).toBe("");
 		expect(docs[1]?.content).toBe("");
 	});
 
 	test("handles doc names with hyphens and underscores", async () => {
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "api-reference.md"), "Content");
 		writeFileSync(join(docsDir, "getting_started.md"), "Content");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(2);
 
 		const names = docs.map((d) => d.name).sort();
@@ -162,15 +155,15 @@ const code = "example";
 	});
 
 	test("loads multiple docs in consistent order", async () => {
-		writeFileSync(join(testDir, "definition.md"), "Definition");
+		writeFileSync(join(testDir.path, "definition.md"), "Definition");
 
-		const docsDir = join(testDir, "docs");
+		const docsDir = join(testDir.path, "docs");
 		mkdirSync(docsDir);
 		writeFileSync(join(docsDir, "aaa.md"), "AAA");
 		writeFileSync(join(docsDir, "zzz.md"), "ZZZ");
 		writeFileSync(join(docsDir, "mmm.md"), "MMM");
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(4);
 
 		// definition.md should be first, then docs in filesystem order
@@ -183,16 +176,16 @@ const code = "example";
 	});
 
 	test("returns empty array when docs directory is empty", async () => {
-		mkdirSync(join(testDir, "docs"));
-		const docs = await loadDocs(testDir, "test-cap");
+		mkdirSync(join(testDir.path, "docs"));
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toEqual([]);
 	});
 
 	test("handles very long doc content", async () => {
 		const longContent = `# Long Document\n\n${"Content line.\n".repeat(1000)}`;
-		writeFileSync(join(testDir, "definition.md"), longContent);
+		writeFileSync(join(testDir.path, "definition.md"), longContent);
 
-		const docs = await loadDocs(testDir, "test-cap");
+		const docs = await loadDocs(testDir.path, "test-cap");
 		expect(docs).toHaveLength(1);
 		expect(docs[0]?.content).toBe(longContent.trim());
 	});

@@ -7,6 +7,11 @@ export interface CapabilityMetadata {
 	name: string;
 	version: string;
 	description: string;
+	/** Optional author information */
+	author?: {
+		name?: string;
+		email?: string;
+	};
 	/** Optional metadata about the capability author and source */
 	metadata?: {
 		author?: string;
@@ -154,12 +159,6 @@ export interface GitCapabilitySourceConfig {
 	ref?: string;
 	/** Subdirectory within the repo containing the capability */
 	path?: string;
-	/**
-	 * Type of capability:
-	 * - "full" (default): Repo has capability.toml, use as-is
-	 * - "wrap": Auto-discover skills/agents/commands and generate capability.toml
-	 */
-	type?: "full" | "wrap";
 }
 
 /** Configuration for a file-sourced capability (local path) */

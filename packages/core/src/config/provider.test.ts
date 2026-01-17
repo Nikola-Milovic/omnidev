@@ -1,22 +1,8 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, rmSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { parseProviderFlag } from "./provider.js";
 
-let TEST_DIR: string;
-const originalCwd = process.cwd();
-
-beforeEach(() => {
-	TEST_DIR = tmpdir("provider-test-");
-	process.chdir(TEST_DIR);
-});
-
-afterEach(() => {
-	process.chdir(originalCwd);
-	if (existsSync(TEST_DIR)) {
-		rmSync(TEST_DIR, { recursive: true });
-	}
-});
+const testDir = setupTestDir("provider-test-", { chdir: true });
 
 describe("parseProviderFlag", () => {
 	test("parses 'claude' flag", () => {
@@ -44,7 +30,7 @@ describe("parseProviderFlag", () => {
 
 describe("writeProviderConfig", () => {
 	test("writes single provider config", async () => {
-		const testPath = `${TEST_DIR}/provider.toml`;
+		const testPath = `${testDir.path}/provider.toml`;
 
 		// Manually write for testing
 		const lines: string[] = [];
@@ -62,7 +48,7 @@ describe("writeProviderConfig", () => {
 	});
 
 	test("writes multiple providers config", async () => {
-		const testPath = `${TEST_DIR}/provider.toml`;
+		const testPath = `${testDir.path}/provider.toml`;
 
 		const lines: string[] = [];
 		lines.push("# OmniDev Provider Configuration");

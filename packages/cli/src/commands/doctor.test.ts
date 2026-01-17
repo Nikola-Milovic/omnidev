@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runDoctor } from "./doctor";
 
 describe("doctor command", () => {
-	let testDir: string;
-	let originalCwd: string;
+	setupTestDir("doctor-test-", { chdir: true });
 	let originalExit: typeof process.exit;
 	let exitCalled: boolean;
 	let exitCode: number;
@@ -41,11 +40,6 @@ sandbox/
 	}
 
 	beforeEach(() => {
-		// Create test directory in /tmp
-		originalCwd = process.cwd();
-		testDir = tmpdir("doctor-test-");
-		process.chdir(testDir);
-
 		// Mock process.exit
 		exitCalled = false;
 		exitCode = 0;
@@ -59,14 +53,6 @@ sandbox/
 	afterEach(() => {
 		// Restore process.exit
 		process.exit = originalExit;
-
-		// Restore working directory
-		process.chdir(originalCwd);
-
-		// Clean up test directory
-		if (existsSync(testDir)) {
-			rmSync(testDir, { recursive: true, force: true });
-		}
 	});
 
 	test("should pass all checks when setup is complete", async () => {

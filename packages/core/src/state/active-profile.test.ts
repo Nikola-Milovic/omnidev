@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "../test-utils/index.js";
+import { describe, expect, test } from "bun:test";
+import { existsSync, mkdirSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import {
 	clearActiveProfileState,
 	readActiveProfileState,
@@ -9,20 +8,7 @@ import {
 } from "./active-profile";
 
 describe("active-profile state", () => {
-	let originalCwd: string;
-	let tempDir: string;
-
-	beforeEach(() => {
-		originalCwd = process.cwd();
-		tempDir = tmpdir("active-profile-test-");
-		mkdirSync(join(tempDir, ".omni"), { recursive: true });
-		process.chdir(tempDir);
-	});
-
-	afterEach(() => {
-		process.chdir(originalCwd);
-		rmSync(tempDir, { recursive: true, force: true });
-	});
+	setupTestDir("active-profile-test-", { chdir: true, createOmniDir: true });
 
 	describe("readActiveProfileState", () => {
 		test("returns null when state file does not exist", async () => {

@@ -1,26 +1,10 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { describe, expect, mock, test } from "bun:test";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runServe } from "./serve";
 
-let testDir: string;
-const originalCwd = process.cwd();
-
-beforeEach(() => {
-	// Create test directory in /tmp
-	testDir = tmpdir("serve-test-");
-	process.chdir(testDir);
-});
-
-afterEach(() => {
-	// Return to original directory and clean up
-	process.chdir(originalCwd);
-	if (existsSync(testDir)) {
-		rmSync(testDir, { recursive: true, force: true });
-	}
-});
-
 describe("serve command", () => {
+	setupTestDir("serve-test-", { chdir: true });
 	test("should fail when OmniDev is not initialized", async () => {
 		const mockExit = mock((code?: number) => {
 			throw new Error(`process.exit: ${code}`);

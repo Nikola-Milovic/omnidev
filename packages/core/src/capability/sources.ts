@@ -10,16 +10,16 @@
 
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readFile, writeFile, readdir, stat, rm } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { parse as parseToml } from "smol-toml";
 import type {
-	OmniConfig,
-	GitCapabilitySourceConfig,
-	FileCapabilitySourceConfig,
-	CapabilitySourceConfig,
 	CapabilitiesLockFile,
 	CapabilityLockEntry,
+	CapabilitySourceConfig,
+	FileCapabilitySourceConfig,
+	GitCapabilitySourceConfig,
+	OmniConfig,
 } from "../types/index.js";
 
 // Local path for .omni directory
@@ -381,6 +381,33 @@ function hasCapabilityToml(dirPath: string): boolean {
 }
 
 /**
+ * Check if a directory should be wrapped (has plugin.json or appropriate structure)
+ * Returns true if:
+ * 1. .claude-plugin/plugin.json exists, OR
+ * 2. Any of the expected content directories exist (skills, agents, commands, rules, docs)
+ */
+async function shouldWrapDirectory(dirPath: string): Promise<boolean> {
+	// Check for plugin.json
+	if (existsSync(join(dirPath, ".claude-plugin", "plugin.json"))) {
+		return true;
+	}
+
+	// Check for any expected content directories
+	const allDirs = [...SKILL_DIRS, ...AGENT_DIRS, ...COMMAND_DIRS, ...RULE_DIRS, ...DOC_DIRS];
+	for (const dirName of allDirs) {
+		const checkPath = join(dirPath, dirName);
+		if (existsSync(checkPath)) {
+			const stats = await stat(checkPath);
+			if (stats.isDirectory()) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/**
  * Find directories matching any of the given names
  */
 async function findMatchingDirs(basePath: string, names: string[]): Promise<string | null> {
@@ -409,7 +436,9 @@ async function findContentItems(
 		return items;
 	}
 
-	const entries = await readdir(dirPath, { withFileTypes: true });
+	const entries = (await readdir(dirPath, { withFileTypes: true })).sort((a, b) =>
+		a.name.localeCompare(b.name),
+	);
 
 	for (const entry of entries) {
 		const entryPath = join(dirPath, entry.name);
@@ -438,6 +467,105 @@ async function findContentItems(
 	}
 
 	return items;
+}
+
+/**
+ * Plugin metadata from .claude-plugin/plugin.json
+ */
+export interface PluginMetadata {
+	name?: string;
+	version?: string;
+	description?: string;
+	author?: {
+		name?: string;
+		email?: string;
+	};
+}
+
+/**
+ * Parse .claude-plugin/plugin.json if it exists
+ */
+async function parsePluginJson(dirPath: string): Promise<PluginMetadata | null> {
+	const pluginJsonPath = join(dirPath, ".claude-plugin", "plugin.json");
+	if (!existsSync(pluginJsonPath)) {
+		return null;
+	}
+
+	try {
+		const content = await readFile(pluginJsonPath, "utf-8");
+		const data = JSON.parse(content);
+		const result: PluginMetadata = {
+			name: data.name,
+			version: data.version,
+			description: data.description,
+		};
+		if (data.author) {
+			result.author = {
+				name: data.author.name,
+				email: data.author.email,
+			};
+		}
+		return result;
+	} catch (error) {
+		console.warn(`Failed to parse plugin.json in ${dirPath}:`, error);
+		return null;
+	}
+}
+
+/**
+ * Read README.md and extract description
+ * Returns the first paragraph or the first 200 characters
+ */
+async function readReadmeDescription(dirPath: string): Promise<string | null> {
+	const readmePath = join(dirPath, "README.md");
+	if (!existsSync(readmePath)) {
+		return null;
+	}
+
+	try {
+		const content = await readFile(readmePath, "utf-8");
+		// Remove markdown headers and get first non-empty paragraph
+		const lines = content.split("\n");
+		let description = "";
+		let inCodeBlock = false;
+
+		for (const line of lines) {
+			const trimmed = line.trim();
+
+			// Track code blocks
+			if (trimmed.startsWith("```")) {
+				inCodeBlock = !inCodeBlock;
+				continue;
+			}
+
+			// Skip headers, empty lines, and code blocks
+			if (
+				inCodeBlock ||
+				trimmed.startsWith("#") ||
+				trimmed.length === 0 ||
+				trimmed.startsWith("![")
+			) {
+				continue;
+			}
+
+			// Found content
+			description += (description ? " " : "") + trimmed;
+
+			// Stop at first paragraph (200 chars or first blank line after content)
+			if (description.length >= 200) {
+				break;
+			}
+		}
+
+		if (description.length > 200) {
+			description = `${description.substring(0, 197)}...`;
+		}
+
+		return description || null;
+	} catch (error) {
+		console.warn(`Failed to read README.md in ${dirPath}:`, error);
+		return null;
+	}
 }
 
 /**
@@ -499,35 +627,66 @@ async function generateCapabilityToml(
 ): Promise<void> {
 	const shortHash = shortCommit(commit);
 
-	// Build description based on discovered content
-	const parts: string[] = [];
-	if (content.skills.length > 0) {
-		parts.push(`${content.skills.length} skill${content.skills.length > 1 ? "s" : ""}`);
-	}
-	if (content.agents.length > 0) {
-		parts.push(`${content.agents.length} agent${content.agents.length > 1 ? "s" : ""}`);
-	}
-	if (content.commands.length > 0) {
-		parts.push(`${content.commands.length} command${content.commands.length > 1 ? "s" : ""}`);
+	// Try to get metadata from plugin.json
+	const pluginMeta = await parsePluginJson(repoPath);
+
+	// Try to get description from README
+	const readmeDesc = await readReadmeDescription(repoPath);
+
+	// Build description based on available sources
+	let description: string;
+	if (pluginMeta?.description) {
+		description = pluginMeta.description;
+	} else if (readmeDesc) {
+		description = readmeDesc;
+	} else {
+		// Fallback: build from discovered content
+		const parts: string[] = [];
+		if (content.skills.length > 0) {
+			parts.push(`${content.skills.length} skill${content.skills.length > 1 ? "s" : ""}`);
+		}
+		if (content.agents.length > 0) {
+			parts.push(`${content.agents.length} agent${content.agents.length > 1 ? "s" : ""}`);
+		}
+		if (content.commands.length > 0) {
+			parts.push(`${content.commands.length} command${content.commands.length > 1 ? "s" : ""}`);
+		}
+		description = parts.length > 0 ? `${parts.join(", ")}` : `Wrapped from ${source}`;
 	}
 
-	const description =
-		parts.length > 0 ? `Wrapped from ${source} (${parts.join(", ")})` : `Wrapped from ${source}`;
+	// Use plugin metadata for name and version if available
+	const name = pluginMeta?.name || `${id} (wrapped)`;
+	const version = pluginMeta?.version || shortHash;
 
 	// Extract repository URL for metadata
 	const repoUrl = source.startsWith("github:")
 		? `https://github.com/${source.replace("github:", "")}`
 		: source;
 
-	const tomlContent = `# Auto-generated by OmniDev - DO NOT EDIT
+	// Build TOML content
+	let tomlContent = `# Auto-generated by OmniDev - DO NOT EDIT
 # This capability was wrapped from an external repository
 
 [capability]
 id = "${id}"
-name = "${id} (wrapped)"
-version = "${shortHash}"
+name = "${name}"
+version = "${version}"
 description = "${description}"
+`;
 
+	// Add author if available from plugin.json
+	if (pluginMeta?.author?.name || pluginMeta?.author?.email) {
+		tomlContent += "\n[capability.author]\n";
+		if (pluginMeta.author.name) {
+			tomlContent += `name = "${pluginMeta.author.name}"\n`;
+		}
+		if (pluginMeta.author.email) {
+			tomlContent += `email = "${pluginMeta.author.email}"\n`;
+		}
+	}
+
+	// Add metadata section
+	tomlContent += `
 [capability.metadata]
 repository = "${repoUrl}"
 wrapped = true
@@ -688,36 +847,76 @@ async function fetchGitCapabilitySource(
 ): Promise<FetchResult> {
 	const gitUrl = sourceToGitUrl(config.source);
 	const targetPath = getSourceCapabilityPath(id);
-	const isWrap = config.type === "wrap";
 
 	let updated = false;
 	let commit: string;
+	let repoPath: string;
 
-	// Check if already cloned
-	if (existsSync(join(targetPath, ".git"))) {
-		// Fetch updates
-		if (!options?.silent) {
-			console.log(`  Checking ${id}...`);
+	// If path is specified, clone to temp location first
+	if (config.path) {
+		const tempPath = join(OMNI_LOCAL, "_temp", `${id}-repo`);
+
+		// Check if already cloned to temp
+		if (existsSync(join(tempPath, ".git"))) {
+			if (!options?.silent) {
+				console.log(`  Checking ${id}...`);
+			}
+			updated = await fetchRepo(tempPath, config.ref);
+			commit = await getRepoCommit(tempPath);
+		} else {
+			if (!options?.silent) {
+				console.log(`  Cloning ${id} from ${config.source}...`);
+			}
+			await mkdir(join(tempPath, ".."), { recursive: true });
+			await cloneRepo(gitUrl, tempPath, config.ref);
+			commit = await getRepoCommit(tempPath);
+			updated = true;
 		}
-		updated = await fetchRepo(targetPath, config.ref);
-		commit = await getRepoCommit(targetPath);
+
+		// Copy subdirectory to target
+		const sourcePath = join(tempPath, config.path);
+		if (!existsSync(sourcePath)) {
+			throw new Error(`Path not found in repository: ${config.path}`);
+		}
+
+		// Remove old target and copy new content
+		if (existsSync(targetPath)) {
+			await rm(targetPath, { recursive: true });
+		}
+		await mkdir(join(targetPath, ".."), { recursive: true });
+		await cp(sourcePath, targetPath, { recursive: true });
+
+		repoPath = targetPath;
 	} else {
-		// Clone repository
-		if (!options?.silent) {
-			console.log(`  Cloning ${id} from ${config.source}...`);
+		// Clone directly to target (no subdirectory)
+		if (existsSync(join(targetPath, ".git"))) {
+			if (!options?.silent) {
+				console.log(`  Checking ${id}...`);
+			}
+			updated = await fetchRepo(targetPath, config.ref);
+			commit = await getRepoCommit(targetPath);
+		} else {
+			if (!options?.silent) {
+				console.log(`  Cloning ${id} from ${config.source}...`);
+			}
+			await cloneRepo(gitUrl, targetPath, config.ref);
+			commit = await getRepoCommit(targetPath);
+			updated = true;
 		}
-		await cloneRepo(gitUrl, targetPath, config.ref);
-		commit = await getRepoCommit(targetPath);
-		updated = true;
+
+		repoPath = targetPath;
 	}
 
-	// Check if we need to wrap (no capability.toml or explicitly wrap type)
-	const needsWrap = isWrap || !hasCapabilityToml(targetPath);
+	// Auto-detect if we need to wrap
+	let needsWrap = false;
+	if (!hasCapabilityToml(repoPath)) {
+		needsWrap = await shouldWrapDirectory(repoPath);
+	}
 
 	if (needsWrap && updated) {
 		// Discover content and generate capability.toml
-		const content = await discoverContent(targetPath);
-		await generateCapabilityToml(id, targetPath, config.source, commit, content);
+		const content = await discoverContent(repoPath);
+		await generateCapabilityToml(id, repoPath, config.source, commit, content);
 
 		if (!options?.silent) {
 			const parts: string[] = [];
@@ -732,7 +931,7 @@ async function fetchGitCapabilitySource(
 
 	// Get version from capability.toml or package.json
 	let version = shortCommit(commit);
-	const pkgJsonPath = join(targetPath, "package.json");
+	const pkgJsonPath = join(repoPath, "package.json");
 	if (existsSync(pkgJsonPath)) {
 		try {
 			const pkgJson = JSON.parse(await readFile(pkgJsonPath, "utf-8"));

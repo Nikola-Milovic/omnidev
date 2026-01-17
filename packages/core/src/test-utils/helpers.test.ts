@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { existsSync } from "node:fs";
 import {
 	captureConsole,
 	createDeferredPromise,
@@ -6,6 +7,7 @@ import {
 	createSpy,
 	delay,
 	expectToThrowAsync,
+	setupTestDir,
 	waitForCondition,
 } from "./helpers";
 
@@ -116,6 +118,22 @@ describe("createMockFn", () => {
 		const mock = createMockFn("only");
 		mock();
 		expect(() => mock()).toThrow("Mock function called more times than return values provided");
+	});
+});
+
+describe("setupTestDir", () => {
+	const testDir = setupTestDir("helpers-test-", { chdir: true, createOmniDir: true });
+
+	test("creates directory and switches cwd", () => {
+		expect(process.cwd()).toBe(testDir.path);
+		expect(existsSync(".omni")).toBe(true);
+	});
+
+	test("reset creates a new directory", () => {
+		const previous = testDir.path;
+		const next = testDir.reset("helpers-test-reset-");
+		expect(next).not.toBe(previous);
+		expect(process.cwd()).toBe(testDir.path);
 	});
 });
 

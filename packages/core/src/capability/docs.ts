@@ -26,7 +26,9 @@ export async function loadDocs(capabilityPath: string, capabilityId: string): Pr
 	// Load docs/*.md
 	const docsDir = join(capabilityPath, "docs");
 	if (existsSync(docsDir)) {
-		const entries = readdirSync(docsDir, { withFileTypes: true });
+		const entries = readdirSync(docsDir, { withFileTypes: true }).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
 
 		for (const entry of entries) {
 			if (entry.isFile() && entry.name.endsWith(".md")) {

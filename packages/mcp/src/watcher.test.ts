@@ -2,38 +2,23 @@
  * Tests for file watcher functionality
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
-import { tmpdir } from "@omnidev-ai/core/test-utils";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { mkdirSync } from "node:fs";
+import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { startWatcher } from "./watcher.js";
 
 describe("startWatcher", () => {
-	let TEST_DIR: string;
-	const originalCwd = process.cwd();
+	const testDir = setupTestDir("watcher-test-", { chdir: true });
 
 	beforeEach(() => {
 		// Create test directory in /tmp
-		TEST_DIR = tmpdir("watcher-test-");
-
-		// Create test directory structure
-		mkdirSync(`${TEST_DIR}/omni`, { recursive: true });
-		mkdirSync(`${TEST_DIR}/.omni`, { recursive: true });
-		mkdirSync(`${TEST_DIR}/omni/capabilities`, { recursive: true });
+		mkdirSync(`${testDir.path}/omni`, { recursive: true });
+		mkdirSync(`${testDir.path}/.omni`, { recursive: true });
+		mkdirSync(`${testDir.path}/omni/capabilities`, { recursive: true });
 
 		// Write initial config files
-		Bun.write(`${TEST_DIR}/omni.toml`, '[capability]\nid = "test"');
-		Bun.write(`${TEST_DIR}/.omni/active-profile`, "default");
-
-		// Change to test directory
-		process.chdir(TEST_DIR);
-	});
-
-	afterEach(() => {
-		// Change back to original directory
-		process.chdir(originalCwd);
-
-		// Clean up test directory
-		rmSync(TEST_DIR, { recursive: true, force: true });
+		Bun.write(`${testDir.path}/omni.toml`, '[capability]\nid = "test"');
+		Bun.write(`${testDir.path}/.omni/active-profile`, "default");
 	});
 
 	test("starts watcher without errors", () => {
@@ -47,10 +32,7 @@ describe("startWatcher", () => {
 
 	test("handles missing watch paths gracefully", () => {
 		// Create minimal test directory without all watched paths
-		process.chdir(originalCwd);
-		rmSync(TEST_DIR, { recursive: true, force: true });
-		mkdirSync(TEST_DIR);
-		process.chdir(TEST_DIR);
+		testDir.reset("watcher-missing-test-");
 
 		const onReload = async () => {
 			// No-op for this test

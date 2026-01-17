@@ -26,6 +26,11 @@ function mergeConfigs(base: OmniConfig, override: OmniConfig): OmniConfig {
 		};
 	}
 
+	// Deep merge mcps (only if at least one config has it)
+	if (base.mcps || override.mcps) {
+		merged.mcps = { ...base.mcps, ...override.mcps };
+	}
+
 	return merged;
 }
 
@@ -114,6 +119,28 @@ function generateConfigToml(config: OmniConfig): string {
 	lines.push("#");
 	lines.push("# # Force wrap mode (generate capability.toml from discovered content)");
 	lines.push('# external = { source = "github:user/skills-repo", type = "wrap" }');
+	lines.push("");
+
+	// MCP servers (commented examples)
+	lines.push("# =============================================================================");
+	lines.push("# MCP Servers");
+	lines.push("# =============================================================================");
+	lines.push("# Define MCP servers directly in omni.toml. These automatically become");
+	lines.push("# capabilities in your profiles (use capability ID: _mcps-{name}).");
+	lines.push("#");
+	lines.push("# [mcps.context7]");
+	lines.push('# command = "npx"');
+	lines.push('# args = ["-y", "@upstash/context7-mcp"]');
+	lines.push('# transport = "stdio"');
+	lines.push("#");
+	lines.push("# [mcps.context7.env]");
+	// biome-ignore lint/suspicious/noTemplateCurlyInString: Example of env var syntax
+	lines.push('# API_KEY = "${CONTEXT7_API_KEY}"');
+	lines.push("#");
+	lines.push("# [mcps.filesystem]");
+	lines.push('# command = "node"');
+	lines.push('# args = ["server.js"]');
+	lines.push('# cwd = "./mcp-servers/filesystem"');
 	lines.push("");
 
 	// Profiles

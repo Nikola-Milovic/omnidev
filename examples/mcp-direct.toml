@@ -1,0 +1,64 @@
+# Direct MCP Server Definitions
+# MCPs defined here automatically become capabilities
+
+# =============================================================================
+# MCP Servers
+# =============================================================================
+# Define MCP servers directly in omni.toml. These automatically become
+# capabilities in your profiles (use capability ID: _mcps-{name}).
+
+[mcps.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+transport = "stdio"
+
+[mcps.context7.env]
+API_KEY = "${CONTEXT7_API_KEY}"
+
+[mcps.filesystem]
+command = "node"
+args = ["./mcp-servers/filesystem/server.js"]
+cwd = "./mcp-servers/filesystem"
+
+[mcps.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+
+[mcps.github.env]
+GITHUB_TOKEN = "${GITHUB_TOKEN}"
+
+[mcps.slack]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-slack"]
+transport = "stdio"
+
+[mcps.slack.env]
+SLACK_BOT_TOKEN = "${SLACK_BOT_TOKEN}"
+
+# =============================================================================
+# Profiles
+# =============================================================================
+# Reference MCP capabilities using _mcps-{name} prefix
+
+[profiles.default]
+capabilities = ["_mcps-context7", "_mcps-filesystem"]
+
+[profiles.full]
+capabilities = [
+	"_mcps-context7",
+	"_mcps-filesystem",
+	"_mcps-github",
+	"_mcps-slack"
+]
+
+[profiles.development]
+capabilities = ["_mcps-filesystem", "_mcps-github"]
+
+# =============================================================================
+# Notes
+# =============================================================================
+# - MCP capabilities are auto-generated in .omni/capabilities/_mcps-{name}/
+# - Each MCP gets a capability.toml with [mcp] section
+# - When you remove an MCP from [mcps], it's automatically cleaned up
+# - Environment variables use ${VAR} syntax and are expanded at runtime
+# - You can mix direct MCPs with git-sourced capabilities in profiles

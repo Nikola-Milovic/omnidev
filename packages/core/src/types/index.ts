@@ -21,6 +21,8 @@ export interface CapabilityMetadata {
 		wrapped?: boolean;
 		/** For wrapped capabilities: the full commit hash */
 		commit?: string;
+		/** True if this capability was auto-generated from omni.toml [mcps] section */
+		generated_from_omni_toml?: boolean;
 	};
 }
 
@@ -220,6 +222,8 @@ export interface OmniConfig {
 	};
 	/** Capabilities configuration (enable/disable, sources) */
 	capabilities?: CapabilitiesConfig;
+	/** MCP server definitions that auto-generate capabilities */
+	mcps?: Record<string, McpConfig>;
 }
 
 // Provider Types

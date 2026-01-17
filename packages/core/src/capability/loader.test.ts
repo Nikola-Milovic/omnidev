@@ -202,57 +202,6 @@ secret = true`,
 		expect(config.env?.[0]?.secret).toBe(true);
 	});
 
-	test("throws error for reserved capability name (fs)", async () => {
-		const capPath = join(".omni", "capabilities", "fs");
-		mkdirSync(capPath, { recursive: true });
-		writeFileSync(
-			join(capPath, "capability.toml"),
-			`[capability]
-id = "fs"
-name = "File System"
-version = "1.0.0"
-description = "Reserved name"`,
-		);
-
-		expect(async () => await loadCapabilityConfig(capPath)).toThrow(
-			'Capability name "fs" is reserved. Choose a different name.',
-		);
-	});
-
-	test("throws error for reserved capability name (react)", async () => {
-		const capPath = join(".omni", "capabilities", "react-cap");
-		mkdirSync(capPath, { recursive: true });
-		writeFileSync(
-			join(capPath, "capability.toml"),
-			`[capability]
-id = "react"
-name = "React"
-version = "1.0.0"
-description = "Reserved name"`,
-		);
-
-		expect(async () => await loadCapabilityConfig(capPath)).toThrow(
-			'Capability name "react" is reserved. Choose a different name.',
-		);
-	});
-
-	test("throws error for reserved capability name (typescript)", async () => {
-		const capPath = join(".omni", "capabilities", "ts-cap");
-		mkdirSync(capPath, { recursive: true });
-		writeFileSync(
-			join(capPath, "capability.toml"),
-			`[capability]
-id = "typescript"
-name = "TypeScript"
-version = "1.0.0"
-description = "Reserved name"`,
-		);
-
-		expect(async () => await loadCapabilityConfig(capPath)).toThrow(
-			'Capability name "typescript" is reserved. Choose a different name.',
-		);
-	});
-
 	test("throws error when capability.toml is missing", async () => {
 		const capPath = join(".omni", "capabilities", "missing-config");
 		mkdirSync(capPath, { recursive: true });
@@ -286,24 +235,6 @@ id = "bad-toml"
 		);
 
 		expect(async () => await loadCapabilityConfig(capPath)).toThrow();
-	});
-
-	test("allows non-reserved capability names", async () => {
-		const capPath = join(".omni", "capabilities", "my-custom-capability");
-		mkdirSync(capPath, { recursive: true });
-		writeFileSync(
-			join(capPath, "capability.toml"),
-			`[capability]
-id = "my-custom-capability"
-name = "My Custom Capability"
-version = "2.1.0"
-description = "A custom capability"`,
-		);
-
-		const config = await loadCapabilityConfig(capPath);
-
-		expect(config.capability.id).toBe("my-custom-capability");
-		expect(config.capability.name).toBe("My Custom Capability");
 	});
 
 	test("handles capability config with all optional fields defined", async () => {

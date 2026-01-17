@@ -150,8 +150,8 @@ export interface Command {
 }
 
 // Capability Source Types
-// Sources: local (manual), git (version via package.json), file (local path), hub (future)
-export type CapabilitySourceType = "built-in" | "local" | "git" | "file" | "hub";
+// Sources: local (manual), git (version via package.json)
+export type CapabilitySourceType = "local" | "git";
 
 /** Configuration for a Git-sourced capability */
 export interface GitCapabilitySourceConfig {
@@ -163,17 +163,10 @@ export interface GitCapabilitySourceConfig {
 	path?: string;
 }
 
-/** Configuration for a file-sourced capability (local path) */
-export interface FileCapabilitySourceConfig {
-	/** Source path as file:// URL (e.g., "file://./local-cap", "file:///absolute/path") */
-	source: string;
-}
-
 /** Combined type for all capability source configurations */
 export type CapabilitySourceConfig =
-	| string // shorthand: "github:user/repo" or "file://./path"
-	| GitCapabilitySourceConfig
-	| FileCapabilitySourceConfig;
+	| string // shorthand: "github:user/repo"
+	| GitCapabilitySourceConfig;
 
 /** Lock file entry for a capability (version tracking) */
 export interface CapabilityLockEntry {
@@ -183,8 +176,6 @@ export interface CapabilityLockEntry {
 	version: string;
 	/** For git sources: exact commit hash */
 	commit?: string;
-	/** For file sources: content hash (sha256) for change detection */
-	content_hash?: string;
 	/** Pinned ref if specified */
 	ref?: string;
 	/** Last update timestamp (ISO 8601) */

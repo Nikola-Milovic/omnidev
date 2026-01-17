@@ -210,6 +210,8 @@ See [docs/capability-development.md](docs/capability-development.md) for the ful
 ## Roadmap
 
 - [ ] Support `.env` files for MCP environment variables (qualify of life feature)
+- [ ] Different MCP protocols
+- [ ] Command to easily add capabilities/ mcps to config (capability install/ add) (enable/ disable currently breaks omni.toml)
 
 ## Contributing
 

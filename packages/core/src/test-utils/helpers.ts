@@ -77,7 +77,12 @@ export function delay(ms: number): Promise<void> {
  */
 export function createSpy<TArgs extends unknown[], TReturn>(
 	implementation?: (...args: TArgs) => TReturn,
-) {
+): {
+	(...args: TArgs): TReturn;
+	calls: TArgs[];
+	callCount: number;
+	reset: () => void;
+} {
 	const calls: TArgs[] = [];
 
 	const spy = ((...args: TArgs) => {
@@ -132,21 +137,21 @@ export function createMockFn<T>(...returnValues: T[]): () => T {
  * Creates a mock promise that can be resolved or rejected manually
  * @returns Object with promise and resolve/reject functions
  */
-export function createDeferredPromise<T>() {
-	let resolveRef: ((value: T) => void) | undefined;
-	let rejectRef: ((reason?: unknown) => void) | undefined;
+export function createDeferredPromise<T>(): {
+	promise: Promise<T>;
+	resolve: (value: T) => void;
+	reject: (reason?: unknown) => void;
+} {
+	let resolveRef!: (value: T) => void;
+	let rejectRef!: (reason?: unknown) => void;
 
 	const promise = new Promise<T>((res, rej) => {
 		resolveRef = res;
 		rejectRef = rej;
 	});
 
-	if (!resolveRef || !rejectRef) {
-		throw new Error("Promise executor did not initialize resolve/reject");
-	}
-
 	return {
-		promise,
+		promise: promise,
 		resolve: resolveRef,
 		reject: rejectRef,
 	};

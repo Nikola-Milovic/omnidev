@@ -5,7 +5,6 @@ MODE="${1:-dev}"
 CLI_VERSION="${2:-}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CASES_FILE="${CASES_FILE:-tests/integration/cases.json}"
 
 IMAGE_NODE="omnidev-it-node:local"
 IMAGE_BUN="omnidev-it-bun:local"
@@ -20,15 +19,13 @@ run_in_container() {
   local runner="$2"
   local mode="$3"
   local cli_version="$4"
-  local exec_cmd=()
+  local runtime="bun"
   local uid gid
   uid="$(id -u)"
   gid="$(id -g)"
 
   if [[ "${image}" == "${IMAGE_NODE}" ]]; then
-    exec_cmd=(node tests/integration/inside/run.js)
-  else
-    exec_cmd=(bun tests/integration/inside/run.js)
+    runtime="node"
   fi
 
   docker run --rm \
@@ -37,11 +34,11 @@ run_in_container() {
     -e IT_MODE="${mode}" \
     -e IT_RUNNER="${runner}" \
     -e IT_CLI_VERSION="${cli_version}" \
-    -e IT_CASES_FILE="${CASES_FILE}" \
+    -e IT_RUNTIME="${runtime}" \
     -v "${ROOT_DIR}:/repo" \
     -w /repo \
     "${image}" \
-    "${exec_cmd[@]}"
+    bash tests/integration/inside/run.sh
 }
 
 build_images

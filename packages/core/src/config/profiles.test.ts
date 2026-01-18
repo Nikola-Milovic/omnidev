@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { readActiveProfileState } from "../state/active-profile.js";
 import type { OmniConfig } from "../types/index.js";
@@ -15,7 +16,7 @@ describe("getActiveProfile", () => {
 
 	test("returns profile from state file when set", async () => {
 		mkdirSync(".omni/state", { recursive: true });
-		await Bun.write(".omni/state/active-profile", "dev");
+		await writeFile(".omni/state/active-profile", "dev", "utf-8");
 		const profile = await getActiveProfile();
 		expect(profile).toBe("dev");
 	});
@@ -28,7 +29,7 @@ describe("getActiveProfile", () => {
 
 	test("state file takes precedence over config.toml", async () => {
 		mkdirSync(".omni/state", { recursive: true });
-		await Bun.write(".omni/state/active-profile", "from-state");
+		await writeFile(".omni/state/active-profile", "from-state", "utf-8");
 		writeFileSync("omni.toml", 'active_profile = "from-config"', "utf-8");
 		const profile = await getActiveProfile();
 		expect(profile).toBe("from-state");
@@ -52,7 +53,7 @@ describe("setActiveProfile", () => {
 
 	test("overwrites existing active_profile in state file", async () => {
 		mkdirSync(".omni/state", { recursive: true });
-		await Bun.write(".omni/state/active-profile", "dev");
+		await writeFile(".omni/state/active-profile", "dev", "utf-8");
 		await setActiveProfile("prod");
 		const stateProfile = await readActiveProfileState();
 		expect(stateProfile).toBe("prod");
@@ -61,7 +62,7 @@ describe("setActiveProfile", () => {
 	test("does not modify config.toml", async () => {
 		writeFileSync("omni.toml", 'project = "test"', "utf-8");
 		await setActiveProfile("staging");
-		const content = await Bun.file("omni.toml").text();
+		const content = await readFile("omni.toml", "utf-8");
 		expect(content).not.toContain("active_profile");
 	});
 });

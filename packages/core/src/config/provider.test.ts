@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { parseProviderFlag } from "./provider.js";
 
@@ -40,9 +41,9 @@ describe("writeProviderConfig", () => {
 		lines.push("# Single provider");
 		lines.push('provider = "claude"');
 
-		await Bun.write(testPath, `${lines.join("\n")}\n`);
+		await writeFile(testPath, `${lines.join("\n")}\n`, "utf-8");
 
-		const content = await Bun.file(testPath).text();
+		const content = await readFile(testPath, "utf-8");
 		expect(content).toContain('provider = "claude"');
 		expect(content).toContain("# Single provider");
 	});
@@ -57,9 +58,9 @@ describe("writeProviderConfig", () => {
 		lines.push("# Multiple providers enabled");
 		lines.push('providers = ["claude", "codex"]');
 
-		await Bun.write(testPath, `${lines.join("\n")}\n`);
+		await writeFile(testPath, `${lines.join("\n")}\n`, "utf-8");
 
-		const content = await Bun.file(testPath).text();
+		const content = await readFile(testPath, "utf-8");
 		expect(content).toContain('providers = ["claude", "codex"]');
 		expect(content).toContain("# Multiple providers");
 	});

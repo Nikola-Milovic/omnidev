@@ -1,11 +1,20 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import {
 	clearActiveProfileState,
 	readActiveProfileState,
 	writeActiveProfileState,
 } from "./active-profile";
+
+async function writeTextFile(path: string, content: string): Promise<void> {
+	await writeFile(path, content, "utf-8");
+}
+
+async function readTextFile(path: string): Promise<string> {
+	return await readFile(path, "utf-8");
+}
 
 describe("active-profile state", () => {
 	setupTestDir("active-profile-test-", { chdir: true, createOmniDir: true });
@@ -18,7 +27,7 @@ describe("active-profile state", () => {
 
 		test("reads profile from state file", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "my-profile");
+			await writeTextFile(".omni/state/active-profile", "my-profile");
 
 			const profile = await readActiveProfileState();
 			expect(profile).toBe("my-profile");
@@ -26,7 +35,7 @@ describe("active-profile state", () => {
 
 		test("trims whitespace from profile name", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "  my-profile  \n");
+			await writeTextFile(".omni/state/active-profile", "  my-profile  \n");
 
 			const profile = await readActiveProfileState();
 			expect(profile).toBe("my-profile");
@@ -34,7 +43,7 @@ describe("active-profile state", () => {
 
 		test("returns null for empty file", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "");
+			await writeTextFile(".omni/state/active-profile", "");
 
 			const profile = await readActiveProfileState();
 			expect(profile).toBe(null);
@@ -42,7 +51,7 @@ describe("active-profile state", () => {
 
 		test("returns null for whitespace-only file", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "   \n  ");
+			await writeTextFile(".omni/state/active-profile", "   \n  ");
 
 			const profile = await readActiveProfileState();
 			expect(profile).toBe(null);
@@ -53,7 +62,7 @@ describe("active-profile state", () => {
 		test("writes profile to state file", async () => {
 			await writeActiveProfileState("production");
 
-			const content = await Bun.file(".omni/state/active-profile").text();
+			const content = await readTextFile(".omni/state/active-profile");
 			expect(content).toBe("production");
 		});
 
@@ -63,17 +72,17 @@ describe("active-profile state", () => {
 			await writeActiveProfileState("dev");
 
 			expect(existsSync(".omni/state")).toBe(true);
-			const content = await Bun.file(".omni/state/active-profile").text();
+			const content = await readTextFile(".omni/state/active-profile");
 			expect(content).toBe("dev");
 		});
 
 		test("overwrites existing state file", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "old-profile");
+			await writeTextFile(".omni/state/active-profile", "old-profile");
 
 			await writeActiveProfileState("new-profile");
 
-			const content = await Bun.file(".omni/state/active-profile").text();
+			const content = await readTextFile(".omni/state/active-profile");
 			expect(content).toBe("new-profile");
 		});
 	});
@@ -81,7 +90,7 @@ describe("active-profile state", () => {
 	describe("clearActiveProfileState", () => {
 		test("deletes state file when it exists", async () => {
 			mkdirSync(".omni/state", { recursive: true });
-			await Bun.write(".omni/state/active-profile", "some-profile");
+			await writeTextFile(".omni/state/active-profile", "some-profile");
 
 			expect(existsSync(".omni/state/active-profile")).toBe(true);
 

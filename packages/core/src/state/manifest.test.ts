@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import type { LoadedCapability } from "../types";
 import {
@@ -8,6 +11,18 @@ import {
 	saveManifest,
 	type ResourceManifest,
 } from "./manifest";
+
+async function writeTextFile(path: string, content: string): Promise<void> {
+	const dir = dirname(path);
+	if (dir !== ".") {
+		mkdirSync(dir, { recursive: true });
+	}
+	await writeFile(path, content, "utf-8");
+}
+
+async function readTextFile(path: string): Promise<string> {
+	return await readFile(path, "utf-8");
+}
 
 describe("manifest", () => {
 	setupTestDir("manifest-test-", { chdir: true, createOmniDir: true });
@@ -36,7 +51,7 @@ describe("manifest", () => {
 				},
 			};
 
-			await Bun.write(".omni/state/manifest.json", JSON.stringify(existingManifest));
+			await writeTextFile(".omni/state/manifest.json", JSON.stringify(existingManifest));
 
 			const manifest = await loadManifest();
 
@@ -62,7 +77,7 @@ describe("manifest", () => {
 
 			await saveManifest(manifest);
 
-			const content = await Bun.file(".omni/state/manifest.json").text();
+			const content = await readTextFile(".omni/state/manifest.json");
 			expect(JSON.parse(content)).toEqual(manifest);
 		});
 	});
@@ -185,10 +200,10 @@ describe("manifest", () => {
 	describe("cleanupStaleResources", () => {
 		test("deletes skills and rules from disabled capabilities", async () => {
 			// Create skill directory
-			await Bun.write(".claude/skills/old-skill/SKILL.md", "old skill content");
+			await writeTextFile(".claude/skills/old-skill/SKILL.md", "old skill content");
 
 			// Create rule file
-			await Bun.write(".cursor/rules/omnidev-old-rule.mdc", "old rule content");
+			await writeTextFile(".cursor/rules/omnidev-old-rule.mdc", "old rule content");
 
 			const previousManifest: ResourceManifest = {
 				version: 1,
@@ -227,7 +242,7 @@ describe("manifest", () => {
 
 		test("preserves resources from still-enabled capabilities", async () => {
 			// Create skill directory for enabled capability
-			await Bun.write(".claude/skills/keep-skill/SKILL.md", "keep this");
+			await writeTextFile(".claude/skills/keep-skill/SKILL.md", "keep this");
 
 			const previousManifest: ResourceManifest = {
 				version: 1,
@@ -297,13 +312,13 @@ describe("manifest", () => {
 
 		test("deletes multiple skills and rules from same capability", async () => {
 			// Create multiple skills
-			await Bun.write(".claude/skills/skill-1/SKILL.md", "skill 1");
-			await Bun.write(".claude/skills/skill-2/SKILL.md", "skill 2");
-			await Bun.write(".claude/skills/skill-3/SKILL.md", "skill 3");
+			await writeTextFile(".claude/skills/skill-1/SKILL.md", "skill 1");
+			await writeTextFile(".claude/skills/skill-2/SKILL.md", "skill 2");
+			await writeTextFile(".claude/skills/skill-3/SKILL.md", "skill 3");
 
 			// Create multiple rules
-			await Bun.write(".cursor/rules/omnidev-rule-1.mdc", "rule 1");
-			await Bun.write(".cursor/rules/omnidev-rule-2.mdc", "rule 2");
+			await writeTextFile(".cursor/rules/omnidev-rule-1.mdc", "rule 1");
+			await writeTextFile(".cursor/rules/omnidev-rule-2.mdc", "rule 2");
 
 			const previousManifest: ResourceManifest = {
 				version: 1,
@@ -336,10 +351,10 @@ describe("manifest", () => {
 
 		test("deletes resources from multiple disabled capabilities", async () => {
 			// Create resources for multiple capabilities
-			await Bun.write(".claude/skills/cap1-skill/SKILL.md", "cap1 skill");
-			await Bun.write(".claude/skills/cap2-skill/SKILL.md", "cap2 skill");
-			await Bun.write(".cursor/rules/omnidev-cap1-rule.mdc", "cap1 rule");
-			await Bun.write(".cursor/rules/omnidev-cap2-rule.mdc", "cap2 rule");
+			await writeTextFile(".claude/skills/cap1-skill/SKILL.md", "cap1 skill");
+			await writeTextFile(".claude/skills/cap2-skill/SKILL.md", "cap2 skill");
+			await writeTextFile(".cursor/rules/omnidev-cap1-rule.mdc", "cap1 rule");
+			await writeTextFile(".cursor/rules/omnidev-cap2-rule.mdc", "cap2 rule");
 
 			const previousManifest: ResourceManifest = {
 				version: 1,
@@ -382,8 +397,8 @@ describe("manifest", () => {
 		});
 
 		test("cleans up when all capabilities are disabled", async () => {
-			await Bun.write(".claude/skills/only-skill/SKILL.md", "only");
-			await Bun.write(".cursor/rules/omnidev-only-rule.mdc", "only");
+			await writeTextFile(".claude/skills/only-skill/SKILL.md", "only");
+			await writeTextFile(".cursor/rules/omnidev-only-rule.mdc", "only");
 
 			const previousManifest: ResourceManifest = {
 				version: 1,

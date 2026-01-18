@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { captureConsole, setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runInit } from "../packages/cli/src/commands/init.js";
@@ -127,7 +128,7 @@ describe("examples integration", () => {
 				// Copy example file directly - no modifications
 				const examplePath = resolve(examplesDir, exampleFile);
 				const config = readFileSync(examplePath, "utf-8");
-				await Bun.write("omni.toml", config);
+				await writeFile("omni.toml", config, "utf-8");
 
 				// Run init
 				await captureConsole(async () => {
@@ -198,7 +199,7 @@ standard = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtures
 [profiles.default]
 capabilities = ["standard"]
 `;
-			await Bun.write("omni.toml", config);
+			await writeFile("omni.toml", config, "utf-8");
 
 			await captureConsole(async () => {
 				await runInit({}, "claude");
@@ -229,7 +230,7 @@ claude-plugin = { source = "github:Nikola-Milovic/omnidev", path = "examples/fix
 [profiles.default]
 capabilities = ["claude-plugin"]
 `;
-			await Bun.write("omni.toml", config);
+			await writeFile("omni.toml", config, "utf-8");
 
 			await captureConsole(async () => {
 				await runInit({}, "claude");
@@ -256,7 +257,7 @@ bare-skills = { source = "github:Nikola-Milovic/omnidev", path = "examples/fixtu
 [profiles.default]
 capabilities = ["bare-skills"]
 `;
-			await Bun.write("omni.toml", config);
+			await writeFile("omni.toml", config, "utf-8");
 
 			await captureConsole(async () => {
 				await runInit({}, "claude");

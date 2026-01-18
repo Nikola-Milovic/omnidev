@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runInit } from "./init";
 
@@ -143,7 +144,7 @@ describe("init command", () => {
 
 	test("does not modify existing CLAUDE.md", async () => {
 		const existingContent = "# My Existing Config\n\nExisting content here.\n";
-		await Bun.write("CLAUDE.md", existingContent);
+		await writeFile("CLAUDE.md", existingContent, "utf-8");
 
 		await runInit({}, "claude-code");
 
@@ -153,7 +154,7 @@ describe("init command", () => {
 
 	test("does not modify existing AGENTS.md", async () => {
 		const existingContent = "# My Existing Agents\n\nExisting content here.\n";
-		await Bun.write("AGENTS.md", existingContent);
+		await writeFile("AGENTS.md", existingContent, "utf-8");
 
 		await runInit({}, "codex");
 
@@ -170,7 +171,7 @@ describe("init command", () => {
 
 	test("updates root .gitignore with omnidev entries", async () => {
 		// Create a root .gitignore with custom content
-		await Bun.write(".gitignore", "node_modules/\n*.log\n");
+		await writeFile(".gitignore", "node_modules/\n*.log\n", "utf-8");
 
 		await runInit({}, "claude-code");
 
@@ -219,7 +220,7 @@ describe("init command", () => {
 	test("does not overwrite existing config.toml", async () => {
 		const customConfig = 'project = "custom"\n';
 		mkdirSync(".omni", { recursive: true });
-		await Bun.write("omni.toml", customConfig);
+		await writeFile("omni.toml", customConfig, "utf-8");
 
 		await runInit({}, "claude-code");
 
@@ -229,7 +230,7 @@ describe("init command", () => {
 
 	test("does not overwrite existing AGENTS.md", async () => {
 		const customAgents = "# Custom agents\n";
-		await Bun.write("AGENTS.md", customAgents);
+		await writeFile("AGENTS.md", customAgents, "utf-8");
 
 		await runInit({}, "codex");
 

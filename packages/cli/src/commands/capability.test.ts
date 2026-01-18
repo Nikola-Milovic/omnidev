@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runCapabilityDisable, runCapabilityEnable, runCapabilityList } from "./capability";
 
@@ -26,13 +27,14 @@ describe("capability list command", () => {
 		// Create minimal setup
 		mkdirSync(".omni", { recursive: true });
 		mkdirSync(".omni/capabilities", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = []
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -54,7 +56,7 @@ capabilities = []
 	test("lists all discovered capabilities with enabled status", async () => {
 		// Create test structure
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/tasks/capability.toml",
 			`[capability]
 id = "tasks"
@@ -62,10 +64,11 @@ name = "Task Management"
 version = "1.0.0"
 description = "Task tracking"
 `,
+			"utf-8",
 		);
 
 		mkdirSync(".omni/capabilities/notes", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/notes/capability.toml",
 			`[capability]
 id = "notes"
@@ -73,15 +76,17 @@ name = "Note Taking"
 version = "0.5.0"
 description = "Note management"
 `,
+			"utf-8",
 		);
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["tasks"]
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -111,7 +116,7 @@ capabilities = ["tasks"]
 
 	test("shows capability id and version", async () => {
 		mkdirSync(".omni/capabilities/test-cap", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/test-cap/capability.toml",
 			`[capability]
 id = "test-cap"
@@ -119,15 +124,17 @@ name = "Test Capability"
 version = "2.3.4"
 description = "Test"
 `,
+			"utf-8",
 		);
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["test-cap"]
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -148,7 +155,7 @@ capabilities = ["test-cap"]
 
 	test("handles invalid capability gracefully", async () => {
 		mkdirSync(".omni/capabilities/valid", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/valid/capability.toml",
 			`[capability]
 id = "valid"
@@ -156,18 +163,20 @@ name = "Valid"
 version = "1.0.0"
 description = "Valid capability"
 `,
+			"utf-8",
 		);
 
 		mkdirSync(".omni/capabilities/invalid", { recursive: true });
-		await Bun.write(".omni/capabilities/invalid/capability.toml", "invalid toml [[[");
+		await writeFile(".omni/capabilities/invalid/capability.toml", "invalid toml [[[", "utf-8");
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["valid", "invalid"]
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -195,7 +204,7 @@ capabilities = ["valid", "invalid"]
 
 	test("respects profile when determining enabled status", async () => {
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/tasks/capability.toml",
 			`[capability]
 id = "tasks"
@@ -203,9 +212,10 @@ name = "Tasks"
 version = "1.0.0"
 description = "Task tracking"
 `,
+			"utf-8",
 		);
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 active_profile = "coding"
@@ -213,6 +223,7 @@ active_profile = "coding"
 [profiles.coding]
 capabilities = ["tasks"]
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -235,7 +246,7 @@ capabilities = ["tasks"]
 		// Create an omni directory but with invalid config to trigger error
 		mkdirSync(".omni", { recursive: true });
 		mkdirSync(".omni/capabilities", { recursive: true });
-		await Bun.write("omni.toml", "invalid toml [[[");
+		await writeFile("omni.toml", "invalid toml [[[", "utf-8");
 		mkdirSync(".omni", { recursive: true });
 
 		const originalError = console.error;
@@ -257,7 +268,7 @@ capabilities = ["tasks"]
 
 		for (const cap of capabilities) {
 			mkdirSync(`.omni/capabilities/${cap}`, { recursive: true });
-			await Bun.write(
+			await writeFile(
 				`.omni/capabilities/${cap}/capability.toml`,
 				`[capability]
 id = "${cap}"
@@ -265,16 +276,18 @@ name = "${cap.toUpperCase()}"
 version = "1.0.0"
 description = "${cap} capability"
 `,
+				"utf-8",
 			);
 		}
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["alpha", "beta", "gamma"]
 `,
+			"utf-8",
 		);
 
 		const consoleLogs: string[] = [];
@@ -317,7 +330,7 @@ describe("capability enable command", () => {
 
 	test("enables a capability", async () => {
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/tasks/capability.toml",
 			`[capability]
 id = "tasks"
@@ -325,26 +338,28 @@ name = "Tasks"
 version = "1.0.0"
 description = "Task tracking"
 `,
+			"utf-8",
 		);
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = []
 `,
+			"utf-8",
 		);
 
 		await runCapabilityEnable({}, "tasks");
 
-		const content = await Bun.file("omni.toml").text();
+		const content = await readFile("omni.toml", "utf-8");
 		expect(content).toContain('capabilities = ["tasks"]');
 	});
 
 	test("adds capability to profile when enabling", async () => {
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			".omni/capabilities/tasks/capability.toml",
 			`[capability]
 id = "tasks"
@@ -352,32 +367,35 @@ name = "Tasks"
 version = "1.0.0"
 description = "Task tracking"
 `,
+			"utf-8",
 		);
 
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = []
 `,
+			"utf-8",
 		);
 
 		await runCapabilityEnable({}, "tasks");
 
-		const content = await Bun.file("omni.toml").text();
+		const content = await readFile("omni.toml", "utf-8");
 		expect(content).toContain('capabilities = ["tasks"]');
 	});
 
 	test("exits with error if capability doesn't exist", async () => {
 		mkdirSync(".omni", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = []
 `,
+			"utf-8",
 		);
 
 		const originalError = console.error;
@@ -419,35 +437,37 @@ describe("capability disable command", () => {
 
 	test("disables a capability", async () => {
 		mkdirSync(".omni", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["tasks"]
 `,
+			"utf-8",
 		);
 
 		await runCapabilityDisable({}, "tasks");
 
-		const content = await Bun.file("omni.toml").text();
+		const content = await readFile("omni.toml", "utf-8");
 		expect(content).toContain("capabilities = []");
 	});
 
 	test("removes capability from profile", async () => {
 		mkdirSync(".omni", { recursive: true });
-		await Bun.write(
+		await writeFile(
 			"omni.toml",
 			`project = "test"
 
 [profiles.default]
 capabilities = ["tasks", "notes"]
 `,
+			"utf-8",
 		);
 
 		await runCapabilityDisable({}, "tasks");
 
-		const content = await Bun.file("omni.toml").text();
+		const content = await readFile("omni.toml", "utf-8");
 		expect(content).toContain('capabilities = ["notes"]');
 	});
 });

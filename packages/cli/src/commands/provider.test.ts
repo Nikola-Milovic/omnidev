@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { captureConsole, tmpdir } from "@omnidev-ai/core/test-utils";
 import { runProviderList, runProviderEnable, runProviderDisable } from "./provider";
 
@@ -20,7 +21,7 @@ describe("provider commands", () => {
 
 		// Create basic OmniDev structure
 		mkdirSync(".omni/state", { recursive: true });
-		await Bun.write("omni.toml", 'project = "test"\n');
+		await writeFile("omni.toml", 'project = "test"\n', "utf-8");
 	});
 
 	afterEach(() => {

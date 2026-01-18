@@ -1,8 +1,17 @@
 import { describe, expect, test } from "bun:test";
+import { readFile, writeFile } from "node:fs/promises";
 import type { LoadedCapability } from "../types";
 import type { ResourceManifest } from "../state/manifest";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { readMcpJson, syncMcpJson, writeMcpJson } from "./manager";
+
+async function writeTextFile(path: string, content: string): Promise<void> {
+	await writeFile(path, content, "utf-8");
+}
+
+async function readTextFile(path: string): Promise<string> {
+	return await readFile(path, "utf-8");
+}
 
 describe("mcp-json manager", () => {
 	setupTestDir("mcp-json-test-", { chdir: true, createOmniDir: true });
@@ -28,21 +37,21 @@ describe("mcp-json manager", () => {
 					},
 				},
 			};
-			await Bun.write(".mcp.json", JSON.stringify(existingConfig));
+			await writeTextFile(".mcp.json", JSON.stringify(existingConfig));
 
 			const config = await readMcpJson();
 			expect(config).toEqual(existingConfig);
 		});
 
 		test("handles invalid JSON gracefully", async () => {
-			await Bun.write(".mcp.json", "invalid json {{{");
+			await writeTextFile(".mcp.json", "invalid json {{{");
 
 			const config = await readMcpJson();
 			expect(config).toEqual({ mcpServers: {} });
 		});
 
 		test("handles missing mcpServers field", async () => {
-			await Bun.write(".mcp.json", JSON.stringify({ other: "field" }));
+			await writeTextFile(".mcp.json", JSON.stringify({ other: "field" }));
 
 			const config = await readMcpJson();
 			expect(config).toEqual({ mcpServers: {} });
@@ -62,12 +71,12 @@ describe("mcp-json manager", () => {
 
 			await writeMcpJson(config);
 
-			const content = await Bun.file(".mcp.json").text();
+			const content = await readTextFile(".mcp.json");
 			expect(JSON.parse(content)).toEqual(config);
 		});
 
 		test("overwrites existing .mcp.json", async () => {
-			await Bun.write(".mcp.json", JSON.stringify({ mcpServers: { old: { command: "old" } } }));
+			await writeTextFile(".mcp.json", JSON.stringify({ mcpServers: { old: { command: "old" } } }));
 
 			const newConfig = {
 				mcpServers: {
@@ -77,7 +86,7 @@ describe("mcp-json manager", () => {
 
 			await writeMcpJson(newConfig);
 
-			const content = await Bun.file(".mcp.json").text();
+			const content = await readTextFile(".mcp.json");
 			expect(JSON.parse(content)).toEqual(newConfig);
 		});
 
@@ -90,7 +99,7 @@ describe("mcp-json manager", () => {
 
 			await writeMcpJson(config);
 
-			const content = await Bun.file(".mcp.json").text();
+			const content = await readTextFile(".mcp.json");
 			expect(content).toContain("\n");
 			expect(content).toContain("  ");
 		});
@@ -167,7 +176,7 @@ describe("mcp-json manager", () => {
 
 			test("removes previously managed MCP from manifest", async () => {
 				// Setup: pre-populate .mcp.json with an old MCP
-				await Bun.write(
+				await writeTextFile(
 					".mcp.json",
 					JSON.stringify({
 						mcpServers: {
@@ -199,7 +208,7 @@ describe("mcp-json manager", () => {
 			});
 
 			test("preserves user MCPs", async () => {
-				await Bun.write(
+				await writeTextFile(
 					".mcp.json",
 					JSON.stringify({
 						mcpServers: {

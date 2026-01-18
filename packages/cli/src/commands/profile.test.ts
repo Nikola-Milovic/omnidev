@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runProfileList, runProfileSet } from "./profile";
 
@@ -56,11 +57,12 @@ describe("profile commands", () => {
 		test("should show message when no profiles defined", async () => {
 			// Create minimal config without profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "default"
 `,
+				"utf-8",
 			);
 
 			await runProfileList();
@@ -73,7 +75,7 @@ active_profile = "default"
 		test("should list all profiles from config", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "default"
@@ -87,6 +89,7 @@ capabilities = ["tasks", "planner"]
 [profiles.coding]
 capabilities = []
 `,
+				"utf-8",
 			);
 
 			await runProfileList();
@@ -102,7 +105,7 @@ capabilities = []
 		test("should show active profile with marker", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "planning"
@@ -113,6 +116,7 @@ capabilities = []
 [profiles.planning]
 capabilities = ["planner"]
 `,
+				"utf-8",
 			);
 
 			await runProfileList();
@@ -126,7 +130,7 @@ capabilities = ["planner"]
 		test("should show profile capabilities", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "default"
@@ -137,6 +141,7 @@ capabilities = []
 [profiles.planning]
 capabilities = ["planner", "tasks"]
 `,
+				"utf-8",
 			);
 
 			await runProfileList();
@@ -149,7 +154,7 @@ capabilities = ["planner", "tasks"]
 		test("should use default_profile when no active profile", async () => {
 			// Create config with active_profile
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "planning"
@@ -157,6 +162,7 @@ active_profile = "planning"
 [profiles.planning]
 capabilities = ["planner"]
 `,
+				"utf-8",
 			);
 
 			await runProfileList();
@@ -169,7 +175,7 @@ capabilities = ["planner"]
 		test("should handle invalid config gracefully", async () => {
 			// Create invalid config
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write("omni.toml", "invalid toml [[[");
+			await writeFile("omni.toml", "invalid toml [[[", "utf-8");
 
 			try {
 				await runProfileList();
@@ -198,13 +204,14 @@ capabilities = ["planner"]
 		test("should show error when profile does not exist", async () => {
 			// Create config without the requested profile
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 
 [profiles.default]
 capabilities = []
 `,
+				"utf-8",
 			);
 
 			try {
@@ -223,7 +230,7 @@ capabilities = []
 		test("should set active profile", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 
@@ -233,6 +240,7 @@ capabilities = []
 [profiles.planning]
 capabilities = ["planner"]
 `,
+				"utf-8",
 			);
 
 			await runProfileSet("planning");
@@ -241,14 +249,14 @@ capabilities = ["planner"]
 			expect(consoleOutput.join("\n")).toContain("Active profile set to: planning");
 
 			// Verify active_profile was written to state file (not config.toml)
-			const stateContent = await Bun.file(".omni/state/active-profile").text();
+			const stateContent = await readFile(".omni/state/active-profile", "utf-8");
 			expect(stateContent).toBe("planning");
 		});
 
 		test("should trigger agents sync after setting profile", async () => {
 			// Create config with profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 active_profile = "default"
@@ -271,7 +279,7 @@ capabilities = []
 		test("should show list of available profiles when profile not found", async () => {
 			// Create config with multiple profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 
@@ -284,6 +292,7 @@ capabilities = []
 [profiles.coding]
 capabilities = []
 `,
+				"utf-8",
 			);
 
 			try {
@@ -303,10 +312,11 @@ capabilities = []
 		test("should handle empty profiles config", async () => {
 			// Create config without any profiles
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write(
+			await writeFile(
 				"omni.toml",
 				`project = "test-project"
 `,
+				"utf-8",
 			);
 
 			try {
@@ -324,7 +334,7 @@ capabilities = []
 		test("should handle invalid config gracefully", async () => {
 			// Create invalid config
 			mkdirSync(".omni", { recursive: true });
-			await Bun.write("omni.toml", "invalid toml [[[");
+			await writeFile("omni.toml", "invalid toml [[[", "utf-8");
 
 			try {
 				await runProfileSet("planning");

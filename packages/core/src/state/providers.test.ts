@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
-import { tmpdir } from "../test-utils/index.js";
+import { tmpdir } from "@omnidev-ai/core/test-utils";
 import {
 	disableProvider,
 	enableProvider,

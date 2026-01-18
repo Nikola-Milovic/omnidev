@@ -39,5 +39,6 @@ Thumbs.db
 .mcp.json
 
 .omni/
+.omni.local.toml
 
 plans

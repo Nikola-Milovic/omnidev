@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
-import { captureConsole, setupTestDir } from "../packages/core/src/test-utils/index.js";
+import { captureConsole, setupTestDir } from "@omnidev-ai/core/test-utils";
 import { runInit } from "../packages/cli/src/commands/init.js";
 import { runSync } from "../packages/cli/src/commands/sync.js";
 

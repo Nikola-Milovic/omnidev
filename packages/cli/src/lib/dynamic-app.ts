@@ -9,7 +9,7 @@ import { initCommand } from "../commands/init";
 import { profileRoutes } from "../commands/profile";
 import { providerRoutes } from "../commands/provider";
 import { syncCommand } from "../commands/sync";
-import { debug } from "./debug";
+import { debug } from "@omnidev-ai/core";
 
 /**
  * Build CLI app with dynamically loaded capability commands

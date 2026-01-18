@@ -7,7 +7,7 @@
 
 import { run } from "@stricli/core";
 import { buildDynamicApp } from "./lib/dynamic-app";
-import { debug } from "./lib/debug";
+import { debug } from "@omnidev-ai/core";
 
 // Build app dynamically based on enabled capabilities
 const app = await buildDynamicApp();

@@ -37,15 +37,11 @@ for (const pkgDir of PACKAGES) {
 
 	let needsFix = false;
 
-	// CLI is bundled and should publish with no internal deps.
+	// CLI bundles adapters internally, so remove from published deps.
+	// Core is external and must remain as a dependency.
 	if (packedPkg.name === "@omnidev-ai/cli" && packedPkg.dependencies) {
-		const before = Object.keys(packedPkg.dependencies);
-		delete packedPkg.dependencies["@omnidev-ai/adapters"];
-		delete packedPkg.dependencies["@omnidev-ai/core"];
-		const after = Object.keys(packedPkg.dependencies);
-		if (before.length !== after.length) needsFix = true;
-		if (after.length === 0) {
-			delete packedPkg.dependencies;
+		if (packedPkg.dependencies["@omnidev-ai/adapters"]) {
+			delete packedPkg.dependencies["@omnidev-ai/adapters"];
 			needsFix = true;
 		}
 	}

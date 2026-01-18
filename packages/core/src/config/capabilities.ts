@@ -1,4 +1,4 @@
-import { loadConfig, writeConfig } from "./loader.js";
+import { loadBaseConfig, loadConfig, writeConfig } from "./loader.js";
 import { getActiveProfile, resolveEnabledCapabilities } from "./profiles.js";
 
 /**
@@ -17,7 +17,8 @@ export async function getEnabledCapabilities(): Promise<string[]> {
  * @param capabilityId - The ID of the capability to enable
  */
 export async function enableCapability(capabilityId: string): Promise<void> {
-	const config = await loadConfig();
+	// Use loadBaseConfig to avoid writing local overrides to omni.toml
+	const config = await loadBaseConfig();
 	const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
 	if (!config.profiles) {
@@ -39,7 +40,8 @@ export async function enableCapability(capabilityId: string): Promise<void> {
  * @param capabilityId - The ID of the capability to disable
  */
 export async function disableCapability(capabilityId: string): Promise<void> {
-	const config = await loadConfig();
+	// Use loadBaseConfig to avoid writing local overrides to omni.toml
+	const config = await loadBaseConfig();
 	const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
 	if (!config.profiles?.[activeProfile]) {

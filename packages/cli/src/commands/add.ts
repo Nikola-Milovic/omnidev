@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { getEnabledAdapters } from "@omnidev-ai/adapters";
 import {
 	getActiveProfile,
-	loadConfig,
+	loadBaseConfig,
 	syncAgentConfiguration,
 	writeConfig,
 	type McpConfig,
@@ -62,7 +62,7 @@ export async function runAddCap(flags: AddCapFlags, name: string): Promise<void>
 		}
 
 		// Load config
-		const config = await loadConfig();
+		const config = await loadBaseConfig();
 		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
 		// Ensure capabilities.sources exists
@@ -135,7 +135,7 @@ export async function runAddMcp(flags: AddMcpFlags, name: string): Promise<void>
 		}
 
 		// Load config
-		const config = await loadConfig();
+		const config = await loadBaseConfig();
 		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
 		// Ensure mcps exists

@@ -36,6 +36,19 @@ function mergeConfigs(base: OmniConfig, override: OmniConfig): OmniConfig {
 }
 
 /**
+ * Load only the base config file (omni.toml) without merging local overrides.
+ * Use this when you need to modify and write back to omni.toml.
+ * @returns OmniConfig from omni.toml only
+ */
+export async function loadBaseConfig(): Promise<OmniConfig> {
+	if (existsSync(CONFIG_PATH)) {
+		const content = await readFile(CONFIG_PATH, "utf-8");
+		return parseOmniConfig(content);
+	}
+	return {};
+}
+
+/**
  * Load and merge config and local configuration files
  * @returns Merged OmniConfig object
  *
@@ -43,13 +56,8 @@ function mergeConfigs(base: OmniConfig, override: OmniConfig): OmniConfig {
  * Local config takes precedence over main config. Missing files are treated as empty configs.
  */
 export async function loadConfig(): Promise<OmniConfig> {
-	let baseConfig: OmniConfig = {};
+	const baseConfig = await loadBaseConfig();
 	let localConfig: OmniConfig = {};
-
-	if (existsSync(CONFIG_PATH)) {
-		const content = await readFile(CONFIG_PATH, "utf-8");
-		baseConfig = parseOmniConfig(content);
-	}
 
 	if (existsSync(LOCAL_CONFIG)) {
 		const content = await readFile(LOCAL_CONFIG, "utf-8");
@@ -249,7 +257,12 @@ function generateConfigToml(config: OmniConfig): string {
 	lines.push("# Capabilities that load in ALL profiles, regardless of profile config.");
 	lines.push("# Useful for essential tools needed everywhere.");
 	lines.push("#");
-	lines.push('# always_enabled_capabilities = ["git-tools", "linting"]');
+	if (config.always_enabled_capabilities && config.always_enabled_capabilities.length > 0) {
+		const caps = config.always_enabled_capabilities.map((c) => `"${c}"`).join(", ");
+		lines.push(`always_enabled_capabilities = [${caps}]`);
+	} else {
+		lines.push('# always_enabled_capabilities = ["git-tools", "linting"]');
+	}
 	lines.push("");
 
 	// Profiles

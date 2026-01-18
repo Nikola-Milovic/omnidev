@@ -51,3 +51,24 @@ jobs:
           # No NPM_TOKEN needed - using OIDC trusted publishing
           # TODO: Consider switching to `bun publish`, not sure if it supports OIDC trusted publishing
           # This would allow removing the Node.js setup step entirely
+
+      - name: Resolve published CLI version
+        if: ${{ steps.changesets.outputs.published == 'true' }}
+        id: cli_version
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          node -e '
+            const raw = process.env.PUBLISHED_PACKAGES || "[]";
+            const pkgs = JSON.parse(raw);
+            const cli = pkgs.find((p) => p.name === "@omnidev-ai/cli");
+            if (!cli) {
+              console.error("Published packages:", pkgs.map((p) => p.name).join(", "));
+              process.exit(1);
+            }
+            process.stdout.write(`version=${cli.version}\n`);
+          ' >> "$GITHUB_OUTPUT"
+
+      - name: Docker integration (post-publish npx + bunx)
+        if: ${{ steps.changesets.outputs.published == 'true' }}
+        run: bash tests/integration/run.sh release "${{ steps.cli_version.outputs.version }}"

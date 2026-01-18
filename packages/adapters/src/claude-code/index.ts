@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
 	ProviderAdapter,
@@ -20,7 +21,7 @@ export const claudeCodeAdapter: ProviderAdapter = {
 		const filesCreated: string[] = [];
 
 		if (!existsSync(claudeMdPath)) {
-			await Bun.write(claudeMdPath, generateClaudeTemplate());
+			await writeFile(claudeMdPath, generateClaudeTemplate(), "utf-8");
 			filesCreated.push("CLAUDE.md");
 		}
 
@@ -51,7 +52,7 @@ description: "${skill.description}"
 
 ${skill.instructions}`;
 
-			await Bun.write(skillPath, content);
+			await writeFile(skillPath, content, "utf-8");
 			filesWritten.push(`.claude/skills/${skill.name}/SKILL.md`);
 		}
 

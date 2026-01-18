@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import type { Doc, Rule } from "../types";
 
@@ -23,7 +24,7 @@ export async function loadRules(capabilityPath: string, capabilityId: string): P
 	for (const entry of entries) {
 		if (entry.isFile() && entry.name.endsWith(".md")) {
 			const rulePath = join(rulesDir, entry.name);
-			const content = await Bun.file(rulePath).text();
+			const content = await readFile(rulePath, "utf-8");
 
 			rules.push({
 				name: basename(entry.name, ".md"),
@@ -51,7 +52,7 @@ export async function writeRules(rules: Rule[], docs: Doc[] = []): Promise<void>
 	// Read existing content or create new file
 	let content: string;
 	if (existsSync(instructionsPath)) {
-		content = await Bun.file(instructionsPath).text();
+		content = await readFile(instructionsPath, "utf-8");
 	} else {
 		// Create new file with basic template
 		content = `# OmniDev Instructions
@@ -85,7 +86,7 @@ export async function writeRules(rules: Rule[], docs: Doc[] = []): Promise<void>
 			content.substring(endIndex);
 	}
 
-	await Bun.write(instructionsPath, content);
+	await writeFile(instructionsPath, content, "utf-8");
 }
 
 function generateRulesContent(rules: Rule[], docs: Doc[] = []): string {

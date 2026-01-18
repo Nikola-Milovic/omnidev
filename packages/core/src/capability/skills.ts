@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Skill } from "../types";
 import { parseFrontmatterWithMarkdown } from "./yaml-parser";
@@ -34,7 +35,7 @@ export async function loadSkills(capabilityPath: string, capabilityId: string): 
 }
 
 async function parseSkillFile(filePath: string, capabilityId: string): Promise<Skill> {
-	const content = await Bun.file(filePath).text();
+	const content = await readFile(filePath, "utf-8");
 
 	const parsed = parseFrontmatterWithMarkdown<SkillFrontmatter>(content);
 

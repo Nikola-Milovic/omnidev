@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import type { LoadedCapability } from "../types";
 
 /**
@@ -52,7 +53,7 @@ export async function loadManifest(): Promise<ResourceManifest> {
 		};
 	}
 
-	const content = await Bun.file(MANIFEST_PATH).text();
+	const content = await readFile(MANIFEST_PATH, "utf-8");
 	return JSON.parse(content) as ResourceManifest;
 }
 
@@ -61,7 +62,7 @@ export async function loadManifest(): Promise<ResourceManifest> {
  */
 export async function saveManifest(manifest: ResourceManifest): Promise<void> {
 	mkdirSync(".omni/state", { recursive: true });
-	await Bun.write(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+	await writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, "utf-8");
 }
 
 /**

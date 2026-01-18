@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
 	ProviderAdapter,
@@ -23,7 +24,7 @@ export const opencodeAdapter: ProviderAdapter = {
 		const filesCreated: string[] = [];
 
 		if (!existsSync(instructionsPath)) {
-			await Bun.write(instructionsPath, generateOpencodeTemplate());
+			await writeFile(instructionsPath, generateOpencodeTemplate(), "utf-8");
 			filesCreated.push(".opencode/instructions.md");
 		}
 

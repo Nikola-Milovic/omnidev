@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
 	ProviderAdapter,
@@ -35,7 +36,7 @@ export const cursorAdapter: ProviderAdapter = {
 		// Write rules to .cursor/rules/
 		for (const rule of bundle.rules) {
 			const rulePath = join(rulesDir, `omnidev-${rule.name}.mdc`);
-			await Bun.write(rulePath, rule.content);
+			await writeFile(rulePath, rule.content, "utf-8");
 			filesWritten.push(`.cursor/rules/omnidev-${rule.name}.mdc`);
 		}
 

@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Subagent, SubagentHooks, SubagentModel, SubagentPermissionMode } from "../types";
 import { parseFrontmatterWithMarkdown } from "./yaml-parser";
@@ -47,7 +48,7 @@ export async function loadSubagents(
 }
 
 async function parseSubagentFile(filePath: string, capabilityId: string): Promise<Subagent> {
-	const content = await Bun.file(filePath).text();
+	const content = await readFile(filePath, "utf-8");
 
 	const parsed = parseFrontmatterWithMarkdown<SubagentFrontmatter>(content);
 

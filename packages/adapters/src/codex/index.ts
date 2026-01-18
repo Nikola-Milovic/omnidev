@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
 	ProviderAdapter,
@@ -20,7 +21,7 @@ export const codexAdapter: ProviderAdapter = {
 		const filesCreated: string[] = [];
 
 		if (!existsSync(agentsMdPath)) {
-			await Bun.write(agentsMdPath, generateAgentsTemplate());
+			await writeFile(agentsMdPath, generateAgentsTemplate(), "utf-8");
 			filesCreated.push("AGENTS.md");
 		}
 

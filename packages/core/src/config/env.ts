@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import type { EnvDeclaration } from "../types";
 
 const ENV_FILE = ".omni/.env";
@@ -14,7 +15,7 @@ export async function loadEnvironment(): Promise<Record<string, string>> {
 
 	// Load from .omni/.env
 	if (existsSync(ENV_FILE)) {
-		const content = await Bun.file(ENV_FILE).text();
+		const content = await readFile(ENV_FILE, "utf-8");
 		for (const line of content.split("\n")) {
 			const trimmed = line.trim();
 			// Skip empty lines and comments

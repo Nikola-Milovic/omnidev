@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { getAllAdapters, getEnabledAdapters } from "@omnidev-ai/adapters";
 import type { ProviderId, ProviderContext } from "@omnidev-ai/core";
 import {
@@ -56,7 +57,7 @@ export async function runInit(_flags: Record<string, never>, providerArg?: strin
 
 	// Create .omni/instructions.md
 	if (!existsSync(".omni/instructions.md")) {
-		await Bun.write(".omni/instructions.md", generateInstructionsTemplate());
+		await writeFile(".omni/instructions.md", generateInstructionsTemplate(), "utf-8");
 	}
 
 	// Load config and create provider context
@@ -168,7 +169,7 @@ async function updateRootGitignore(): Promise<void> {
 
 	let content = "";
 	if (existsSync(gitignorePath)) {
-		content = await Bun.file(gitignorePath).text();
+		content = await readFile(gitignorePath, "utf-8");
 	}
 
 	const lines = content.split("\n");
@@ -184,5 +185,5 @@ async function updateRootGitignore(): Promise<void> {
 	const needsNewline = content.length > 0 && !content.endsWith("\n");
 	const section = `${needsNewline ? "\n" : ""}# OmniDev\n${missingEntries.join("\n")}\n`;
 
-	await Bun.write(gitignorePath, content + section);
+	await writeFile(gitignorePath, content + section, "utf-8");
 }

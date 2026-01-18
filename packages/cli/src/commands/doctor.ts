@@ -1,4 +1,7 @@
 import { existsSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { promisify } from "node:util";
 import { buildCommand } from "@stricli/core";
 
 export const doctorCommand = buildCommand({
@@ -17,7 +20,7 @@ export async function runDoctor(): Promise<void> {
 	console.log("");
 
 	const checks = [
-		checkBunVersion(),
+		checkPackageManager(),
 		checkOmniLocalDir(),
 		checkConfig(),
 		checkRootGitignore(),
@@ -51,34 +54,54 @@ interface Check {
 	fix?: string;
 }
 
-async function checkBunVersion(): Promise<Check> {
-	const version = Bun.version;
-	const parts = version.split(".");
-	const firstPart = parts[0];
-	if (!firstPart) {
+async function checkPackageManager(): Promise<Check> {
+	const execFileAsync = promisify(execFile);
+
+	try {
+		const { stdout } = await execFileAsync("bun", ["--version"]);
+		const version = stdout.trim();
+		const firstPart = version.split(".")[0];
+		if (!firstPart) {
+			return {
+				name: "Package Manager",
+				passed: false,
+				message: `Invalid Bun version format: ${version}`,
+				fix: "Reinstall Bun: curl -fsSL https://bun.sh/install | bash",
+			};
+		}
+
+		const major = Number.parseInt(firstPart, 10);
+		if (major < 1) {
+			return {
+				name: "Package Manager",
+				passed: false,
+				message: `bun v${version}`,
+				fix: "Upgrade Bun: curl -fsSL https://bun.sh/install | bash",
+			};
+		}
+
 		return {
-			name: "Bun Version",
+			name: "Package Manager",
+			passed: true,
+			message: `bun v${version}`,
+		};
+	} catch {}
+
+	try {
+		const { stdout } = await execFileAsync("npm", ["--version"]);
+		return {
+			name: "Package Manager",
+			passed: true,
+			message: `npm v${stdout.trim()}`,
+		};
+	} catch {
+		return {
+			name: "Package Manager",
 			passed: false,
-			message: `Invalid version format: ${version}`,
-			fix: "Reinstall Bun: curl -fsSL https://bun.sh/install | bash",
+			message: "Neither Bun nor npm is installed",
+			fix: "Install Bun (recommended): curl -fsSL https://bun.sh/install | bash",
 		};
 	}
-	const major = Number.parseInt(firstPart, 10);
-
-	if (major < 1) {
-		return {
-			name: "Bun Version",
-			passed: false,
-			message: `v${version}`,
-			fix: "Upgrade Bun: curl -fsSL https://bun.sh/install | bash",
-		};
-	}
-
-	return {
-		name: "Bun Version",
-		passed: true,
-		message: `v${version}`,
-	};
 }
 
 async function checkOmniLocalDir(): Promise<Check> {
@@ -139,7 +162,7 @@ async function checkRootGitignore(): Promise<Check> {
 		};
 	}
 
-	const content = await Bun.file(gitignorePath).text();
+	const content = await readFile(gitignorePath, "utf-8");
 	const lines = content.split("\n").map((line) => line.trim());
 	const hasOmniDir = lines.includes(".omni/");
 	const hasLocalToml = lines.includes("omni.local.toml");

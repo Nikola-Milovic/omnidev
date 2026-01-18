@@ -43,6 +43,23 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 
 	const entries = readdirSync(capabilitiesDir, { withFileTypes: true });
 
+	async function commandExists(cmd: string): Promise<boolean> {
+		return await new Promise((resolve) => {
+			const proc = spawn(cmd, ["--version"], { stdio: "ignore" });
+			proc.on("error", () => resolve(false));
+			proc.on("close", (code) => resolve(code === 0));
+		});
+	}
+
+	const hasBun = await commandExists("bun");
+	const hasNpm = hasBun ? false : await commandExists("npm");
+
+	if (!hasBun && !hasNpm) {
+		throw new Error(
+			"Neither Bun nor npm is installed. Install one of them to install capability dependencies.",
+		);
+	}
+
 	for (const entry of entries) {
 		if (!entry.isDirectory()) {
 			continue;
@@ -60,9 +77,13 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 			console.log(`Installing dependencies for ${capabilityPath}...`);
 		}
 
-		// Run bun install in the capability directory
+		// Prefer Bun if available, otherwise fallback to npm.
 		await new Promise<void>((resolve, reject) => {
-			const proc = spawn("bun", ["install"], {
+			const useNpmCi = hasNpm && existsSync(join(capabilityPath, "package-lock.json"));
+			const cmd = hasBun ? "bun" : "npm";
+			const args = hasBun ? ["install"] : useNpmCi ? ["ci"] : ["install"];
+
+			const proc = spawn(cmd, args, {
 				cwd: capabilityPath,
 				stdio: silent ? "ignore" : "inherit",
 			});

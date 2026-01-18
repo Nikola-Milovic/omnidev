@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { parse } from "smol-toml";
 import type { Provider, ProviderConfig } from "../types/index.js";
 
@@ -9,7 +10,7 @@ export async function loadProviderConfig(): Promise<ProviderConfig> {
 		return { provider: "claude" };
 	}
 
-	const content = await Bun.file(PROVIDER_CONFIG_PATH).text();
+	const content = await readFile(PROVIDER_CONFIG_PATH, "utf-8");
 	const parsed = parse(content) as unknown as ProviderConfig;
 	return parsed;
 }
@@ -40,7 +41,7 @@ export async function writeProviderConfig(config: ProviderConfig): Promise<void>
 		lines.push('provider = "claude"');
 	}
 
-	await Bun.write(PROVIDER_CONFIG_PATH, `${lines.join("\n")}\n`);
+	await writeFile(PROVIDER_CONFIG_PATH, `${lines.join("\n")}\n`, "utf-8");
 }
 
 export function parseProviderFlag(flag: string): Provider[] {

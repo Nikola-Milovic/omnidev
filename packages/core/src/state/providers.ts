@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import type { ProviderId } from "../types/index.js";
 
 const STATE_DIR = ".omni/state";
@@ -20,7 +21,7 @@ export async function readEnabledProviders(): Promise<ProviderId[]> {
 	}
 
 	try {
-		const content = await Bun.file(PROVIDERS_PATH).text();
+		const content = await readFile(PROVIDERS_PATH, "utf-8");
 		const state = JSON.parse(content) as ProvidersState;
 		return state.enabled.length > 0 ? state.enabled : DEFAULT_PROVIDERS;
 	} catch {
@@ -35,7 +36,7 @@ export async function readEnabledProviders(): Promise<ProviderId[]> {
 export async function writeEnabledProviders(providers: ProviderId[]): Promise<void> {
 	mkdirSync(STATE_DIR, { recursive: true });
 	const state: ProvidersState = { enabled: providers };
-	await Bun.write(PROVIDERS_PATH, JSON.stringify(state, null, 2));
+	await writeFile(PROVIDERS_PATH, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
 }
 
 /**

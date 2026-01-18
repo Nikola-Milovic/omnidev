@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import type { Doc } from "../types";
 
@@ -15,7 +16,7 @@ export async function loadDocs(capabilityPath: string, capabilityId: string): Pr
 	// Load definition.md if exists
 	const definitionPath = join(capabilityPath, "definition.md");
 	if (existsSync(definitionPath)) {
-		const content = await Bun.file(definitionPath).text();
+		const content = await readFile(definitionPath, "utf-8");
 		docs.push({
 			name: "definition",
 			content: content.trim(),
@@ -33,7 +34,7 @@ export async function loadDocs(capabilityPath: string, capabilityId: string): Pr
 		for (const entry of entries) {
 			if (entry.isFile() && entry.name.endsWith(".md")) {
 				const docPath = join(docsDir, entry.name);
-				const content = await Bun.file(docPath).text();
+				const content = await readFile(docPath, "utf-8");
 
 				docs.push({
 					name: basename(entry.name, ".md"),

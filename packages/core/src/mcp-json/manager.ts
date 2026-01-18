@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import type { LoadedCapability, McpConfig } from "../types";
 import type { ResourceManifest } from "../state/manifest";
 
@@ -29,7 +30,7 @@ export async function readMcpJson(): Promise<McpJsonConfig> {
 	}
 
 	try {
-		const content = await Bun.file(MCP_JSON_PATH).text();
+		const content = await readFile(MCP_JSON_PATH, "utf-8");
 		const parsed = JSON.parse(content);
 		return {
 			mcpServers: parsed.mcpServers || {},
@@ -44,7 +45,7 @@ export async function readMcpJson(): Promise<McpJsonConfig> {
  * Write .mcp.json, preserving non-OmniDev entries
  */
 export async function writeMcpJson(config: McpJsonConfig): Promise<void> {
-	await Bun.write(MCP_JSON_PATH, JSON.stringify(config, null, 2));
+	await writeFile(MCP_JSON_PATH, `${JSON.stringify(config, null, 2)}\n`, "utf-8");
 }
 
 /**

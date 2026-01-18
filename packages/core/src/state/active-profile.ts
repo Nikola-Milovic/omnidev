@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 
 const STATE_DIR = ".omni/state";
 const ACTIVE_PROFILE_PATH = `${STATE_DIR}/active-profile`;
@@ -13,7 +14,7 @@ export async function readActiveProfileState(): Promise<string | null> {
 	}
 
 	try {
-		const content = await Bun.file(ACTIVE_PROFILE_PATH).text();
+		const content = await readFile(ACTIVE_PROFILE_PATH, "utf-8");
 		const trimmed = content.trim();
 		return trimmed || null;
 	} catch {
@@ -27,7 +28,7 @@ export async function readActiveProfileState(): Promise<string | null> {
  */
 export async function writeActiveProfileState(profileName: string): Promise<void> {
 	mkdirSync(STATE_DIR, { recursive: true });
-	await Bun.write(ACTIVE_PROFILE_PATH, profileName);
+	await writeFile(ACTIVE_PROFILE_PATH, profileName, "utf-8");
 }
 
 /**
@@ -35,7 +36,6 @@ export async function writeActiveProfileState(profileName: string): Promise<void
  */
 export async function clearActiveProfileState(): Promise<void> {
 	if (existsSync(ACTIVE_PROFILE_PATH)) {
-		const file = Bun.file(ACTIVE_PROFILE_PATH);
-		await file.delete();
+		await unlink(ACTIVE_PROFILE_PATH);
 	}
 }

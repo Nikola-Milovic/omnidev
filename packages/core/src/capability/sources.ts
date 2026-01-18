@@ -9,6 +9,7 @@
  */
 
 import { existsSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse as parseToml } from "smol-toml";
@@ -51,6 +52,37 @@ export interface SourceUpdateInfo {
 	currentVersion: string;
 	latestVersion: string;
 	hasUpdate: boolean;
+}
+
+async function spawnCapture(
+	command: string,
+	args: string[],
+	options?: { cwd?: string },
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+	return await new Promise((resolve, reject) => {
+		const child = spawn(command, args, {
+			cwd: options?.cwd,
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+
+		let stdout = "";
+		let stderr = "";
+
+		child.stdout?.setEncoding("utf-8");
+		child.stderr?.setEncoding("utf-8");
+
+		child.stdout?.on("data", (chunk) => {
+			stdout += chunk;
+		});
+		child.stderr?.on("data", (chunk) => {
+			stderr += chunk;
+		});
+
+		child.on("error", (error) => reject(error));
+		child.on("close", (exitCode) => {
+			resolve({ exitCode: exitCode ?? 0, stdout, stderr });
+		});
+	});
 }
 
 /**
@@ -188,14 +220,13 @@ export async function saveLockFile(lockFile: CapabilitiesLockFile): Promise<void
  * Get the current commit hash of a git repository
  */
 async function getRepoCommit(repoPath: string): Promise<string> {
-	const proc = Bun.spawn(["git", "rev-parse", "HEAD"], {
+	const { exitCode, stdout, stderr } = await spawnCapture("git", ["rev-parse", "HEAD"], {
 		cwd: repoPath,
-		stdout: "pipe",
-		stderr: "pipe",
 	});
-	const output = await new Response(proc.stdout).text();
-	await proc.exited;
-	return output.trim();
+	if (exitCode !== 0) {
+		throw new Error(`Failed to get commit for ${repoPath}: ${stderr.trim()}`);
+	}
+	return stdout.trim();
 }
 
 /**
@@ -218,16 +249,9 @@ async function cloneRepo(gitUrl: string, targetPath: string, ref?: string): Prom
 	}
 	args.push(gitUrl, targetPath);
 
-	const proc = Bun.spawn(["git", ...args], {
-		stdout: "pipe",
-		stderr: "pipe",
-	});
-
-	await proc.exited;
-
-	if (proc.exitCode !== 0) {
-		const stderr = await new Response(proc.stderr).text();
-		throw new Error(`Failed to clone ${gitUrl}: ${stderr}`);
+	const { exitCode, stderr } = await spawnCapture("git", args);
+	if (exitCode !== 0) {
+		throw new Error(`Failed to clone ${gitUrl}: ${stderr.trim()}`);
 	}
 }
 
@@ -236,39 +260,36 @@ async function cloneRepo(gitUrl: string, targetPath: string, ref?: string): Prom
  */
 async function fetchRepo(repoPath: string, ref?: string): Promise<boolean> {
 	// Fetch latest
-	const fetchProc = Bun.spawn(["git", "fetch", "--depth", "1", "origin"], {
+	const fetchResult = await spawnCapture("git", ["fetch", "--depth", "1", "origin"], {
 		cwd: repoPath,
-		stdout: "pipe",
-		stderr: "pipe",
 	});
-	await fetchProc.exited;
+	if (fetchResult.exitCode !== 0) {
+		throw new Error(`Failed to fetch in ${repoPath}: ${fetchResult.stderr.trim()}`);
+	}
 
 	// Get current and remote commits
 	const currentCommit = await getRepoCommit(repoPath);
 
 	// Check remote commit
 	const targetRef = ref || "HEAD";
-	const lsProc = Bun.spawn(["git", "ls-remote", "origin", targetRef], {
+	const lsResult = await spawnCapture("git", ["ls-remote", "origin", targetRef], {
 		cwd: repoPath,
-		stdout: "pipe",
-		stderr: "pipe",
 	});
-	const lsOutput = await new Response(lsProc.stdout).text();
-	await lsProc.exited;
+	if (lsResult.exitCode !== 0) {
+		throw new Error(`Failed to ls-remote in ${repoPath}: ${lsResult.stderr.trim()}`);
+	}
 
-	const remoteCommit = lsOutput.split("\t")[0];
+	const remoteCommit = lsResult.stdout.split("\t")[0];
 
 	if (currentCommit === remoteCommit) {
 		return false; // No update
 	}
 
 	// Pull changes
-	const pullProc = Bun.spawn(["git", "pull", "--ff-only"], {
-		cwd: repoPath,
-		stdout: "pipe",
-		stderr: "pipe",
-	});
-	await pullProc.exited;
+	const pullResult = await spawnCapture("git", ["pull", "--ff-only"], { cwd: repoPath });
+	if (pullResult.exitCode !== 0) {
+		throw new Error(`Failed to pull in ${repoPath}: ${pullResult.stderr.trim()}`);
+	}
 
 	return true; // Updated
 }
@@ -965,24 +986,23 @@ export async function checkForUpdates(config: OmniConfig): Promise<SourceUpdateI
 		}
 
 		// Fetch to check for updates (without pulling)
-		const fetchProc = Bun.spawn(["git", "fetch", "--depth", "1", "origin"], {
+		const fetchResult = await spawnCapture("git", ["fetch", "--depth", "1", "origin"], {
 			cwd: targetPath,
-			stdout: "pipe",
-			stderr: "pipe",
 		});
-		await fetchProc.exited;
+		if (fetchResult.exitCode !== 0) {
+			throw new Error(`Failed to fetch in ${targetPath}: ${fetchResult.stderr.trim()}`);
+		}
 
 		// Get remote commit
 		const targetRef = gitConfig.ref || "HEAD";
-		const lsProc = Bun.spawn(["git", "ls-remote", "origin", targetRef], {
+		const lsResult = await spawnCapture("git", ["ls-remote", "origin", targetRef], {
 			cwd: targetPath,
-			stdout: "pipe",
-			stderr: "pipe",
 		});
-		const lsOutput = await new Response(lsProc.stdout).text();
-		await lsProc.exited;
+		if (lsResult.exitCode !== 0) {
+			throw new Error(`Failed to ls-remote in ${targetPath}: ${lsResult.stderr.trim()}`);
+		}
 
-		const remoteCommit = lsOutput.split("\t")[0] || "";
+		const remoteCommit = lsResult.stdout.split("\t")[0] || "";
 		const currentCommit = existing?.commit || "";
 
 		updates.push({

@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import type { OmniConfig } from "../types";
 import { parseOmniConfig } from "./parser";
 
@@ -46,12 +47,12 @@ export async function loadConfig(): Promise<OmniConfig> {
 	let localConfig: OmniConfig = {};
 
 	if (existsSync(CONFIG_PATH)) {
-		const content = await Bun.file(CONFIG_PATH).text();
+		const content = await readFile(CONFIG_PATH, "utf-8");
 		baseConfig = parseOmniConfig(content);
 	}
 
 	if (existsSync(LOCAL_CONFIG)) {
-		const content = await Bun.file(LOCAL_CONFIG).text();
+		const content = await readFile(LOCAL_CONFIG, "utf-8");
 		localConfig = parseOmniConfig(content);
 	}
 
@@ -64,7 +65,7 @@ export async function loadConfig(): Promise<OmniConfig> {
  */
 export async function writeConfig(config: OmniConfig): Promise<void> {
 	const content = generateConfigToml(config);
-	await Bun.write(CONFIG_PATH, content);
+	await writeFile(CONFIG_PATH, content, "utf-8");
 }
 
 /**

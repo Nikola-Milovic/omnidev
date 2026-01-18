@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "../types";
 import { parseFrontmatterWithMarkdown } from "./yaml-parser";
@@ -42,7 +43,7 @@ export async function loadCommands(
 }
 
 async function parseCommandFile(filePath: string, capabilityId: string): Promise<Command> {
-	const content = await Bun.file(filePath).text();
+	const content = await readFile(filePath, "utf-8");
 	const parsed = parseFrontmatterWithMarkdown<CommandFrontmatter>(content);
 
 	if (!parsed) {

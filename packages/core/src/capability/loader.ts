@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { validateEnv } from "../config/env";
 import { parseCapabilityConfig } from "../config/parser";
@@ -63,7 +64,7 @@ export async function discoverCapabilities(): Promise<string[]> {
  */
 export async function loadCapabilityConfig(capabilityPath: string): Promise<CapabilityConfig> {
 	const configPath = join(capabilityPath, "capability.toml");
-	const content = await Bun.file(configPath).text();
+	const content = await readFile(configPath, "utf-8");
 	const config = parseCapabilityConfig(content);
 
 	return config;
@@ -116,7 +117,7 @@ async function loadTypeDefinitions(capabilityPath: string): Promise<string | und
 		return undefined;
 	}
 
-	return Bun.file(typesPath).text();
+	return readFile(typesPath, "utf-8");
 }
 
 /**

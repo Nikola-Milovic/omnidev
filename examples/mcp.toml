@@ -1,32 +1,83 @@
 # MCP Server Configuration
 # Define MCP servers directly in omni.toml
+# Supports multiple transport types: stdio (local), http (remote), sse (remote)
 
-# Demo MCP server - defined inline, creates a capability named "demo"
+# ============================================================================
+# OPTION 1: stdio transport - Local process (default)
+# ============================================================================
+# Use for MCP servers that run as local processes. This is the most common
+# option for community MCP servers installed via npm.
+
 [mcps.demo]
 command = "npx"
 args = ["-y", "@anthropic-ai/claude-code-mcp"]
+transport = "stdio"  # Optional - stdio is the default
+
+[mcps.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/dir"]
+# transport = "stdio"  # Can be omitted since stdio is the default
+
+[mcps.database]
+command = "node"
+args = ["./servers/database.js"]
+cwd = "./mcp-servers"
 transport = "stdio"
+[mcps.database.env]
+DB_URL = "${DATABASE_URL}"
+
+# ============================================================================
+# OPTION 2: http transport - Remote HTTP server (recommended for remote)
+# ============================================================================
+# Use for connecting to remote MCP servers over HTTP. This is the recommended
+# transport for cloud-based services.
+
+[mcps.notion]
+transport = "http"
+url = "https://mcp.notion.com/mcp"
+
+# With Bearer token authentication
+[mcps.secure-api]
+transport = "http"
+url = "https://api.example.com/mcp"
+[mcps.secure-api.headers]
+Authorization = "Bearer ${API_TOKEN}"
+
+# With custom headers
+[mcps.custom-api]
+transport = "http"
+url = "https://internal.company.com/mcp"
+[mcps.custom-api.headers]
+"X-API-Key" = "${INTERNAL_API_KEY}"
+"X-Team-ID" = "engineering"
+
+# ============================================================================
+# OPTION 3: sse transport - Server-Sent Events (deprecated)
+# ============================================================================
+# The SSE transport is deprecated. Use HTTP transport instead, where available.
+# Only use SSE if the MCP server doesn't support HTTP transport.
+
+[mcps.asana]
+transport = "sse"
+url = "https://mcp.asana.com/sse"
+
+# With authentication header
+[mcps.private-sse]
+transport = "sse"
+url = "https://api.company.com/sse"
+[mcps.private-sse.headers]
+"X-API-Key" = "${SSE_API_KEY}"
+
+# ============================================================================
+# Profile Configuration
+# ============================================================================
+# Reference MCPs by name in your profile's capabilities
 
 [profiles.default]
 capabilities = ["demo"]
 
-# Example: Other MCP server configurations (commented)
-#
-# [mcps.filesystem]
-# command = "npx"
-# args = ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/dir"]
-# transport = "stdio"
-#
-# [mcps.database]
-# command = "node"
-# args = ["./servers/database.js"]
-# cwd = "./mcp-servers"
-# transport = "stdio"
-# [mcps.database.env]
-# DB_URL = "${DATABASE_URL}"
-#
-# [mcps.remote-api]
-# command = "python"
-# args = ["-m", "my_mcp_server"]
-# transport = "sse"
-# url = "http://localhost:8080/sse"
+[profiles.development]
+capabilities = ["demo", "filesystem", "database"]
+
+[profiles.production]
+capabilities = ["notion", "secure-api", "asana"]

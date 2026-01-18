@@ -4,13 +4,36 @@ import type { LoadedCapability, McpConfig } from "../types";
 import type { ResourceManifest } from "../state/manifest";
 
 /**
- * MCP server configuration in .mcp.json
+ * MCP server configuration in .mcp.json for stdio transport
  */
-export interface McpServerConfig {
+export interface McpServerStdioConfig {
 	command: string;
 	args?: string[];
 	env?: Record<string, string>;
 }
+
+/**
+ * MCP server configuration in .mcp.json for HTTP transport
+ */
+export interface McpServerHttpConfig {
+	type: "http";
+	url: string;
+	headers?: Record<string, string>;
+}
+
+/**
+ * MCP server configuration in .mcp.json for SSE transport
+ */
+export interface McpServerSseConfig {
+	type: "sse";
+	url: string;
+	headers?: Record<string, string>;
+}
+
+/**
+ * Union type for all MCP server configurations
+ */
+export type McpServerConfig = McpServerStdioConfig | McpServerHttpConfig | McpServerSseConfig;
 
 /**
  * Structure of .mcp.json file
@@ -52,7 +75,43 @@ export async function writeMcpJson(config: McpJsonConfig): Promise<void> {
  * Build MCP server config from capability's mcp section
  */
 function buildMcpServerConfig(mcp: McpConfig): McpServerConfig {
-	const config: McpServerConfig = {
+	const transport = mcp.transport ?? "stdio";
+
+	// HTTP transport - remote server
+	if (transport === "http") {
+		if (!mcp.url) {
+			throw new Error("HTTP transport requires a URL");
+		}
+		const config: McpServerHttpConfig = {
+			type: "http",
+			url: mcp.url,
+		};
+		if (mcp.headers && Object.keys(mcp.headers).length > 0) {
+			config.headers = mcp.headers;
+		}
+		return config;
+	}
+
+	// SSE transport - remote server (deprecated)
+	if (transport === "sse") {
+		if (!mcp.url) {
+			throw new Error("SSE transport requires a URL");
+		}
+		const config: McpServerSseConfig = {
+			type: "sse",
+			url: mcp.url,
+		};
+		if (mcp.headers && Object.keys(mcp.headers).length > 0) {
+			config.headers = mcp.headers;
+		}
+		return config;
+	}
+
+	// stdio transport - local process (default)
+	if (!mcp.command) {
+		throw new Error("stdio transport requires a command");
+	}
+	const config: McpServerStdioConfig = {
 		command: mcp.command,
 	};
 	if (mcp.args) {

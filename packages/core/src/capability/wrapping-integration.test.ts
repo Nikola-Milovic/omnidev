@@ -409,4 +409,161 @@ describe("MCP capability generation", () => {
 		// Non-MCP capability should still exist
 		expect(existsSync(nonMcpDir)).toBe(true);
 	});
+
+	test("generates HTTP transport MCP capability", async () => {
+		const config: OmniConfig = {
+			mcps: {
+				notion: {
+					transport: "http",
+					url: "https://mcp.notion.com/mcp",
+				},
+			},
+		};
+
+		await generateMcpCapabilities(config);
+
+		const capabilityDir = join(".omni", "capabilities", "notion");
+		expect(existsSync(capabilityDir)).toBe(true);
+
+		const tomlPath = join(capabilityDir, "capability.toml");
+		const tomlContent = await readFile(tomlPath, "utf-8");
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
+
+		expect(parsed.capability.id).toBe("notion");
+		expect(parsed.mcp?.transport).toBe("http");
+		expect(parsed.mcp?.url).toBe("https://mcp.notion.com/mcp");
+		expect(parsed.mcp?.command).toBeUndefined();
+	});
+
+	test("generates HTTP transport MCP capability with headers", async () => {
+		const config: OmniConfig = {
+			mcps: {
+				"secure-api": {
+					transport: "http",
+					url: "https://api.example.com/mcp",
+					headers: {
+						Authorization: "Bearer my-token",
+						"X-Custom-Header": "value",
+					},
+				},
+			},
+		};
+
+		await generateMcpCapabilities(config);
+
+		const capabilityDir = join(".omni", "capabilities", "secure-api");
+		expect(existsSync(capabilityDir)).toBe(true);
+
+		const tomlPath = join(capabilityDir, "capability.toml");
+		const tomlContent = await readFile(tomlPath, "utf-8");
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
+
+		expect(parsed.mcp?.transport).toBe("http");
+		expect(parsed.mcp?.url).toBe("https://api.example.com/mcp");
+		expect(parsed.mcp?.headers?.Authorization).toBe("Bearer my-token");
+		expect(parsed.mcp?.headers?.["X-Custom-Header"]).toBe("value");
+	});
+
+	test("generates SSE transport MCP capability", async () => {
+		const config: OmniConfig = {
+			mcps: {
+				asana: {
+					transport: "sse",
+					url: "https://mcp.asana.com/sse",
+				},
+			},
+		};
+
+		await generateMcpCapabilities(config);
+
+		const capabilityDir = join(".omni", "capabilities", "asana");
+		expect(existsSync(capabilityDir)).toBe(true);
+
+		const tomlPath = join(capabilityDir, "capability.toml");
+		const tomlContent = await readFile(tomlPath, "utf-8");
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
+
+		expect(parsed.capability.id).toBe("asana");
+		expect(parsed.mcp?.transport).toBe("sse");
+		expect(parsed.mcp?.url).toBe("https://mcp.asana.com/sse");
+		expect(parsed.mcp?.command).toBeUndefined();
+	});
+
+	test("generates SSE transport MCP capability with headers", async () => {
+		const config: OmniConfig = {
+			mcps: {
+				"private-api": {
+					transport: "sse",
+					url: "https://api.company.com/sse",
+					headers: {
+						"X-API-Key": "your-key-here",
+					},
+				},
+			},
+		};
+
+		await generateMcpCapabilities(config);
+
+		const capabilityDir = join(".omni", "capabilities", "private-api");
+		const tomlPath = join(capabilityDir, "capability.toml");
+		const tomlContent = await readFile(tomlPath, "utf-8");
+		const parsed = parseToml(tomlContent) as unknown as CapabilityConfig;
+
+		expect(parsed.mcp?.transport).toBe("sse");
+		expect(parsed.mcp?.url).toBe("https://api.company.com/sse");
+		expect(parsed.mcp?.headers?.["X-API-Key"]).toBe("your-key-here");
+	});
+
+	test("generates multiple MCPs with different transports", async () => {
+		const config: OmniConfig = {
+			mcps: {
+				filesystem: {
+					command: "npx",
+					args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"],
+					transport: "stdio",
+				},
+				notion: {
+					transport: "http",
+					url: "https://mcp.notion.com/mcp",
+				},
+				asana: {
+					transport: "sse",
+					url: "https://mcp.asana.com/sse",
+					headers: {
+						"X-API-Key": "key",
+					},
+				},
+			},
+		};
+
+		await generateMcpCapabilities(config);
+
+		// Check stdio MCP
+		const stdioToml = await readFile(
+			join(".omni", "capabilities", "filesystem", "capability.toml"),
+			"utf-8",
+		);
+		const stdioParsed = parseToml(stdioToml) as unknown as CapabilityConfig;
+		expect(stdioParsed.mcp?.command).toBe("npx");
+		expect(stdioParsed.mcp?.transport).toBe("stdio");
+
+		// Check HTTP MCP
+		const httpToml = await readFile(
+			join(".omni", "capabilities", "notion", "capability.toml"),
+			"utf-8",
+		);
+		const httpParsed = parseToml(httpToml) as unknown as CapabilityConfig;
+		expect(httpParsed.mcp?.transport).toBe("http");
+		expect(httpParsed.mcp?.url).toBe("https://mcp.notion.com/mcp");
+
+		// Check SSE MCP
+		const sseToml = await readFile(
+			join(".omni", "capabilities", "asana", "capability.toml"),
+			"utf-8",
+		);
+		const sseParsed = parseToml(sseToml) as unknown as CapabilityConfig;
+		expect(sseParsed.mcp?.transport).toBe("sse");
+		expect(sseParsed.mcp?.url).toBe("https://mcp.asana.com/sse");
+		expect(sseParsed.mcp?.headers?.["X-API-Key"]).toBe("key");
+	});
 });

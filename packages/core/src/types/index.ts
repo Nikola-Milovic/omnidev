@@ -62,12 +62,37 @@ export interface McpToolSchema {
 	inputSchema: Record<string, unknown>;
 }
 
+/**
+ * MCP server configuration supporting multiple transport types:
+ *
+ * - **stdio**: Local process using stdin/stdout (default)
+ *   - Requires: command
+ *   - Optional: args, env, cwd
+ *
+ * - **http**: Remote HTTP server (recommended for remote servers)
+ *   - Requires: url
+ *   - Optional: headers (for authentication)
+ *
+ * - **sse**: Server-Sent Events (deprecated, use http instead)
+ *   - Requires: url
+ *   - Optional: headers (for authentication)
+ */
 export interface McpConfig {
-	command: string;
+	/** Executable to run (required for stdio transport) */
+	command?: string;
+	/** Command arguments (stdio transport only) */
 	args?: string[];
+	/** Environment variables (stdio transport only) */
 	env?: Record<string, string>;
+	/** Working directory (stdio transport only) */
 	cwd?: string;
+	/** Transport type: stdio (default), http, or sse */
 	transport?: McpTransport;
+	/** URL for remote servers (required for http/sse transport) */
+	url?: string;
+	/** HTTP headers for authentication (http/sse transport only) */
+	headers?: Record<string, string>;
+	/** Tool schemas (optional, for documentation) */
 	tools?: McpToolSchema[];
 }
 

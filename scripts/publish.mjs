@@ -5,7 +5,7 @@ import { extname, join } from "node:path";
 
 const RUNTIME_JS_EXTS = new Set([".js", ".mjs", ".cjs"]);
 const BUN_RUNTIME_PATTERNS = [
-	/\bBun\s*[\.\[]/,
+	/\bBun\s*[.[]/,
 	/\bfrom\s+["']bun["']/,
 	/\brequire\(\s*["']bun["']\s*\)/,
 	/\bimport\(\s*["']bun["']\s*\)/,

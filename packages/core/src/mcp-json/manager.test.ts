@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { readFile, writeFile } from "node:fs/promises";
-import type { LoadedCapability } from "../types";
+import type { LoadedCapability, McpConfig } from "../types";
 import type { ResourceManifest } from "../state/manifest";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import { readMcpJson, syncMcpJson, writeMcpJson } from "./manager";
+import {
+	type McpServerStdioConfig,
+	type McpServerHttpConfig,
+	type McpServerSseConfig,
+	readMcpJson,
+	syncMcpJson,
+	writeMcpJson,
+} from "./manager";
 
 async function writeTextFile(path: string, content: string): Promise<void> {
 	await writeFile(path, content, "utf-8");
@@ -106,10 +113,7 @@ describe("mcp-json manager", () => {
 	});
 
 	describe("syncMcpJson", () => {
-		const createMockCapability = (
-			id: string,
-			mcp?: { command: string; args?: string[]; env?: Record<string, string> },
-		): LoadedCapability => ({
+		const createMockCapability = (id: string, mcp?: McpConfig): LoadedCapability => ({
 			id,
 			path: `/path/to/${id}`,
 			config: {
@@ -168,7 +172,8 @@ describe("mcp-json manager", () => {
 				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
 
 				const config = await readMcpJson();
-				expect(config.mcpServers["my-cap"].env).toEqual({
+				const serverConfig = config.mcpServers["my-cap"] as McpServerStdioConfig;
+				expect(serverConfig.env).toEqual({
 					API_KEY: "secret",
 					DEBUG: "true",
 				});
@@ -313,6 +318,205 @@ describe("mcp-json manager", () => {
 				expect(config.mcpServers).toHaveProperty("context7");
 				expect(config.mcpServers).toHaveProperty("playwright");
 				expect(config.mcpServers).not.toHaveProperty("tasks");
+			});
+		});
+
+		describe("transport types", () => {
+			test("stdio transport - local process (default)", async () => {
+				const capabilities = [
+					createMockCapability("filesystem", {
+						command: "npx",
+						args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"],
+						transport: "stdio",
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["filesystem"] as McpServerStdioConfig;
+				expect(serverConfig.command).toBe("npx");
+				expect(serverConfig.args).toEqual([
+					"-y",
+					"@modelcontextprotocol/server-filesystem",
+					"/path/to/dir",
+				]);
+				expect("type" in serverConfig).toBe(false);
+			});
+
+			test("stdio transport without explicit transport field", async () => {
+				const capabilities = [
+					createMockCapability("local-server", {
+						command: "node",
+						args: ["server.js"],
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["local-server"] as McpServerStdioConfig;
+				expect(serverConfig.command).toBe("node");
+				expect(serverConfig.args).toEqual(["server.js"]);
+				expect("type" in serverConfig).toBe(false);
+			});
+
+			test("http transport - remote server", async () => {
+				const capabilities = [
+					createMockCapability("notion", {
+						transport: "http",
+						url: "https://mcp.notion.com/mcp",
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["notion"] as McpServerHttpConfig;
+				expect(serverConfig.type).toBe("http");
+				expect(serverConfig.url).toBe("https://mcp.notion.com/mcp");
+				expect("command" in serverConfig).toBe(false);
+			});
+
+			test("http transport with authentication headers", async () => {
+				const capabilities = [
+					createMockCapability("secure-api", {
+						transport: "http",
+						url: "https://api.example.com/mcp",
+						headers: {
+							Authorization: "Bearer your-token",
+							"X-Custom-Header": "value",
+						},
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["secure-api"] as McpServerHttpConfig;
+				expect(serverConfig.type).toBe("http");
+				expect(serverConfig.url).toBe("https://api.example.com/mcp");
+				expect(serverConfig.headers).toEqual({
+					Authorization: "Bearer your-token",
+					"X-Custom-Header": "value",
+				});
+			});
+
+			test("sse transport - server-sent events (deprecated)", async () => {
+				const capabilities = [
+					createMockCapability("asana", {
+						transport: "sse",
+						url: "https://mcp.asana.com/sse",
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["asana"] as McpServerSseConfig;
+				expect(serverConfig.type).toBe("sse");
+				expect(serverConfig.url).toBe("https://mcp.asana.com/sse");
+				expect("command" in serverConfig).toBe(false);
+			});
+
+			test("sse transport with authentication headers", async () => {
+				const capabilities = [
+					createMockCapability("private-sse", {
+						transport: "sse",
+						url: "https://api.company.com/sse",
+						headers: {
+							"X-API-Key": "your-key-here",
+						},
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+				const serverConfig = config.mcpServers["private-sse"] as McpServerSseConfig;
+				expect(serverConfig.type).toBe("sse");
+				expect(serverConfig.url).toBe("https://api.company.com/sse");
+				expect(serverConfig.headers).toEqual({
+					"X-API-Key": "your-key-here",
+				});
+			});
+
+			test("mixed transport types in same sync", async () => {
+				const capabilities = [
+					createMockCapability("local-fs", {
+						command: "npx",
+						args: ["-y", "filesystem-mcp"],
+						transport: "stdio",
+					}),
+					createMockCapability("remote-notion", {
+						transport: "http",
+						url: "https://mcp.notion.com/mcp",
+					}),
+					createMockCapability("remote-sse", {
+						transport: "sse",
+						url: "https://api.example.com/sse",
+						headers: { "X-Key": "test" },
+					}),
+				];
+
+				await syncMcpJson(capabilities, createEmptyManifest(), { silent: true });
+
+				const config = await readMcpJson();
+
+				// stdio
+				const stdioConfig = config.mcpServers["local-fs"] as McpServerStdioConfig;
+				expect(stdioConfig.command).toBe("npx");
+				expect("type" in stdioConfig).toBe(false);
+
+				// http
+				const httpConfig = config.mcpServers["remote-notion"] as McpServerHttpConfig;
+				expect(httpConfig.type).toBe("http");
+				expect(httpConfig.url).toBe("https://mcp.notion.com/mcp");
+
+				// sse
+				const sseConfig = config.mcpServers["remote-sse"] as McpServerSseConfig;
+				expect(sseConfig.type).toBe("sse");
+				expect(sseConfig.url).toBe("https://api.example.com/sse");
+				expect(sseConfig.headers).toEqual({ "X-Key": "test" });
+			});
+
+			test("throws error for http transport without url", async () => {
+				const capabilities = [
+					createMockCapability("bad-http", {
+						transport: "http",
+						// Missing url
+					}),
+				];
+
+				await expect(
+					syncMcpJson(capabilities, createEmptyManifest(), { silent: true }),
+				).rejects.toThrow("HTTP transport requires a URL");
+			});
+
+			test("throws error for sse transport without url", async () => {
+				const capabilities = [
+					createMockCapability("bad-sse", {
+						transport: "sse",
+						// Missing url
+					}),
+				];
+
+				await expect(
+					syncMcpJson(capabilities, createEmptyManifest(), { silent: true }),
+				).rejects.toThrow("SSE transport requires a URL");
+			});
+
+			test("throws error for stdio transport without command", async () => {
+				const capabilities = [
+					createMockCapability("bad-stdio", {
+						transport: "stdio",
+						// Missing command
+					}),
+				];
+
+				await expect(
+					syncMcpJson(capabilities, createEmptyManifest(), { silent: true }),
+				).rejects.toThrow("stdio transport requires a command");
 			});
 		});
 	});

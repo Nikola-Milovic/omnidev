@@ -1,5 +1,12 @@
 # @omnidev-ai/cli
 
+## 0.5.2
+
+### Patch Changes
+
+- eadf41b: Try and fix again
+  - @omnidev-ai/core@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes

@@ -132,26 +132,46 @@ function generateConfigToml(config: OmniConfig): string {
 	}
 	lines.push("");
 
-	// Capability sources (commented examples)
+	// Capability sources
 	lines.push("# =============================================================================");
 	lines.push("# Capability Sources");
 	lines.push("# =============================================================================");
 	lines.push("# Fetch capabilities from Git repositories. On sync, these are");
 	lines.push("# cloned/updated and made available to your profiles.");
 	lines.push("#");
-	lines.push("# [capabilities.sources]");
-	lines.push("# # GitHub shorthand (uses latest commit)");
-	lines.push('# tasks = "github:example-org/tasks-capability"');
-	lines.push("#");
-	lines.push("# # Version pinning (recommended for production)");
-	lines.push('# ralph = { source = "github:example-org/ralph", ref = "v1.2.0" }');
-	lines.push("#");
-	lines.push("# # Other Git sources");
-	lines.push('# private = "git@github.com:company/private-cap.git"');
-	lines.push('# gitlab = "https://gitlab.com/user/capability.git"');
+
+	const sources = config.capabilities?.sources;
+	if (sources && Object.keys(sources).length > 0) {
+		lines.push("[capabilities.sources]");
+		for (const [name, sourceConfig] of Object.entries(sources)) {
+			if (typeof sourceConfig === "string") {
+				// Simple string source
+				lines.push(`${name} = "${sourceConfig}"`);
+			} else if (sourceConfig.path) {
+				// Full config object with path
+				lines.push(
+					`${name} = { source = "${sourceConfig.source}", path = "${sourceConfig.path}" }`,
+				);
+			} else {
+				// Full config object without path - just write the source
+				lines.push(`${name} = "${sourceConfig.source}"`);
+			}
+		}
+	} else {
+		lines.push("# [capabilities.sources]");
+		lines.push("# # GitHub shorthand (uses latest commit)");
+		lines.push('# tasks = "github:example-org/tasks-capability"');
+		lines.push("#");
+		lines.push("# # With subdirectory path");
+		lines.push('# ralph = { source = "github:example-org/ralph", path = "plugins/my-cap" }');
+		lines.push("#");
+		lines.push("# # Other Git sources");
+		lines.push('# private = "git@github.com:company/private-cap.git"');
+		lines.push('# gitlab = "https://gitlab.com/user/capability.git"');
+	}
 	lines.push("");
 
-	// MCP servers (commented examples)
+	// MCP servers
 	lines.push("# =============================================================================");
 	lines.push("# MCP Servers");
 	lines.push("# =============================================================================");
@@ -160,19 +180,67 @@ function generateConfigToml(config: OmniConfig): string {
 		'# Reference in profiles using the MCP name directly, e.g. capabilities = ["filesystem"]',
 	);
 	lines.push("#");
-	lines.push("# [mcps.filesystem]");
-	lines.push('# command = "npx"');
-	lines.push('# args = ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]');
-	lines.push('# transport = "stdio"  # stdio (default), sse, or http');
-	lines.push("#");
-	lines.push("# [mcps.database]");
-	lines.push('# command = "node"');
-	lines.push('# args = ["./servers/database.js"]');
-	lines.push('# cwd = "./mcp-servers"');
-	lines.push("# [mcps.database.env]");
-	// biome-ignore lint/suspicious/noTemplateCurlyInString: Example of env var syntax
-	lines.push('# DB_URL = "${DATABASE_URL}"');
-	lines.push("");
+
+	const mcps = config.mcps;
+	if (mcps && Object.keys(mcps).length > 0) {
+		for (const [name, mcpConfig] of Object.entries(mcps)) {
+			lines.push(`[mcps.${name}]`);
+
+			// Transport type (default is stdio)
+			if (mcpConfig.transport && mcpConfig.transport !== "stdio") {
+				lines.push(`transport = "${mcpConfig.transport}"`);
+			}
+
+			// For stdio transport
+			if (mcpConfig.command) {
+				lines.push(`command = "${mcpConfig.command}"`);
+			}
+			if (mcpConfig.args && mcpConfig.args.length > 0) {
+				const argsStr = mcpConfig.args.map((a) => `"${a}"`).join(", ");
+				lines.push(`args = [${argsStr}]`);
+			}
+			if (mcpConfig.cwd) {
+				lines.push(`cwd = "${mcpConfig.cwd}"`);
+			}
+
+			// For http/sse transport
+			if (mcpConfig.url) {
+				lines.push(`url = "${mcpConfig.url}"`);
+			}
+
+			// Environment variables (sub-table)
+			if (mcpConfig.env && Object.keys(mcpConfig.env).length > 0) {
+				lines.push(`[mcps.${name}.env]`);
+				for (const [key, value] of Object.entries(mcpConfig.env)) {
+					lines.push(`${key} = "${value}"`);
+				}
+			}
+
+			// Headers (sub-table)
+			if (mcpConfig.headers && Object.keys(mcpConfig.headers).length > 0) {
+				lines.push(`[mcps.${name}.headers]`);
+				for (const [key, value] of Object.entries(mcpConfig.headers)) {
+					lines.push(`${key} = "${value}"`);
+				}
+			}
+
+			lines.push("");
+		}
+	} else {
+		lines.push("# [mcps.filesystem]");
+		lines.push('# command = "npx"');
+		lines.push('# args = ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]');
+		lines.push('# transport = "stdio"  # stdio (default), sse, or http');
+		lines.push("#");
+		lines.push("# [mcps.database]");
+		lines.push('# command = "node"');
+		lines.push('# args = ["./servers/database.js"]');
+		lines.push('# cwd = "./mcp-servers"');
+		lines.push("# [mcps.database.env]");
+		// biome-ignore lint/suspicious/noTemplateCurlyInString: Example of env var syntax
+		lines.push('# DB_URL = "${DATABASE_URL}"');
+		lines.push("");
+	}
 
 	// Always enabled capabilities
 	lines.push("# =============================================================================");

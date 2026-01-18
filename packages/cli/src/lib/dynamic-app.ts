@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import type { CapabilityExport } from "@omnidev-ai/core";
 import { buildApplication, buildRouteMap } from "@stricli/core";
+import { addRoutes } from "../commands/add";
 import { capabilityRoutes } from "../commands/capability";
 // Core commands
 import { doctorCommand } from "../commands/doctor";
@@ -35,6 +36,7 @@ export async function buildDynamicApp() {
 		init: initCommand,
 		doctor: doctorCommand,
 		sync: syncCommand,
+		add: addRoutes,
 		capability: capabilityRoutes,
 		profile: profileRoutes,
 		provider: providerRoutes,

@@ -1,7 +1,10 @@
 name = "omnidev-docs"
 compatibility_date = "2026-01-19"
-pages_build_output_dir = "dist"
 
-[site]
-bucket = "dist"
+[assets]
+directory = "dist"
+not_found_handling = "404-page"
+
+[observability]
+enabled = true
 

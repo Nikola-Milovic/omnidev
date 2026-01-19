@@ -3,38 +3,14 @@ import { getEnabledAdapters } from "@omnidev-ai/adapters";
 import {
 	getActiveProfile,
 	loadBaseConfig,
+	patchAddCapabilitySource,
+	patchAddMcp,
+	patchAddToProfile,
 	syncAgentConfiguration,
-	writeConfig,
 	type McpConfig,
 	type McpTransport,
-	type OmniConfig,
 } from "@omnidev-ai/core";
 import { buildCommand, buildRouteMap } from "@stricli/core";
-
-/**
- * Add a capability to the active profile's capabilities list
- */
-function addToActiveProfile(config: OmniConfig, activeProfile: string, capabilityName: string) {
-	// Ensure profiles object exists
-	if (!config.profiles) {
-		config.profiles = {};
-	}
-
-	// Ensure profile exists
-	if (!config.profiles[activeProfile]) {
-		config.profiles[activeProfile] = { capabilities: [] };
-	}
-
-	// Ensure capabilities array exists
-	if (!config.profiles[activeProfile].capabilities) {
-		config.profiles[activeProfile].capabilities = [];
-	}
-
-	// Add capability if not already present
-	if (!config.profiles[activeProfile].capabilities.includes(capabilityName)) {
-		config.profiles[activeProfile].capabilities.push(capabilityName);
-	}
-}
 
 interface AddCapFlags {
 	github: string;
@@ -61,38 +37,27 @@ export async function runAddCap(flags: AddCapFlags, name: string): Promise<void>
 			process.exit(1);
 		}
 
-		// Load config
+		// Load config to check for duplicates and get active profile
 		const config = await loadBaseConfig();
 		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
-		// Ensure capabilities.sources exists
-		if (!config.capabilities) {
-			config.capabilities = {};
-		}
-		if (!config.capabilities.sources) {
-			config.capabilities.sources = {};
-		}
-
 		// Check if source already exists
-		if (config.capabilities.sources[name]) {
+		if (config.capabilities?.sources?.[name]) {
 			console.error(`✗ Capability source "${name}" already exists`);
 			console.log("  Use a different name or remove the existing source first");
 			process.exit(1);
 		}
 
-		// Create source config
+		// Create source config and patch the TOML file (preserves comments)
 		const source = `github:${flags.github}`;
 		if (flags.path) {
-			config.capabilities.sources[name] = { source, path: flags.path };
+			await patchAddCapabilitySource(name, { source, path: flags.path });
 		} else {
-			config.capabilities.sources[name] = source;
+			await patchAddCapabilitySource(name, source);
 		}
 
-		// Add to active profile
-		addToActiveProfile(config, activeProfile, name);
-
-		// Write config
-		await writeConfig(config);
+		// Add to active profile (also preserves comments)
+		await patchAddToProfile(activeProfile, name);
 
 		console.log(`✓ Added capability source: ${name}`);
 		console.log(`  Source: ${source}`);
@@ -134,17 +99,12 @@ export async function runAddMcp(flags: AddMcpFlags, name: string): Promise<void>
 			process.exit(1);
 		}
 
-		// Load config
+		// Load config to check for duplicates and get active profile
 		const config = await loadBaseConfig();
 		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
 
-		// Ensure mcps exists
-		if (!config.mcps) {
-			config.mcps = {};
-		}
-
 		// Check if MCP already exists
-		if (config.mcps[name]) {
+		if (config.mcps?.[name]) {
 			console.error(`✗ MCP "${name}" already exists`);
 			console.log("  Use a different name or remove the existing MCP first");
 			process.exit(1);
@@ -214,14 +174,11 @@ export async function runAddMcp(flags: AddMcpFlags, name: string): Promise<void>
 			}
 		}
 
-		// Add MCP config
-		config.mcps[name] = mcpConfig;
+		// Add MCP config (preserves comments)
+		await patchAddMcp(name, mcpConfig);
 
-		// Add to active profile
-		addToActiveProfile(config, activeProfile, name);
-
-		// Write config
-		await writeConfig(config);
+		// Add to active profile (also preserves comments)
+		await patchAddToProfile(activeProfile, name);
 
 		console.log(`✓ Added MCP: ${name}`);
 		console.log(`  Transport: ${transport}`);

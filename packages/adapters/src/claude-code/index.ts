@@ -1,15 +1,15 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type {
-	HooksConfig,
-	ProviderAdapter,
-	ProviderContext,
-	ProviderInitResult,
-	ProviderSyncResult,
-	SyncBundle,
+import {
+	transformHooksConfig,
+	type HooksConfig,
+	type ProviderAdapter,
+	type ProviderContext,
+	type ProviderInitResult,
+	type ProviderSyncResult,
+	type SyncBundle,
 } from "@omnidev-ai/core";
-import { transformHooksConfig } from "@omnidev-ai/core/hooks";
 
 /**
  * Claude Code adapter - writes skills to .claude/skills/ and generates CLAUDE.md from OMNI.md

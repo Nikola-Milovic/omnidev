@@ -36,9 +36,8 @@ export async function runSync(): Promise<void> {
 		console.log("  • Capability registry");
 		console.log("  • Capability sync hooks");
 		console.log("  • .omni/.gitignore");
-		console.log("  • .omni/instructions.md");
 		if (adapters.length > 0) {
-			console.log("  • Provider-specific files");
+			console.log("  • Provider-specific files (instructions embedded)");
 		}
 	} catch (error) {
 		console.error("");

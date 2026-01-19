@@ -1,6 +1,6 @@
 /**
  * Template for AGENTS.md (Codex provider)
- * Creates a minimal file with reference to OmniDev instructions
+ * Creates a minimal file - actual content is generated during sync from OMNI.md + instructions
  */
 export function generateAgentsTemplate(): string {
 	return `# Project Instructions
@@ -9,6 +9,6 @@ export function generateAgentsTemplate(): string {
 
 ## OmniDev
 
-@import .omni/instructions.md
+<!-- This section is populated during sync with capability rules and docs -->
 `;
 }

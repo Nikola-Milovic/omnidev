@@ -47,7 +47,7 @@ omnidev add cap my-cap --github anthropics/skills --path skills/docx
 omnidev sync
 ```
 
-This fetches capabilities, generates `.omni/instructions.md`, and updates provider files.
+This fetches capabilities, generates instructions from rules and docs, and updates provider files.
 
 ## 5) Verify
 

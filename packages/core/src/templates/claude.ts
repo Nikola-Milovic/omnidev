@@ -1,6 +1,6 @@
 /**
  * Template for CLAUDE.md (Claude provider)
- * Creates a minimal file with reference to OmniDev instructions
+ * Creates a minimal file - actual content is generated during sync from OMNI.md + instructions
  */
 export function generateClaudeTemplate(): string {
 	return `# Project Instructions
@@ -9,49 +9,6 @@ export function generateClaudeTemplate(): string {
 
 ## OmniDev
 
-@import .omni/instructions.md
-`;
-}
-
-/**
- * Template for .omni/instructions.md
- * Contains OmniDev-specific instructions and capability rules
- */
-export function generateInstructionsTemplate(): string {
-	return `# OmniDev Instructions
-
-## Project Description
-<!-- TODO: Add 2-3 sentences describing your project -->
-[Describe what this project does and its main purpose]
-
-## How OmniDev Works
-
-OmniDev manages capability content for your project. Capabilities can provide:
-
-- Skills (for agent workflows)
-- Rules (for guardrails and conventions)
-- Docs (reference material)
-- Commands and subagents (optional)
-
-Enable capabilities with:
-
-\`\`\`
-omnidev capability enable <capability-id>
-\`\`\`
-
-OmniDev will automatically sync enabled capabilities into your workspace. If you want to force a refresh:
-
-\`\`\`
-omnidev sync
-\`\`\`
-
-<!-- BEGIN OMNIDEV GENERATED CONTENT - DO NOT EDIT BELOW THIS LINE -->
-<!-- This section is automatically updated by 'omnidev agents sync' -->
-
-## Capabilities
-
-No capabilities enabled yet. Run \`omnidev capability enable <name>\` to enable capabilities.
-
-<!-- END OMNIDEV GENERATED CONTENT -->
+<!-- This section is populated during sync with capability rules and docs -->
 `;
 }

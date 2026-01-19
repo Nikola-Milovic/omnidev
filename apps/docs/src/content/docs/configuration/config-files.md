@@ -18,8 +18,8 @@ OmniDev uses a small set of files to define what capabilities you want and how t
 ## How configuration flows
 
 1. You declare capability sources and profiles in `omni.toml`.
-2. `omnidev sync` downloads capabilities and writes `.omni/instructions.md`.
-3. Provider files like `CLAUDE.md` and `AGENTS.md` are generated from `OMNI.md` and import the instructions.
+2. `omnidev sync` downloads capabilities and generates instructions from rules and docs.
+3. Provider files like `CLAUDE.md` and `AGENTS.md` are generated from `OMNI.md` with instructions embedded directly.
 
 ## omni.toml
 
@@ -58,7 +58,7 @@ See the dedicated [OMNI.md guide](./omni-md).
 
 ## .omni/
 
-Runtime directory containing downloaded capabilities and generated instruction bundles.
+Runtime directory containing downloaded capabilities and state.
 
 - `.omni/capabilities/` holds fetched sources
-- `.omni/instructions.md` is the merged output for providers
+- `.omni/state/` holds runtime state (manifest, providers, active profile)

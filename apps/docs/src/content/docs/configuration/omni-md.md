@@ -26,7 +26,7 @@ When you run `omnidev sync`, OmniDev:
 
 1. Reads `OMNI.md`
 2. Generates provider files like `CLAUDE.md` and `AGENTS.md`
-3. Injects `@import .omni/instructions.md` so capabilities are included
+3. Embeds capability rules and docs directly into the generated files
 
 ## Tips
 

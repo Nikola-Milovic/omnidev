@@ -24,13 +24,16 @@ export const codexAdapter: ProviderAdapter = {
 		};
 	},
 
-	async sync(_bundle: SyncBundle, ctx: ProviderContext): Promise<ProviderSyncResult> {
+	async sync(bundle: SyncBundle, ctx: ProviderContext): Promise<ProviderSyncResult> {
 		const filesWritten: string[] = [];
 		const filesDeleted: string[] = [];
 
-		// Generate AGENTS.md from OMNI.md + .omni/instructions.md
+		// Generate AGENTS.md from OMNI.md + instructions content
 		const agentsMdPath = join(ctx.projectRoot, "AGENTS.md");
-		const agentsMdContent = await generateAgentsMdContent(ctx.projectRoot);
+		const agentsMdContent = await generateAgentsMdContent(
+			ctx.projectRoot,
+			bundle.instructionsContent,
+		);
 		await writeFile(agentsMdPath, agentsMdContent, "utf-8");
 		filesWritten.push("AGENTS.md");
 
@@ -42,9 +45,12 @@ export const codexAdapter: ProviderAdapter = {
 };
 
 /**
- * Generate AGENTS.md content from OMNI.md with import directive for instructions
+ * Generate AGENTS.md content from OMNI.md with instructions directly embedded
  */
-async function generateAgentsMdContent(projectRoot: string): Promise<string> {
+async function generateAgentsMdContent(
+	projectRoot: string,
+	instructionsContent: string,
+): Promise<string> {
 	const omniMdPath = join(projectRoot, "OMNI.md");
 
 	let omniMdContent = "";
@@ -53,9 +59,9 @@ async function generateAgentsMdContent(projectRoot: string): Promise<string> {
 		omniMdContent = await readFile(omniMdPath, "utf-8");
 	}
 
-	// Combine OMNI.md content with @import directive for capability-generated instructions
+	// Combine OMNI.md content with instructions directly embedded
 	let content = omniMdContent;
-	content += `\n\n## OmniDev\n\n@import .omni/instructions.md\n`;
+	content += `\n\n## OmniDev\n\n${instructionsContent}\n`;
 
 	return content;
 }

@@ -9,7 +9,7 @@ Static CLI commands built with Stricli framework for OmniDev project management.
 ## WHERE TO LOOK
 | Command | File | Purpose |
 |---------|------|---------|
-| `omnidev init` | init.ts | Creates .omni/ directory, config.toml, provider.toml, instructions.md, internal gitignore |
+| `omnidev init` | init.ts | Creates .omni/ directory, config.toml, provider files, internal gitignore |
 | `omnidev doctor` | doctor.ts | Validates Bun version (≥1.0), .omni/ directory, config.toml, internal gitignore |
 | `omnidev capability` | capability.ts | Subcommands: list, enable <name>, disable <name> (auto-syncs on enable/disable) |
 | `omnidev profile` | profile.ts | Subcommands: list, set <name> (auto-syncs on set, shows active with ● indicator) |

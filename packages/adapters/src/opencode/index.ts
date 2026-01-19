@@ -27,17 +27,20 @@ export const opencodeAdapter: ProviderAdapter = {
 		};
 	},
 
-	async sync(_bundle: SyncBundle, ctx: ProviderContext): Promise<ProviderSyncResult> {
+	async sync(bundle: SyncBundle, ctx: ProviderContext): Promise<ProviderSyncResult> {
 		const filesWritten: string[] = [];
 		const filesDeleted: string[] = [];
 
 		const opencodeDir = join(ctx.projectRoot, ".opencode");
 		mkdirSync(opencodeDir, { recursive: true });
 
-		// Generate .opencode/instructions.md from OMNI.md + .omni/instructions.md
+		// Generate .opencode/instructions.md from OMNI.md + instructions content
 		const instructionsPath = join(opencodeDir, "instructions.md");
-		const instructionsContent = await generateOpencodeInstructionsContent(ctx.projectRoot);
-		await writeFile(instructionsPath, instructionsContent, "utf-8");
+		const instructionsContentFull = await generateOpencodeInstructionsContent(
+			ctx.projectRoot,
+			bundle.instructionsContent,
+		);
+		await writeFile(instructionsPath, instructionsContentFull, "utf-8");
 		filesWritten.push(".opencode/instructions.md");
 
 		return {
@@ -48,9 +51,12 @@ export const opencodeAdapter: ProviderAdapter = {
 };
 
 /**
- * Generate .opencode/instructions.md content from OMNI.md with import directive
+ * Generate .opencode/instructions.md content from OMNI.md with instructions directly embedded
  */
-async function generateOpencodeInstructionsContent(projectRoot: string): Promise<string> {
+async function generateOpencodeInstructionsContent(
+	projectRoot: string,
+	instructionsContent: string,
+): Promise<string> {
 	const omniMdPath = join(projectRoot, "OMNI.md");
 
 	let omniMdContent = "";
@@ -59,9 +65,9 @@ async function generateOpencodeInstructionsContent(projectRoot: string): Promise
 		omniMdContent = await readFile(omniMdPath, "utf-8");
 	}
 
-	// Combine OMNI.md content with @import directive for capability-generated instructions
+	// Combine OMNI.md content with instructions directly embedded
 	let content = omniMdContent;
-	content += `\n\n## OmniDev\n\n@import ../.omni/instructions.md\n`;
+	content += `\n\n## OmniDev\n\n${instructionsContent}\n`;
 
 	return content;
 }

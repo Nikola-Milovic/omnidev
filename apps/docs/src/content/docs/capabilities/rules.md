@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-Rules are markdown files that provide guidance to AI agents. They are merged into `.omni/instructions.md` during sync.
+Rules are markdown files that provide guidance to AI agents. They are embedded directly into provider files (like `CLAUDE.md` or `AGENTS.md`) during sync.
 
 ## Structure
 

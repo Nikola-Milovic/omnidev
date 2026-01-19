@@ -177,8 +177,8 @@ assert_omni_structure() {
   assert_dir_exists ".omni"
   assert_dir_exists ".omni/capabilities"
   # State directory is created on first state write (e.g., profile set)
-  # Instructions file is always created on sync
-  assert_file_exists ".omni/instructions.md"
+  # Note: .omni/instructions.md is no longer created - instructions are embedded directly
+  # into provider-specific files (CLAUDE.md, AGENTS.md, etc.)
 }
 
 # Assert a capability is synced (has directory with capability.toml)
@@ -259,11 +259,12 @@ assert_omni_md_exists() {
   assert_file_exists "OMNI.md"
 }
 
-# Assert CLAUDE.md is generated from OMNI.md (contains @import directive)
+# Assert CLAUDE.md is generated from OMNI.md (contains OmniDev section with embedded instructions)
 # Usage: assert_claude_md_generated_from_omni
 assert_claude_md_generated_from_omni() {
   assert_file_exists "CLAUDE.md"
-  assert_file_contains "CLAUDE.md" "@import .omni/instructions.md"
+  assert_file_contains "CLAUDE.md" "## OmniDev"
+  assert_file_contains "CLAUDE.md" "## Capabilities"
 }
 
 # Assert OMNI.md content is reflected in CLAUDE.md

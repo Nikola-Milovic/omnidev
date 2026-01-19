@@ -563,8 +563,12 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
   // Update .omni/.gitignore
   await rebuildGitignore(allGitignorePatterns);
 
-  // Update .omni/instructions.md (from rules)
-  await writeRules(allRules);
+  // Generate instructions content from rules and docs
+  const instructionsContent = generateInstructionsContent(allRules, allDocs);
+
+  // Update provider-specific files with embedded instructions
+  // (CLAUDE.md, AGENTS.md, etc. now embed instructions directly)
+  await updateProviderFiles(instructionsContent);
 
   // Update .claude/skills/ (from skills)
   await writeSkills(allSkills);
@@ -572,15 +576,11 @@ export async function syncAgentConfiguration(options?: { silent?: boolean }): Pr
   // Update .cursor/rules/ (from rules)
   await writeCursorRules(allRules);
 
-  // Write docs somewhere (TBD: where do docs go?)
-  await writeDocs(allDocs);
-
   if (!options?.silent) {
     console.log("✓ Synced:");
     console.log(`  - .omni/.gitignore (${allGitignorePatterns.length} patterns)`);
-    console.log(`  - .omni/instructions.md (${allRules.length} rules)`);
+    console.log(`  - ${allRules.length} rules, ${allDocs.length} docs (embedded in provider files)`);
     console.log(`  - .claude/skills/ (${allSkills.length} skills)`);
-    console.log(`  - docs (${allDocs.length} documents)`);
   }
 }
 

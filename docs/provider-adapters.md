@@ -134,10 +134,8 @@ This file is:
 
 ### Claude Code (`claude-code`)
 
-**Init:**
-- Creates `CLAUDE.md` with import reference to `.omni/instructions.md`
-
 **Sync:**
+- Generates `CLAUDE.md` from `OMNI.md` with instructions embedded directly
 - Writes skills to `.claude/skills/<skill-name>/SKILL.md`
 
 ### Cursor (`cursor`)
@@ -150,19 +148,16 @@ This file is:
 
 ### Codex (`codex`)
 
-**Init:**
-- Creates `AGENTS.md` with import reference to `.omni/instructions.md`
-
 **Sync:**
-- No additional files (uses AGENTS.md import)
+- Generates `AGENTS.md` from `OMNI.md` with instructions embedded directly
 
 ### OpenCode (`opencode`)
 
 **Init:**
-- Creates `.opencode/instructions.md` with import reference
+- Creates `.opencode/` directory
 
 **Sync:**
-- No additional files (uses instructions.md import)
+- Generates `.opencode/instructions.md` from `OMNI.md` with instructions embedded directly
 
 ## Provider-Agnostic Files
 
@@ -170,7 +165,6 @@ Regardless of which providers are enabled, OmniDev always writes these files:
 
 | File | Description |
 |------|-------------|
-| `.omni/instructions.md` | Aggregated rules and docs from all capabilities |
 | `.omni/.gitignore` | Capability-specific ignore patterns |
 | `.omni/state/manifest.json` | Resource tracking for cleanup |
 | `.mcp.json` | MCP server configurations |
@@ -205,8 +199,7 @@ interface SyncBundle {
   docs: Doc[];
   commands: Command[];
   subagents: Subagent[];
-  instructionsPath: string;      // .omni/instructions.md
-  instructionsContent: string;   // Generated content
+  instructionsContent: string;   // Generated content to embed directly
 }
 ```
 

@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { buildCapabilityRegistry } from "./capability/registry";
-import { writeRules } from "./capability/rules";
 import { fetchAllCapabilitySources } from "./capability/sources";
 import { loadConfig } from "./config/config";
 import { hasAnyHooks } from "./hooks/merger.js";
@@ -142,7 +141,6 @@ export async function buildSyncBundle(options?: {
 		docs,
 		commands,
 		subagents,
-		instructionsPath: ".omni/instructions.md",
 		instructionsContent,
 	};
 
@@ -224,9 +222,6 @@ export async function syncAgentConfiguration(options?: SyncOptions): Promise<Syn
 	// Ensure core directories exist
 	mkdirSync(".omni", { recursive: true });
 
-	// Write rules and docs to .omni/instructions.md (provider-agnostic)
-	await writeRules(bundle.rules, bundle.docs);
-
 	// Sync .mcp.json with capability MCP servers (before saving manifest)
 	await syncMcpJson(capabilities, previousManifest, { silent });
 
@@ -256,9 +251,7 @@ export async function syncAgentConfiguration(options?: SyncOptions): Promise<Syn
 
 	if (!silent) {
 		console.log("✓ Synced:");
-		console.log(
-			`  - .omni/instructions.md (${bundle.docs.length} docs, ${bundle.rules.length} rules)`,
-		);
+		console.log(`  - ${bundle.docs.length} docs, ${bundle.rules.length} rules`);
 		if (adapters.length > 0) {
 			console.log(`  - Provider adapters: ${adapters.map((a) => a.displayName).join(", ")}`);
 		}

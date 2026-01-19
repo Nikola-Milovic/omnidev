@@ -5,7 +5,7 @@ sidebar:
   order: 8
 ---
 
-Capability docs are markdown files that provide longer explanations, examples, or workflows. They are merged into `.omni/instructions.md` during sync.
+Capability docs are markdown files that provide longer explanations, examples, or workflows. They are embedded directly into provider files (like `CLAUDE.md` or `AGENTS.md`) during sync.
 
 ## Structure
 

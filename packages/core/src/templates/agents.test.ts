@@ -2,11 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { generateAgentsTemplate } from "./agents";
 
 describe("generateAgentsTemplate", () => {
-	test("generates AGENTS.md template with reference to instructions", () => {
+	test("generates AGENTS.md template with OmniDev section", () => {
 		const template = generateAgentsTemplate();
 
 		expect(template).toContain("# Project Instructions");
-		expect(template).toContain("@import .omni/instructions.md");
+		expect(template).toContain("## OmniDev");
 	});
 
 	test("includes placeholder for project-specific instructions", () => {
@@ -15,9 +15,11 @@ describe("generateAgentsTemplate", () => {
 		expect(template).toContain("<!-- Add your project-specific instructions here -->");
 	});
 
-	test("includes OmniDev section", () => {
+	test("includes comment about sync population", () => {
 		const template = generateAgentsTemplate();
 
-		expect(template).toContain("## OmniDev");
+		expect(template).toContain(
+			"<!-- This section is populated during sync with capability rules and docs -->",
+		);
 	});
 });

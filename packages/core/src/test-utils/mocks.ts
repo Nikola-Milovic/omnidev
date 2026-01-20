@@ -11,7 +11,6 @@ export interface MockCapability {
 }
 
 export interface MockConfig {
-	project: string;
 	capabilities: {
 		enable: string[];
 		disable?: string[];
@@ -57,7 +56,6 @@ export function createMockCapability(overrides: Partial<MockCapability> = {}): M
  */
 export function createMockConfig(overrides: Partial<MockConfig> = {}): MockConfig {
 	return {
-		project: "test-project",
 		capabilities: {
 			enable: [],
 			disable: [],

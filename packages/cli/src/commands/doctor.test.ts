@@ -14,10 +14,7 @@ describe("doctor command", () => {
 		mkdirSync(".omni", { recursive: true });
 		writeFileSync(
 			"omni.toml",
-			`project = "test"
-active_profile = "default"
-
-[providers]
+			`[providers]
 enabled = ["claude"]
 
 [profiles.default]
@@ -143,10 +140,7 @@ omni.local.toml
 		mkdirSync(".omni", { recursive: true });
 		writeFileSync(
 			"omni.toml",
-			`project = "test"
-active_profile = "default"
-
-[providers]
+			`[providers]
 enabled = ["claude"]
 
 [profiles.default]
@@ -165,10 +159,7 @@ capabilities = []
 		mkdirSync(".omni", { recursive: true });
 		writeFileSync(
 			"omni.toml",
-			`project = "test"
-active_profile = "default"
-
-[providers]
+			`[providers]
 enabled = ["claude"]
 
 [profiles.default]

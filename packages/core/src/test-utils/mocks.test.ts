@@ -27,19 +27,16 @@ describe("createMockCapability", () => {
 describe("createMockConfig", () => {
 	test("should create a mock config with default values", () => {
 		const config = createMockConfig();
-		expect(config.project).toBe("test-project");
 		expect(config.capabilities.enable).toEqual([]);
 		expect(config.capabilities.disable).toEqual([]);
 	});
 
 	test("should allow overriding default values", () => {
 		const config = createMockConfig({
-			project: "custom-project",
 			capabilities: {
 				enable: ["cap1", "cap2"],
 			},
 		});
-		expect(config.project).toBe("custom-project");
 		expect(config.capabilities.enable).toEqual(["cap1", "cap2"]);
 	});
 });

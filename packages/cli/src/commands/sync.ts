@@ -29,7 +29,7 @@ export async function runSync(): Promise<void> {
 
 	try {
 		const config = await loadConfig();
-		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
+		const activeProfile = (await getActiveProfile()) ?? "default";
 
 		// Get enabled adapters for provider-specific sync
 		let adapters = await getEnabledAdapters();

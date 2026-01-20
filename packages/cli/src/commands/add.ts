@@ -117,7 +117,7 @@ export async function runAddCap(flags: AddCapFlags, name?: string): Promise<void
 
 		// Load config to check for duplicates and get active profile
 		const config = await loadBaseConfig();
-		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
+		const activeProfile = (await getActiveProfile()) ?? "default";
 
 		// Check if source already exists
 		if (config.capabilities?.sources?.[capabilityId]) {
@@ -178,7 +178,7 @@ export async function runAddMcp(flags: AddMcpFlags, name: string): Promise<void>
 
 		// Load config to check for duplicates and get active profile
 		const config = await loadBaseConfig();
-		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
+		const activeProfile = (await getActiveProfile()) ?? "default";
 
 		// Check if MCP already exists
 		if (config.mcps?.[name]) {

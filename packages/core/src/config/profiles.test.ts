@@ -21,22 +21,8 @@ describe("getActiveProfile", () => {
 		expect(profile).toBe("dev");
 	});
 
-	test("falls back to config.toml for backwards compatibility", async () => {
-		writeFileSync("omni.toml", 'active_profile = "legacy"', "utf-8");
-		const profile = await getActiveProfile();
-		expect(profile).toBe("legacy");
-	});
-
-	test("state file takes precedence over config.toml", async () => {
-		mkdirSync(".omni/state", { recursive: true });
-		await writeFile(".omni/state/active-profile", "from-state", "utf-8");
-		writeFileSync("omni.toml", 'active_profile = "from-config"', "utf-8");
-		const profile = await getActiveProfile();
-		expect(profile).toBe("from-state");
-	});
-
 	test("returns null when config has no active_profile", async () => {
-		writeFileSync("omni.toml", 'project = "test"', "utf-8");
+		writeFileSync("omni.toml", "", "utf-8");
 		const profile = await getActiveProfile();
 		expect(profile).toBe(null);
 	});
@@ -60,7 +46,7 @@ describe("setActiveProfile", () => {
 	});
 
 	test("does not modify config.toml", async () => {
-		writeFileSync("omni.toml", 'project = "test"', "utf-8");
+		writeFileSync("omni.toml", "", "utf-8");
 		await setActiveProfile("staging");
 		const content = await readFile("omni.toml", "utf-8");
 		expect(content).not.toContain("active_profile");
@@ -98,23 +84,7 @@ describe("resolveEnabledCapabilities", () => {
 		expect(result).toEqual(["tasks", "filesystem", "debug"]);
 	});
 
-	test("uses active_profile when profileName is null", () => {
-		const config: OmniConfig = {
-			active_profile: "dev",
-			profiles: {
-				dev: {
-					capabilities: ["tasks", "debug"],
-				},
-				default: {
-					capabilities: ["tasks"],
-				},
-			},
-		};
-		const result = resolveEnabledCapabilities(config, null);
-		expect(result).toEqual(["tasks", "debug"]);
-	});
-
-	test('falls back to "default" profile when active_profile not set', () => {
+	test('uses "default" profile when profileName is null', () => {
 		const config: OmniConfig = {
 			profiles: {
 				default: {
@@ -204,21 +174,17 @@ describe("resolveEnabledCapabilities", () => {
 		expect(result).toEqual(["logging", "telemetry"]);
 	});
 
-	test("always-enabled capabilities work with active_profile", () => {
+	test("always-enabled capabilities work with default profile", () => {
 		const config: OmniConfig = {
-			active_profile: "dev",
 			always_enabled_capabilities: ["logging"],
 			profiles: {
-				dev: {
-					capabilities: ["tasks", "debug"],
-				},
 				default: {
 					capabilities: ["tasks"],
 				},
 			},
 		};
 		const result = resolveEnabledCapabilities(config, null);
-		expect(result).toEqual(["logging", "tasks", "debug"]);
+		expect(result).toEqual(["logging", "tasks"]);
 	});
 
 	test("expands group reference to constituent capabilities", () => {

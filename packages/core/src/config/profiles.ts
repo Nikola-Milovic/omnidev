@@ -3,20 +3,11 @@ import type { OmniConfig, ProfileConfig } from "../types/index.js";
 import { loadConfig, writeConfig } from "./config.js";
 
 /**
- * Gets the name of the currently active profile.
- * Reads from state file first, falls back to config.toml for backwards compatibility.
+ * Gets the name of the currently active profile from the state file.
  * Returns null if no profile is set.
  */
 export async function getActiveProfile(): Promise<string | null> {
-	// First check state file (new location)
-	const stateProfile = await readActiveProfileState();
-	if (stateProfile) {
-		return stateProfile;
-	}
-
-	// Fall back to config.toml for backwards compatibility
-	const config = await loadConfig();
-	return config.active_profile ?? null;
+	return await readActiveProfileState();
 }
 
 /**
@@ -38,10 +29,8 @@ export function resolveEnabledCapabilities(
 	config: OmniConfig,
 	profileName: string | null,
 ): string[] {
-	// Determine which profile to use
-	const profile = profileName
-		? config.profiles?.[profileName]
-		: config.profiles?.[config.active_profile ?? "default"];
+	// Use the default profile if no profile name is specified
+	const profile = profileName ? config.profiles?.[profileName] : config.profiles?.["default"];
 
 	const profileCapabilities = profile?.capabilities ?? [];
 	const alwaysEnabled = config.always_enabled_capabilities ?? [];

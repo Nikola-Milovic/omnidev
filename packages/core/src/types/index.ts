@@ -259,8 +259,6 @@ export interface ProfileConfig {
 }
 
 export interface OmniConfig {
-	project?: string;
-	active_profile?: string;
 	always_enabled_capabilities?: string[];
 	profiles?: Record<string, ProfileConfig>;
 	providers?: {

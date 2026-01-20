@@ -18,10 +18,7 @@ describe("buildCapabilityRegistry", () => {
 		// Create default config with profiles
 		writeFileSync(
 			join(testDir.path, "omni.toml"),
-			`project = "test"
-active_profile = "default"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["cap1", "cap2"]
 `,
 		);
@@ -94,10 +91,7 @@ description = "Second capability"`,
 		// Update config to only enable cap1
 		writeFileSync(
 			join("omni.toml"),
-			`project = "test"
-active_profile = "default"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["cap1"]
 `,
 		);
@@ -135,12 +129,11 @@ description = "Disabled capability"`,
 
 	test("respects active profile configuration", async () => {
 		// Create config with dev profile that enables both cap1 and cap2
+		mkdirSync(join(".omni", "state"), { recursive: true });
+		writeFileSync(join(".omni", "state", "active-profile"), "dev", "utf-8");
 		writeFileSync(
 			join("omni.toml"),
-			`project = "test"
-active_profile = "dev"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["cap1"]
 
 [profiles.dev]

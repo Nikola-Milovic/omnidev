@@ -230,7 +230,7 @@ describe("init command", () => {
 	});
 
 	test("does not overwrite existing config.toml", async () => {
-		const customConfig = 'project = "custom"\n';
+		const customConfig = '[profiles.custom]\ncapabilities = ["test"]\n';
 		mkdirSync(".omni", { recursive: true });
 		await writeFile("omni.toml", customConfig, "utf-8");
 

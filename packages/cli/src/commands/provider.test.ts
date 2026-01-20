@@ -21,7 +21,7 @@ describe("provider commands", () => {
 
 		// Create basic OmniDev structure
 		mkdirSync(".omni/state", { recursive: true });
-		await writeFile("omni.toml", 'project = "test"\n', "utf-8");
+		await writeFile("omni.toml", "", "utf-8");
 	});
 
 	afterEach(() => {

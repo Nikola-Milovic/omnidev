@@ -57,13 +57,7 @@ describe("profile commands", () => {
 		test("should show message when no profiles defined", async () => {
 			// Create minimal config without profiles
 			mkdirSync(".omni", { recursive: true });
-			await writeFile(
-				"omni.toml",
-				`project = "test-project"
-active_profile = "default"
-`,
-				"utf-8",
-			);
+			await writeFile("omni.toml", ``, "utf-8");
 
 			await runProfileList();
 
@@ -77,10 +71,7 @@ active_profile = "default"
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-active_profile = "default"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -104,13 +95,10 @@ capabilities = []
 
 		test("should show active profile with marker", async () => {
 			// Create config with profiles
-			mkdirSync(".omni", { recursive: true });
+			mkdirSync(".omni/state", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-active_profile = "planning"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -118,6 +106,8 @@ capabilities = ["planner"]
 `,
 				"utf-8",
 			);
+			// Set planning as active profile via state file
+			await writeFile(".omni/state/active-profile", "planning", "utf-8");
 
 			await runProfileList();
 
@@ -132,10 +122,7 @@ capabilities = ["planner"]
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-active_profile = "default"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -151,25 +138,27 @@ capabilities = ["planner", "tasks"]
 			expect(output).toContain("Capabilities: planner, tasks");
 		});
 
-		test("should use default_profile when no active profile", async () => {
-			// Create config with active_profile
+		test('should use "default" when no active profile', async () => {
+			// Create config with default and planning profiles
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-active_profile = "planning"
+				`[profiles.default]
+capabilities = []
 
 [profiles.planning]
 capabilities = ["planner"]
 `,
 				"utf-8",
 			);
+			// No state file = defaults to "default"
 
 			await runProfileList();
 
 			expect(exitCode).toBeUndefined();
 			const output = consoleOutput.join("\n");
-			expect(output).toContain("● planning (active)");
+			expect(output).toContain("● default (active)");
+			expect(output).toContain("○ planning");
 		});
 
 		test("should handle invalid config gracefully", async () => {
@@ -206,9 +195,7 @@ capabilities = ["planner"]
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -232,9 +219,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -258,10 +243,7 @@ capabilities = ["planner"]
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-active_profile = "default"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -281,9 +263,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -312,12 +292,7 @@ capabilities = []
 		test("should handle empty profiles config", async () => {
 			// Create config without any profiles
 			mkdirSync(".omni", { recursive: true });
-			await writeFile(
-				"omni.toml",
-				`project = "test-project"
-`,
-				"utf-8",
-			);
+			await writeFile("omni.toml", ``, "utf-8");
 
 			try {
 				await runProfileSet("default");

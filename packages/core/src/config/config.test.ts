@@ -18,17 +18,12 @@ describe("loadConfig", () => {
 		writeFileSync(
 			CONFIG_PATH,
 			`
-project = "my-project"
-active_profile = "dev"
-
 [profiles.dev]
 capabilities = ["tasks", "git"]
 `,
 		);
 
 		const config = await loadConfig();
-		expect(config.project).toBe("my-project");
-		expect(config.active_profile).toBe("dev");
 		expect(config.profiles?.dev?.capabilities).toEqual(["tasks", "git"]);
 	});
 
@@ -37,15 +32,12 @@ capabilities = ["tasks", "git"]
 		writeFileSync(
 			LOCAL_CONFIG,
 			`
-project = "local-project"
-
 [profiles.default]
 capabilities = ["local-only"]
 `,
 		);
 
 		const config = await loadConfig();
-		expect(config.project).toBe("local-project");
 		expect(config.profiles?.default?.capabilities).toEqual(["local-only"]);
 	});
 
@@ -56,9 +48,6 @@ capabilities = ["local-only"]
 		writeFileSync(
 			CONFIG_PATH,
 			`
-project = "main-project"
-active_profile = "production"
-
 [profiles.default]
 capabilities = ["tasks"]
 `,
@@ -67,17 +56,12 @@ capabilities = ["tasks"]
 		writeFileSync(
 			LOCAL_CONFIG,
 			`
-project = "local-override"
-
 [profiles.default]
 capabilities = ["git"]
 `,
 		);
 
 		const config = await loadConfig();
-
-		// Local overrides should take precedence
-		expect(config.project).toBe("local-override");
 
 		// Profile capabilities from local should override main
 		expect(config.profiles?.default?.capabilities).toEqual(["git"]);
@@ -116,7 +100,6 @@ capabilities = ["local-tasks"]
 		writeFileSync(
 			CONFIG_PATH,
 			`
-project = "test"
 `,
 		);
 
@@ -136,21 +119,5 @@ project = "test"
 		writeFileSync(LOCAL_CONFIG, "invalid toml [[[");
 
 		await expect(loadConfig()).rejects.toThrow("Invalid TOML in config");
-	});
-
-	test("reads active_profile from config.toml for backwards compatibility", async () => {
-		mkdirSync(".omni", { recursive: true });
-
-		writeFileSync(
-			CONFIG_PATH,
-			`
-active_profile = "production"
-`,
-		);
-
-		const config = await loadConfig();
-		// active_profile is still readable from config.toml for backwards compatibility
-		// but new writes go to state file via setActiveProfile()
-		expect(config.active_profile).toBe("production");
 	});
 });

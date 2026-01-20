@@ -58,9 +58,7 @@ describe("add commands", () => {
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -80,9 +78,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -106,9 +102,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -132,9 +126,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[capabilities.sources]
+				`[capabilities.sources]
 expo-design = "github:expo/skills"
 
 [profiles.default]
@@ -158,9 +150,7 @@ capabilities = []
 			await writeFile(".omni/state/active-profile", "planning", "utf-8");
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.planning]
@@ -195,9 +185,7 @@ description = "Test local capability"
 			);
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -232,9 +220,7 @@ description = "Test"
 			);
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -267,9 +253,7 @@ description = "Test"
 			);
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -287,9 +271,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -310,9 +292,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -333,9 +313,7 @@ capabilities = []
 			mkdirSync("caps/test", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -355,9 +333,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -390,9 +366,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -418,9 +392,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -447,9 +419,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -481,9 +451,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -509,9 +477,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[mcps.filesystem]
+				`[mcps.filesystem]
 command = "npx"
 
 [profiles.default]
@@ -534,9 +500,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -556,9 +520,7 @@ capabilities = []
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 `,
 				"utf-8",
@@ -579,9 +541,7 @@ capabilities = []
 			await writeFile(".omni/state/active-profile", "dev", "utf-8");
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[profiles.default]
+				`[profiles.default]
 capabilities = []
 
 [profiles.dev]
@@ -608,9 +568,7 @@ capabilities = ["some-cap"]
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[capabilities.sources]
+				`[capabilities.sources]
 existing = "github:user/existing-repo"
 
 [profiles.default]
@@ -633,9 +591,7 @@ capabilities = ["existing"]
 			mkdirSync(".omni", { recursive: true });
 			await writeFile(
 				"omni.toml",
-				`project = "test-project"
-
-[mcps.existing]
+				`[mcps.existing]
 command = "npx"
 args = ["-y", "existing-mcp"]
 

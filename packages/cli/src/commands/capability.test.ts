@@ -29,9 +29,7 @@ describe("capability list command", () => {
 		mkdirSync(".omni/capabilities", { recursive: true });
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = []
 `,
 			"utf-8",
@@ -81,9 +79,7 @@ description = "Note management"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["tasks"]
 `,
 			"utf-8",
@@ -129,9 +125,7 @@ description = "Test"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["test-cap"]
 `,
 			"utf-8",
@@ -171,9 +165,7 @@ description = "Valid capability"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["valid", "invalid"]
 `,
 			"utf-8",
@@ -204,6 +196,7 @@ capabilities = ["valid", "invalid"]
 
 	test("respects profile when determining enabled status", async () => {
 		mkdirSync(".omni/capabilities/tasks", { recursive: true });
+		mkdirSync(".omni/state", { recursive: true });
 		await writeFile(
 			".omni/capabilities/tasks/capability.toml",
 			`[capability]
@@ -217,14 +210,14 @@ description = "Task tracking"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-active_profile = "coding"
-
-[profiles.coding]
+			`[profiles.coding]
 capabilities = ["tasks"]
 `,
 			"utf-8",
 		);
+
+		// Set coding as the active profile
+		await writeFile(".omni/state/active-profile", "coding", "utf-8");
 
 		const consoleLogs: string[] = [];
 		const originalLog = console.log;
@@ -282,9 +275,7 @@ description = "${cap} capability"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["alpha", "beta", "gamma"]
 `,
 			"utf-8",
@@ -343,9 +334,7 @@ description = "Task tracking"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = []
 `,
 			"utf-8",
@@ -372,9 +361,7 @@ description = "Task tracking"
 
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = []
 `,
 			"utf-8",
@@ -390,9 +377,7 @@ capabilities = []
 		mkdirSync(".omni", { recursive: true });
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = []
 `,
 			"utf-8",
@@ -439,9 +424,7 @@ describe("capability disable command", () => {
 		mkdirSync(".omni", { recursive: true });
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["tasks"]
 `,
 			"utf-8",
@@ -457,9 +440,7 @@ capabilities = ["tasks"]
 		mkdirSync(".omni", { recursive: true });
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = ["tasks", "notes"]
 `,
 			"utf-8",

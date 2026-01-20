@@ -4,40 +4,28 @@ import { parseCapabilityConfig, parseOmniConfig } from "./parser";
 describe("parseOmniConfig", () => {
 	test("parses valid TOML with all fields", () => {
 		const toml = `
-project = "my-project"
-default_profile = "dev"
-
-[capabilities]
-enable = ["tasks", "git"]
-disable = ["docker"]
-
 [profiles.dev]
-enable = ["debug"]
-disable = []
+capabilities = ["tasks", "debug"]
 
 [profiles.prod]
-enable = []
-disable = ["debug"]
+capabilities = ["tasks"]
+
+[capabilities.sources]
+tasks = "github:example/tasks"
 		`;
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.project).toBe("my-project");
-		expect(config.default_profile).toBe("dev");
-		expect(config.capabilities?.enable).toEqual(["tasks", "git"]);
-		expect(config.capabilities?.disable).toEqual(["docker"]);
-		expect(config.profiles?.dev?.enable).toEqual(["debug"]);
-		expect(config.profiles?.prod?.disable).toEqual(["debug"]);
+		expect(config.profiles?.dev?.capabilities).toEqual(["tasks", "debug"]);
+		expect(config.profiles?.prod?.capabilities).toEqual(["tasks"]);
+		expect(config.capabilities?.sources?.tasks).toBe("github:example/tasks");
 	});
 
 	test("parses minimal TOML", () => {
-		const toml = `
-project = "minimal"
-		`;
+		const toml = ``;
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.project).toBe("minimal");
 		expect(config.capabilities).toBeUndefined();
 		expect(config.profiles).toBeUndefined();
 	});
@@ -50,34 +38,34 @@ project = "minimal"
 
 	test("parses TOML with arrays", () => {
 		const toml = `
-[capabilities]
-enable = ["cap1", "cap2", "cap3"]
+[profiles.default]
+capabilities = ["cap1", "cap2", "cap3"]
 		`;
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.capabilities?.enable).toEqual(["cap1", "cap2", "cap3"]);
+		expect(config.profiles?.default?.capabilities).toEqual(["cap1", "cap2", "cap3"]);
 	});
 
 	test("parses TOML with nested tables", () => {
 		const toml = `
 [profiles.dev]
-enable = ["debug"]
+capabilities = ["debug"]
 
 [profiles.prod]
-disable = ["debug"]
+capabilities = ["tasks"]
 		`;
 
 		const config = parseOmniConfig(toml);
 
-		expect(config.profiles?.dev?.enable).toEqual(["debug"]);
-		expect(config.profiles?.prod?.disable).toEqual(["debug"]);
+		expect(config.profiles?.dev?.capabilities).toEqual(["debug"]);
+		expect(config.profiles?.prod?.capabilities).toEqual(["tasks"]);
 	});
 
 	test("throws error for invalid TOML syntax", () => {
 		const toml = `
-project = "test
-[invalid
+[profiles.default
+capabilities = ["test"]
 		`;
 
 		expect(() => parseOmniConfig(toml)).toThrow(/Invalid TOML in config:/);
@@ -85,8 +73,9 @@ project = "test
 
 	test("throws error for duplicate keys", () => {
 		const toml = `
-project = "test"
-project = "duplicate"
+[profiles.default]
+capabilities = ["test"]
+capabilities = ["duplicate"]
 		`;
 
 		expect(() => parseOmniConfig(toml)).toThrow(/Invalid TOML in config:/);
@@ -191,7 +180,6 @@ name = "Test"
 
 	test("throws error when capability table is missing", () => {
 		const toml = `
-project = "test"
 		`;
 
 		expect(() => parseCapabilityConfig(toml)).toThrow(

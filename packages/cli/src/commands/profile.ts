@@ -65,7 +65,7 @@ export async function runProfileList(): Promise<void> {
 		const config = await loadConfig();
 
 		// Get active profile
-		const activeProfile = (await getActiveProfile()) ?? config.active_profile ?? "default";
+		const activeProfile = (await getActiveProfile()) ?? "default";
 
 		// Check if profiles exist
 		const profiles = config.profiles ?? {};

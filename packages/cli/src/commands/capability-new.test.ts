@@ -33,9 +33,7 @@ describe("capability new command", () => {
 		mkdirSync(".omni/capabilities", { recursive: true });
 		await writeFile(
 			"omni.toml",
-			`project = "test"
-
-[profiles.default]
+			`[profiles.default]
 capabilities = []
 `,
 			"utf-8",

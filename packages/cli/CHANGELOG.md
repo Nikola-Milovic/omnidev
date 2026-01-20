@@ -1,5 +1,20 @@
 # @omnidev-ai/cli
 
+## 0.10.0
+
+### Minor Changes
+
+- bc8d7d2: Add local capability support and capability creation command
+
+  - Add support for `file://` sources to load capabilities from local directories
+  - Add `capability new` command to scaffold new capabilities with interactive prompts
+  - Refactor adapter system with dedicated writers for hooks, skills, rules, and instructions
+
+### Patch Changes
+
+- Updated dependencies [bc8d7d2]
+  - @omnidev-ai/core@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

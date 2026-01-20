@@ -42,3 +42,7 @@ Thumbs.db
 .omni.local.toml
 
 plans
+# OmniDev
+omni.local.toml
+# OmniDev Provider Files
+CLAUDE.md

@@ -26,7 +26,7 @@ Configuration loading and parsing system using TOML format with profile-based ca
 **Profile-Based Capability Management:**
 - Profiles define capability sets in `[profiles.name].capabilities`
 - `active_profile` in config.toml selects current profile
-- `always_enabled_capabilities` list merged with profile capabilities
+- `[capabilities].always_enabled` list merged with profile capabilities
 - Use `enableCapability()` / `disableCapability()` to update active profile
 
 ## ANTI-PATTERNS (THIS SUBSYSTEM)

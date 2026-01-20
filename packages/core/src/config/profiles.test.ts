@@ -129,7 +129,9 @@ describe("resolveEnabledCapabilities", () => {
 
 	test("includes always-enabled capabilities with profile capabilities", () => {
 		const config: OmniConfig = {
-			always_enabled_capabilities: ["logging", "telemetry"],
+			capabilities: {
+				always_enabled: ["logging", "telemetry"],
+			},
 			profiles: {
 				dev: {
 					capabilities: ["tasks", "debug"],
@@ -142,7 +144,9 @@ describe("resolveEnabledCapabilities", () => {
 
 	test("removes duplicates when capability is in both always-enabled and profile", () => {
 		const config: OmniConfig = {
-			always_enabled_capabilities: ["logging", "tasks"],
+			capabilities: {
+				always_enabled: ["logging", "tasks"],
+			},
 			profiles: {
 				dev: {
 					capabilities: ["tasks", "debug"],
@@ -155,7 +159,9 @@ describe("resolveEnabledCapabilities", () => {
 
 	test("returns only always-enabled capabilities when profile has none", () => {
 		const config: OmniConfig = {
-			always_enabled_capabilities: ["logging", "telemetry"],
+			capabilities: {
+				always_enabled: ["logging", "telemetry"],
+			},
 			profiles: {
 				dev: {
 					capabilities: [],
@@ -168,7 +174,9 @@ describe("resolveEnabledCapabilities", () => {
 
 	test("returns always-enabled capabilities even when no profiles exist", () => {
 		const config: OmniConfig = {
-			always_enabled_capabilities: ["logging", "telemetry"],
+			capabilities: {
+				always_enabled: ["logging", "telemetry"],
+			},
 		};
 		const result = resolveEnabledCapabilities(config, null);
 		expect(result).toEqual(["logging", "telemetry"]);
@@ -176,7 +184,9 @@ describe("resolveEnabledCapabilities", () => {
 
 	test("always-enabled capabilities work with default profile", () => {
 		const config: OmniConfig = {
-			always_enabled_capabilities: ["logging"],
+			capabilities: {
+				always_enabled: ["logging"],
+			},
 			profiles: {
 				default: {
 					capabilities: ["tasks"],
@@ -298,14 +308,14 @@ describe("resolveEnabledCapabilities", () => {
 		expect(warnings).toContain("Unknown capability group: nonexistent");
 	});
 
-	test("expands group references in always_enabled_capabilities", () => {
+	test("expands group references in always_enabled", () => {
 		const config: OmniConfig = {
 			capabilities: {
 				groups: {
 					core: ["logging", "telemetry"],
 				},
+				always_enabled: ["group:core"],
 			},
-			always_enabled_capabilities: ["group:core"],
 			profiles: {
 				dev: {
 					capabilities: ["debug"],
@@ -323,8 +333,8 @@ describe("resolveEnabledCapabilities", () => {
 					core: ["logging", "telemetry"],
 					dev: ["debug", "logging"],
 				},
+				always_enabled: ["group:core"],
 			},
-			always_enabled_capabilities: ["group:core"],
 			profiles: {
 				dev: {
 					capabilities: ["group:dev"],

@@ -33,7 +33,7 @@ export function resolveEnabledCapabilities(
 	const profile = profileName ? config.profiles?.[profileName] : config.profiles?.["default"];
 
 	const profileCapabilities = profile?.capabilities ?? [];
-	const alwaysEnabled = config.always_enabled_capabilities ?? [];
+	const alwaysEnabled = config.capabilities?.always_enabled ?? [];
 	const groups = config.capabilities?.groups ?? {};
 
 	// Expand group references (group:name -> constituent capabilities)

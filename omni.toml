@@ -75,7 +75,8 @@
 # Capabilities that load in ALL profiles, regardless of profile config.
 # Useful for essential tools needed everywhere.
 #
-# always_enabled_capabilities = ["git-tools", "linting"]
+# [capabilities]
+# always_enabled = ["git-tools", "linting"]
 
 # =============================================================================
 # Profiles

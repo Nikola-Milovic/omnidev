@@ -251,6 +251,8 @@ export interface CapabilitiesConfig {
 	sources?: Record<string, CapabilitySourceConfig>;
 	/** Capability groups: group name -> array of capability IDs */
 	groups?: Record<string, string[]>;
+	/** Capabilities that load in ALL profiles, regardless of profile config */
+	always_enabled?: string[];
 }
 
 // Config Types
@@ -259,12 +261,11 @@ export interface ProfileConfig {
 }
 
 export interface OmniConfig {
-	always_enabled_capabilities?: string[];
 	profiles?: Record<string, ProfileConfig>;
 	providers?: {
 		enabled?: Provider[];
 	};
-	/** Capabilities configuration (enable/disable, sources) */
+	/** Capabilities configuration (enable/disable, sources, always_enabled) */
 	capabilities?: CapabilitiesConfig;
 	/** MCP server definitions that auto-generate capabilities */
 	mcps?: Record<string, McpConfig>;

@@ -153,6 +153,24 @@ function generateConfigToml(config: OmniConfig): string {
 	}
 	lines.push("");
 
+	// Always enabled capabilities (under [capabilities] section)
+	lines.push("# =============================================================================");
+	lines.push("# Always Enabled Capabilities");
+	lines.push("# =============================================================================");
+	lines.push("# Capabilities that load in ALL profiles, regardless of profile config.");
+	lines.push("# Useful for essential tools needed everywhere.");
+	lines.push("#");
+	const alwaysEnabled = config.capabilities?.always_enabled;
+	if (alwaysEnabled && alwaysEnabled.length > 0) {
+		const caps = alwaysEnabled.map((c) => `"${c}"`).join(", ");
+		lines.push(`[capabilities]`);
+		lines.push(`always_enabled = [${caps}]`);
+	} else {
+		lines.push("# [capabilities]");
+		lines.push('# always_enabled = ["git-tools", "linting"]');
+	}
+	lines.push("");
+
 	// MCP servers
 	lines.push("# =============================================================================");
 	lines.push("# MCP Servers");
@@ -220,21 +238,6 @@ function generateConfigToml(config: OmniConfig): string {
 		lines.push('# env = { DB_URL = "${DATABASE_URL}" }');
 		lines.push("");
 	}
-
-	// Always enabled capabilities
-	lines.push("# =============================================================================");
-	lines.push("# Always Enabled Capabilities");
-	lines.push("# =============================================================================");
-	lines.push("# Capabilities that load in ALL profiles, regardless of profile config.");
-	lines.push("# Useful for essential tools needed everywhere.");
-	lines.push("#");
-	if (config.always_enabled_capabilities && config.always_enabled_capabilities.length > 0) {
-		const caps = config.always_enabled_capabilities.map((c) => `"${c}"`).join(", ");
-		lines.push(`always_enabled_capabilities = [${caps}]`);
-	} else {
-		lines.push('# always_enabled_capabilities = ["git-tools", "linting"]');
-	}
-	lines.push("");
 
 	// Profiles
 	lines.push("# =============================================================================");

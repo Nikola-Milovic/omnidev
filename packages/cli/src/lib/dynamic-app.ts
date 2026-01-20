@@ -17,7 +17,8 @@ const require = createRequire(import.meta.url);
 
 export function readCliVersion(): string {
 	try {
-		const pkg = require("../../package.json") as { version?: string };
+		// Path is relative to bundled output at dist/index.js
+		const pkg = require("../package.json") as { version?: string };
 		if (typeof pkg?.version === "string") {
 			return pkg.version;
 		}

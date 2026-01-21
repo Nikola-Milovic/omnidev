@@ -19,7 +19,7 @@ import Footer from "../../components/Footer.astro";
 
 <Hero
   title="The Missing Package Manager for AI Coding Capabilities"
-  tagline="Discover, install, and share agent capabilities across Claude, Cursor, Codex, and more. Capabilities include skills, agents, commands, hooks, rules, instructions and much more."
+  tagline="Discover, install, and share agent capabilities across Claude, Cursor, Codex, and more. Version-lock your capability set and keep an eye on supply-chain risk. Capabilities include skills, agents, commands, hooks, rules, instructions, and more."
   primaryCta={{ text: "Get Started", href: "/getting-started/" }}
   secondaryCta={{ text: "View on GitHub", href: "https://github.com/Nikola-Milovic/omnidev" }}
 >
@@ -116,6 +116,37 @@ import Footer from "../../components/Footer.astro";
       description="Designed for terminal workflows. init, sync, doctor. Simple commands, powerful results."
     />
   </FeatureGrid>
+</Section>
+
+<Section
+  title="Supply Chain Security (WIP)"
+  description="Third-party capabilities can expand your attack surface. OmniDev scans for common exploits before they reach your agent."
+>
+  <div class="od-security">
+    <div class="od-security__icon" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    </div>
+    <div class="od-security__content">
+      <p class="od-security__text">
+        Run <code>omnidev security issues</code> to scan for suspicious scripts, symlink escapes, Unicode tricks, and binaries. Still evolving.
+      </p>
+      <div class="od-security__cta">
+        <a class="od-btn od-btn--secondary" href="/commands/security/">Learn more</a>
+      </div>
+    </div>
+  </div>
 </Section>
 
 <Section

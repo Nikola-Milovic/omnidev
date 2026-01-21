@@ -7,6 +7,8 @@ sidebar:
 
 Scan capabilities for security issues and manage which findings to allow.
 
+This is **work in progress** supply-chain verification. The checks are intentionally lightweight and heuristic-based—use them to catch common footguns and suspicious patterns, not as a guarantee that a capability is safe.
+
 ## `security issues`
 
 Scan all enabled capabilities for security issues.

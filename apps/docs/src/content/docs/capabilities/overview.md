@@ -49,6 +49,23 @@ A capability can contribute one or more of the following:
 - **Sync hooks**: custom setup steps run during `omnidev sync`
 - **Claude Code hooks**: automated scripts that run at specific agent lifecycle events
 
+## Versioning & reproducibility
+
+Capabilities are versioned (via `capability.toml`) and pinned by your project lockfile.
+
+- `capability.toml` declares a capability's semantic version.
+- `omni.lock.toml` records the exact resolved commits/versions after `omnidev sync`, so teammates and CI pull the same content.
+
+See [Configuration](/configuration/config-files/) for how `omni.toml` and `omni.lock.toml` work together.
+
+## Supply chain security (WIP)
+
+Capabilities can come from third-party repos and can include scripts, hooks, and other content that you may not want an LLM to execute or follow blindly.
+
+OmniDev includes a **best-effort** security scanner to flag common risks (suspicious scripts, symlink escapes, Unicode tricks, and more). Run it with `omnidev security issues` and manage exceptions with allows.
+
+See the [`security` command](/commands/security/) for details.
+
 ## How content is loaded
 
 OmniDev merges content from two sources:

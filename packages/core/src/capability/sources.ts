@@ -750,6 +750,9 @@ async function fetchGitCapabilitySource(
 		await mkdir(join(targetPath, ".."), { recursive: true });
 		await cp(sourcePath, targetPath, { recursive: true });
 
+		// Clean up temp directory after successful copy
+		await rm(tempPath, { recursive: true });
+
 		repoPath = targetPath;
 	} else {
 		// Clone directly to target (no subdirectory)
@@ -1067,6 +1070,12 @@ export async function fetchAllCapabilitySources(
 ): Promise<FetchResult[]> {
 	// Generate MCP capabilities FIRST
 	await generateMcpCapabilities(config);
+
+	// Clean up any stale temp directories from previous syncs
+	const tempDir = join(OMNI_LOCAL, "_temp");
+	if (existsSync(tempDir)) {
+		await rm(tempDir, { recursive: true });
+	}
 
 	const sources = config.capabilities?.sources;
 	if (!sources || Object.keys(sources).length === 0) {

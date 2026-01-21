@@ -15,6 +15,12 @@ Scan all enabled capabilities for security issues.
 omnidev security issues
 ```
 
+By default, low-severity findings (like binary files) are hidden. Use `--all` to show all findings:
+
+```bash
+omnidev security issues --all
+```
+
 With verbose output:
 
 ```bash
@@ -27,8 +33,8 @@ The scanner detects:
 
 - **Unicode issues**: Bidirectional text overrides, zero-width characters, control characters
 - **Symlink issues**: Links escaping capability directory, absolute path symlinks
-- **Script patterns**: `curl | sh`, `wget | bash`, `eval`, dangerous `rm` commands
-- **Binary files**: Executables in content directories
+- **Script patterns**: `curl | sh`, `wget | bash`, `eval`, `rm -rf /`, etc.
+- **Binary files**: Executables in content directories (low severity, hidden by default)
 
 ### Example Output
 

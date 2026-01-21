@@ -39,15 +39,25 @@ function isValidFindingType(type: string): type is FindingType {
 }
 
 /**
- * Filter scan results to exclude allowed findings
+ * Filter scan results to exclude allowed findings and optionally low severity
  */
-async function filterAllowedFindings(summary: ScanSummary): Promise<ScanSummary> {
+async function filterAllowedFindings(
+	summary: ScanSummary,
+	options: { includeLow?: boolean } = {},
+): Promise<ScanSummary> {
 	const state = await readSecurityAllows();
+	const { includeLow = false } = options;
 
 	// Create a new summary with filtered results
 	const filteredResults = summary.results.map((result) => {
 		const allows = state.allows[result.capabilityId] ?? [];
-		const filteredFindings = result.findings.filter((finding) => !allows.includes(finding.type));
+		const filteredFindings = result.findings.filter((finding) => {
+			// Filter out allowed findings
+			if (allows.includes(finding.type)) return false;
+			// Filter out low severity unless includeLow is true
+			if (!includeLow && finding.severity === "low") return false;
+			return true;
+		});
 
 		return {
 			...result,
@@ -165,7 +175,9 @@ function formatFindingsWithHints(summary: ScanSummary): string {
 /**
  * Run security issues scan
  */
-export async function runSecurityIssues(flags: { verbose?: boolean } = {}): Promise<void> {
+export async function runSecurityIssues(
+	flags: { verbose?: boolean; all?: boolean } = {},
+): Promise<void> {
 	try {
 		// Check if OmniDev is initialized
 		if (!existsSync("omni.toml")) {
@@ -194,8 +206,10 @@ export async function runSecurityIssues(flags: { verbose?: boolean } = {}): Prom
 
 		const summary = await scanCapabilities(capabilityInfos);
 
-		// Filter out allowed findings
-		const filteredSummary = await filterAllowedFindings(summary);
+		// Filter out allowed findings (and low severity unless --all)
+		const filteredSummary = await filterAllowedFindings(summary, {
+			includeLow: flags.all ?? false,
+		});
 
 		// Format and display results
 		if (flags.verbose) {
@@ -204,11 +218,21 @@ export async function runSecurityIssues(flags: { verbose?: boolean } = {}): Prom
 			console.log(formatFindingsWithHints(filteredSummary));
 		}
 
-		// Show count of allowed findings if any were filtered
-		const allowedCount = summary.totalFindings - filteredSummary.totalFindings;
-		if (allowedCount > 0) {
-			console.log(`(${allowedCount} allowed finding(s) hidden)`);
-			console.log("");
+		// Show count of hidden findings
+		const hiddenCount = summary.totalFindings - filteredSummary.totalFindings;
+		if (hiddenCount > 0) {
+			const parts: string[] = [];
+			if (!flags.all && summary.findingsBySeverity.low > 0) {
+				parts.push(`${summary.findingsBySeverity.low} low-severity`);
+			}
+			const allowedCount = hiddenCount - (flags.all ? 0 : summary.findingsBySeverity.low);
+			if (allowedCount > 0) {
+				parts.push(`${allowedCount} allowed`);
+			}
+			if (parts.length > 0) {
+				console.log(`(${parts.join(", ")} finding(s) hidden, use --all to show)`);
+				console.log("");
+			}
 		}
 
 		// Exit with error code if there are non-passing findings
@@ -338,13 +362,17 @@ const issuesCommand = buildCommand({
 Security checks include:
 - Suspicious Unicode characters (bidi overrides, zero-width, control chars)
 - Symlinks that escape capability directories
-- Suspicious script patterns (curl|sh, eval, etc.)
+- Suspicious script patterns (curl|sh, eval, rm -rf /, etc.)
 - Binary files in content directories
+
+By default, low-severity findings (like binary files) are hidden.
+Use --all to show all findings including low-severity ones.
 
 Findings can be allowed using 'omnidev security allow <cap-id> <type>'.
 
 Examples:
   omnidev security issues
+  omnidev security issues --all
   omnidev security issues --verbose`,
 	},
 	parameters: {
@@ -354,9 +382,14 @@ Examples:
 				brief: "Show verbose output with raw format",
 				optional: true,
 			},
+			all: {
+				kind: "boolean" as const,
+				brief: "Show all findings including low-severity",
+				optional: true,
+			},
 		},
 	},
-	async func(flags: { verbose?: boolean }) {
+	async func(flags: { verbose?: boolean; all?: boolean }) {
 		await runSecurityIssues(flags);
 	},
 });

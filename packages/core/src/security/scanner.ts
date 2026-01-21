@@ -127,11 +127,6 @@ const SUSPICIOUS_SCRIPT_PATTERNS: Array<{
 		message: "Decoding and executing base64 content",
 		severity: "high",
 	},
-	{
-		pattern: /\$\([^)]*\)|`[^`]*`/,
-		message: "Command substitution detected",
-		severity: "low",
-	},
 ];
 
 /**

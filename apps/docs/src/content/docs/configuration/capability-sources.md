@@ -7,6 +7,8 @@ sidebar:
 
 Capability sources are declared under `[capabilities.sources]` in `omni.toml`, and enabled per profile.
 
+Tip: you can either edit `omni.toml` directly, or use [`omnidev add cap`](../commands/add) to add a source and enable it in your active profile.
+
 ## GitHub sources
 
 ```toml
@@ -28,12 +30,37 @@ tools = { source = "github:user/repo", ref = "v1.0.0" }
 my-cap = "file://./capabilities/my-cap"
 ```
 
+Local sources should point at a capability directory with a `capability.toml` at its root. If you're starting from a folder of skills/rules/docs, see [Creating Capabilities](../advanced/creating-capabilities) for how to add a minimal `capability.toml`.
+
 ## Enable in a profile
 
 ```toml
 [profiles.default]
 capabilities = ["obsidian", "my-cap"]
 ```
+
+## Listing sources and versions
+
+- **Configured sources**: check `[capabilities.sources]` in `omni.toml`.
+- **Pinned versions/commits**: after `omnidev sync`, check `omni.lock.toml`.
+- **Installed/enabled capabilities**: run:
+
+```bash
+omnidev capability list
+```
+
+For detailed version information including sources, commits, and content hashes:
+
+```bash
+omnidev capability list --verbose
+```
+
+This shows:
+- **Version**: from `capability.toml`, `plugin.json`, `package.json`, or commit/content hash
+- **Version source**: where the version was detected from
+- **Commit**: for git sources
+- **Content hash**: for file sources (SHA-256)
+- **Last update**: timestamp of last sync
 
 ## Capability groups
 
@@ -80,5 +107,46 @@ After editing `omni.toml`, run:
 ```bash
 omnidev sync
 ```
+
+## Security considerations (supply chain)
+
+Capabilities are effectively third-party code + prompts. Treat adding a new source like adding a dependency:
+
+- Prefer **pinned refs** (`ref = "v1.2.3"` or a commit hash) for important environments (CI, shared teams).
+- Review `omni.lock.toml` changes in PRs (especially new sources or updated commits).
+- Be cautious with capabilities that include **sync hooks**, **hook scripts**, **MCP servers**, or **programmatic code** (`index.ts` + dependencies).
+- Prefer known orgs/repos, and avoid enabling capabilities you wouldn't trust to run locally.
+
+### Version tracking
+
+OmniDev tracks versions for reproducibility:
+
+- **Git sources**: commits are stored in `omni.lock.toml`
+- **File sources**: SHA-256 content hashes are computed and stored
+- **Version detection**: checks `capability.toml` → `plugin.json` → `package.json` → commit/hash
+
+The lock file records `version_source` to show where each version came from, making audits easier.
+
+### Security scanning (opt-in)
+
+OmniDev includes optional security scanners that can detect potential supply-chain issues:
+
+```toml
+[security]
+mode = "warn"  # "off" (default), "warn", or "error"
+
+[security.scan]
+unicode = true     # Detect bidi overrides, zero-width chars, control chars
+symlinks = true    # Detect symlinks escaping capability directories
+scripts = true     # Detect suspicious patterns in hooks/scripts
+binaries = false   # Detect binary files in content folders
+```
+
+**Findings include:**
+- **Unicode attacks**: Bidirectional text overrides that can hide malicious code
+- **Symlink escapes**: Links that escape the capability directory
+- **Suspicious scripts**: Patterns like `curl | sh`, `rm -rf /`, etc.
+
+Set `mode = "error"` to fail sync on high-severity findings.
 
 See [Profiles](./profiles) for switching and managing capability sets.

@@ -54,10 +54,14 @@ Add an MCP server and enable it.
 omnidev add mcp filesystem --command npx --args "-y @modelcontextprotocol/server-filesystem /path"
 ```
 
+Tip: for package-based MCP servers, prefer pinning an explicit version (e.g., `@modelcontextprotocol/server-filesystem@1.2.3`) rather than relying on “latest”.
+
 HTTP transport:
 
 ```bash
 omnidev add mcp notion --transport http --url https://mcp.notion.com/mcp
 ```
+
+Warning: for remote `http` MCP servers, you generally can’t pin the server implementation from the client side. Only use providers you trust to handle your data securely.
 
 After adding, OmniDev automatically runs `omnidev sync`.

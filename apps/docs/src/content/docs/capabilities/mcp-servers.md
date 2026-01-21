@@ -15,6 +15,24 @@ OmniDev treats MCP servers as capabilities. Define them in `omni.toml`, then ena
 | `http` | Remote HTTP server | `url` |
 | `sse` | Server-Sent Events (deprecated) | `url` |
 
+## Security and versioning notes
+
+MCP servers can see what you send them, and their tool responses can influence downstream behavior. Treat MCP configuration like adding a dependency with network and data access.
+
+### `stdio` (local) servers
+
+- Prefer **pinned versions** for package-based servers. For example, instead of relying on “latest”, include an explicit version in the package spec:
+  - `@modelcontextprotocol/server-filesystem@1.2.3`
+- If you run a local server from your repo, consider pinning via your lockfile/tooling (e.g., `package.json` + lockfile) instead of `npx` downloading arbitrary versions at runtime.
+
+### `http` (remote) servers
+
+- You generally **cannot pin** the remote server implementation from the client side. Assume it can change at any time.
+- Only use remote MCP providers you trust to handle your data securely. A compromised or malicious provider can potentially:
+  - exfiltrate sensitive inputs you send to tools,
+  - return tool outputs designed to steer behavior in unexpected ways.
+- Prefer least-privilege credentials, rotate tokens, and consider isolating MCP usage to environments where data exposure is acceptable.
+
 ## stdio example
 
 ```toml

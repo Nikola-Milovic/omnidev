@@ -222,16 +222,31 @@ export function isFileSourceConfig(
 	return config.source.startsWith("file://");
 }
 
+/**
+ * Source where the version was detected from.
+ * Used for debugging and auditing to understand version provenance.
+ */
+export type VersionSource =
+	| "capability.toml"
+	| "plugin.json"
+	| "package.json"
+	| "commit"
+	| "content_hash";
+
 /** Lock file entry for a capability (version tracking) */
 export interface CapabilityLockEntry {
 	/** Original source reference */
 	source: string;
-	/** Version from capability.toml or package.json */
+	/** Version from capability.toml, plugin.json, package.json, or fallback */
 	version: string;
+	/** Where the version was detected from (for auditing/debugging) */
+	version_source?: VersionSource;
 	/** For git sources: exact commit hash */
 	commit?: string;
 	/** Pinned ref if specified */
 	ref?: string;
+	/** For file sources: SHA-256 hash of content for reproducibility */
+	content_hash?: string;
 	/** Last update timestamp (ISO 8601) */
 	updated_at: string;
 }
@@ -260,6 +275,40 @@ export interface ProfileConfig {
 	capabilities?: string[];
 }
 
+/**
+ * Security scan mode
+ * - off: No scanning (default)
+ * - warn: Report findings but continue
+ * - error: Report findings and fail sync
+ */
+export type SecurityMode = "off" | "warn" | "error";
+
+/**
+ * Individual scan toggles for security scanning
+ */
+export interface ScanSettings {
+	/** Detect suspicious Unicode characters (bidi overrides, zero-width, control chars) */
+	unicode?: boolean;
+	/** Detect symlinks inside capability directories */
+	symlinks?: boolean;
+	/** Detect suspicious patterns in scripts/hooks */
+	scripts?: boolean;
+	/** Detect binary files in content folders */
+	binaries?: boolean;
+}
+
+/**
+ * Security configuration section in omni.toml
+ */
+export interface SecurityConfig {
+	/** Scan mode: off, warn, or error (default: off) */
+	mode?: SecurityMode;
+	/** Trusted source patterns (host/org/repo) that skip scanning */
+	trusted_sources?: string[];
+	/** Individual scan settings */
+	scan?: ScanSettings;
+}
+
 export interface OmniConfig {
 	profiles?: Record<string, ProfileConfig>;
 	providers?: {
@@ -269,6 +318,8 @@ export interface OmniConfig {
 	capabilities?: CapabilitiesConfig;
 	/** MCP server definitions that auto-generate capabilities */
 	mcps?: Record<string, McpConfig>;
+	/** Security scanning configuration */
+	security?: SecurityConfig;
 }
 
 // Provider Types

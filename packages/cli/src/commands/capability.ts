@@ -14,6 +14,7 @@ import {
 	generateSkillTemplate,
 	getEnabledCapabilities,
 	loadCapabilityConfig,
+	loadLockFile,
 	syncAgentConfiguration,
 } from "@omnidev-ai/core";
 import { buildCommand, buildRouteMap } from "@stricli/core";
@@ -22,10 +23,11 @@ import { isValidCapabilityId } from "../prompts/capability.js";
 /**
  * Run the capability list command.
  */
-export async function runCapabilityList(): Promise<void> {
+export async function runCapabilityList(flags: { verbose?: boolean } = {}): Promise<void> {
 	try {
 		const enabledIds = await getEnabledCapabilities();
 		const capabilityPaths = await discoverCapabilities();
+		const lockFile = await loadLockFile();
 
 		if (capabilityPaths.length === 0) {
 			console.log("No capabilities found.");
@@ -45,9 +47,44 @@ export async function runCapabilityList(): Promise<void> {
 				const status = isEnabled ? "✓ enabled" : "✗ disabled";
 				const { id, name, version } = capConfig.capability;
 
+				// Get lock entry for additional info
+				const lockEntry = lockFile.capabilities[id];
+
 				console.log(`  ${status}  ${name}`);
 				console.log(`           ID: ${id}`);
 				console.log(`           Version: ${version}`);
+
+				if (flags.verbose && lockEntry) {
+					// Show source information
+					console.log(`           Source: ${lockEntry.source}`);
+
+					// Show version source if available
+					if (lockEntry.version_source) {
+						console.log(`           Version from: ${lockEntry.version_source}`);
+					}
+
+					// Show commit for git sources
+					if (lockEntry.commit) {
+						console.log(`           Commit: ${lockEntry.commit.substring(0, 7)}`);
+					}
+
+					// Show content hash for file sources
+					if (lockEntry.content_hash) {
+						console.log(`           Content hash: ${lockEntry.content_hash.substring(0, 12)}`);
+					}
+
+					// Show ref if pinned
+					if (lockEntry.ref) {
+						console.log(`           Ref: ${lockEntry.ref}`);
+					}
+
+					// Show last update
+					if (lockEntry.updated_at) {
+						const date = new Date(lockEntry.updated_at);
+						console.log(`           Updated: ${date.toLocaleString()}`);
+					}
+				}
+
 				console.log("");
 			} catch (error) {
 				console.error(`  ✗ Failed to load capability at ${path}:`, error);
@@ -364,10 +401,30 @@ Examples:
 const listCommand = buildCommand({
 	docs: {
 		brief: "List all discovered capabilities",
+		fullDescription: `List all discovered capabilities with their status.
+
+Use --verbose to show additional version information including:
+- Source (git URL or file path)
+- Where the version was detected from
+- Commit hash (for git sources)
+- Content hash (for file sources)
+- Last update time
+
+Examples:
+  omnidev capability list
+  omnidev capability list --verbose`,
 	},
-	parameters: {},
-	async func() {
-		await runCapabilityList();
+	parameters: {
+		flags: {
+			verbose: {
+				kind: "boolean" as const,
+				brief: "Show detailed version information",
+				optional: true,
+			},
+		},
+	},
+	async func(flags: { verbose?: boolean }) {
+		await runCapabilityList(flags);
 	},
 });
 

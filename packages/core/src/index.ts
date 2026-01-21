@@ -30,6 +30,9 @@ export * from "./state";
 // Export sync functionality
 export * from "./sync";
 
+// Export security scanning
+export * from "./security";
+
 // Export templates
 export * from "./templates/agents";
 export * from "./templates/capability";

@@ -20,8 +20,10 @@ import type {
 	FileCapabilitySourceConfig,
 	GitCapabilitySourceConfig,
 	OmniConfig,
+	VersionSource,
 } from "../types/index.js";
 import { isFileSourceConfig } from "../types/index.js";
+import { createHash } from "node:crypto";
 
 // Local path for .omni directory
 const OMNI_LOCAL = ".omni";
@@ -42,8 +44,12 @@ export interface FetchResult {
 	id: string;
 	path: string;
 	version: string;
+	/** Source where version was detected from */
+	versionSource: VersionSource;
 	/** Git commit hash */
 	commit?: string;
+	/** Content hash for file sources (SHA-256) */
+	contentHash?: string;
 	updated: boolean;
 	wrapped: boolean;
 }
@@ -243,11 +249,17 @@ function stringifyLockFile(lockFile: CapabilitiesLockFile): string {
 		lines.push(`[capabilities.${id}]`);
 		lines.push(`source = "${entry.source}"`);
 		lines.push(`version = "${entry.version}"`);
+		if (entry.version_source) {
+			lines.push(`version_source = "${entry.version_source}"`);
+		}
 		if (entry.commit) {
 			lines.push(`commit = "${entry.commit}"`);
 		}
 		if (entry.ref) {
 			lines.push(`ref = "${entry.ref}"`);
+		}
+		if (entry.content_hash) {
+			lines.push(`content_hash = "${entry.content_hash}"`);
 		}
 		lines.push(`updated_at = "${entry.updated_at}"`);
 		lines.push("");
@@ -292,6 +304,150 @@ async function getRepoCommit(repoPath: string): Promise<string> {
  */
 function shortCommit(commit: string): string {
 	return commit.substring(0, 7);
+}
+
+/**
+ * Get short content hash (12 chars)
+ */
+function shortContentHash(hash: string): string {
+	return hash.substring(0, 12);
+}
+
+/**
+ * Default patterns to exclude from content hashing
+ */
+const CONTENT_HASH_EXCLUDES = [
+	".git",
+	"node_modules",
+	".omni",
+	"__pycache__",
+	".pytest_cache",
+	".mypy_cache",
+	"dist",
+	"build",
+	".DS_Store",
+	"Thumbs.db",
+];
+
+/**
+ * Compute a stable SHA-256 content hash for a directory.
+ * Files are processed in sorted order to ensure deterministic output.
+ * Excludes common non-semantic artifacts (.git, node_modules, etc.)
+ */
+export async function computeContentHash(
+	dirPath: string,
+	excludePatterns: string[] = CONTENT_HASH_EXCLUDES,
+): Promise<string> {
+	const hash = createHash("sha256");
+	const files: Array<{ relativePath: string; content: Buffer }> = [];
+
+	async function collectFiles(currentPath: string, relativeTo: string): Promise<void> {
+		const entries = await readdir(currentPath, { withFileTypes: true });
+		// Sort entries for deterministic ordering
+		entries.sort((a, b) => a.name.localeCompare(b.name));
+
+		for (const entry of entries) {
+			const fullPath = join(currentPath, entry.name);
+			const relativePath = fullPath.slice(relativeTo.length + 1);
+
+			// Skip excluded patterns
+			if (
+				excludePatterns.some(
+					(pattern) => entry.name === pattern || relativePath.startsWith(`${pattern}/`),
+				)
+			) {
+				continue;
+			}
+
+			if (entry.isDirectory()) {
+				await collectFiles(fullPath, relativeTo);
+			} else if (entry.isFile()) {
+				const content = await readFile(fullPath);
+				files.push({ relativePath, content });
+			}
+			// Skip symlinks for security
+		}
+	}
+
+	await collectFiles(dirPath, dirPath);
+
+	// Sort files by path and hash them
+	files.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+	for (const file of files) {
+		// Include both path and content in hash for integrity
+		hash.update(file.relativePath);
+		hash.update(file.content);
+	}
+
+	return hash.digest("hex");
+}
+
+/**
+ * Result of version detection
+ */
+export interface VersionDetectionResult {
+	version: string;
+	source: VersionSource;
+}
+
+/**
+ * Detect the display version for a capability directory.
+ * Checks in order: capability.toml > plugin.json > package.json > fallback
+ *
+ * @param dirPath - Path to the capability directory
+ * @param fallback - Fallback version if no source is found (e.g., commit hash or content hash)
+ * @param fallbackSource - Source type for the fallback
+ */
+export async function detectDisplayVersion(
+	dirPath: string,
+	fallback: string,
+	fallbackSource: VersionSource,
+): Promise<VersionDetectionResult> {
+	// 1. Check capability.toml
+	const capTomlPath = join(dirPath, "capability.toml");
+	if (existsSync(capTomlPath)) {
+		try {
+			const content = await readFile(capTomlPath, "utf-8");
+			const parsed = parseToml(content) as Record<string, unknown>;
+			const capability = parsed["capability"] as Record<string, unknown> | undefined;
+			if (capability?.["version"] && typeof capability["version"] === "string") {
+				return { version: capability["version"], source: "capability.toml" };
+			}
+		} catch {
+			// Continue to next source
+		}
+	}
+
+	// 2. Check .claude-plugin/plugin.json
+	const pluginJsonPath = join(dirPath, ".claude-plugin", "plugin.json");
+	if (existsSync(pluginJsonPath)) {
+		try {
+			const content = await readFile(pluginJsonPath, "utf-8");
+			const parsed = JSON.parse(content);
+			if (parsed.version && typeof parsed.version === "string") {
+				return { version: parsed.version, source: "plugin.json" };
+			}
+		} catch {
+			// Continue to next source
+		}
+	}
+
+	// 3. Check package.json
+	const pkgJsonPath = join(dirPath, "package.json");
+	if (existsSync(pkgJsonPath)) {
+		try {
+			const content = await readFile(pkgJsonPath, "utf-8");
+			const parsed = JSON.parse(content);
+			if (parsed.version && typeof parsed.version === "string") {
+				return { version: parsed.version, source: "package.json" };
+			}
+		} catch {
+			// Continue to fallback
+		}
+	}
+
+	// 4. Fallback to commit hash (git) or content hash (file)
+	return { version: fallback, source: fallbackSource };
 }
 
 /**
@@ -799,24 +955,15 @@ async function fetchGitCapabilitySource(
 		}
 	}
 
-	// Get version from capability.toml or package.json
-	let version = shortCommit(commit);
-	const pkgJsonPath = join(repoPath, "package.json");
-	if (existsSync(pkgJsonPath)) {
-		try {
-			const pkgJson = JSON.parse(await readFile(pkgJsonPath, "utf-8"));
-			if (pkgJson.version) {
-				version = pkgJson.version;
-			}
-		} catch {
-			// Ignore parse errors
-		}
-	}
+	// Detect version using unified version detection
+	// Fallback to short commit hash for git sources
+	const versionResult = await detectDisplayVersion(repoPath, shortCommit(commit), "commit");
 
 	return {
 		id,
 		path: targetPath,
-		version,
+		version: versionResult.version,
+		versionSource: versionResult.source,
 		commit,
 		updated,
 		wrapped: needsWrap,
@@ -825,6 +972,7 @@ async function fetchGitCapabilitySource(
 
 /**
  * Fetch a file-sourced capability (copy from local path)
+ * Supports wrapping directories without capability.toml if they have skills/agents/etc.
  */
 async function fetchFileCapabilitySource(
 	id: string,
@@ -845,9 +993,20 @@ async function fetchFileCapabilitySource(
 		throw new Error(`File source must be a directory: ${sourcePath}`);
 	}
 
-	// Check if capability.toml exists in source
-	if (!existsSync(join(sourcePath, "capability.toml"))) {
-		throw new Error(`No capability.toml found in: ${sourcePath}`);
+	// Compute content hash for the source (before copy, for reproducibility)
+	const contentHash = await computeContentHash(sourcePath);
+
+	// Check if we need to wrap (no capability.toml but has content)
+	const hasCapToml = existsSync(join(sourcePath, "capability.toml"));
+	let needsWrap = false;
+
+	if (!hasCapToml) {
+		needsWrap = await shouldWrapDirectory(sourcePath);
+		if (!needsWrap) {
+			throw new Error(
+				`No capability.toml found in: ${sourcePath} (and no wrappable content detected)`,
+			);
+		}
 	}
 
 	if (!options?.silent) {
@@ -865,29 +1024,122 @@ async function fetchFileCapabilitySource(
 	// Copy directory contents
 	await cp(sourcePath, targetPath, { recursive: true });
 
-	// Read version from capability.toml
-	let version = "local";
-	const capTomlPath = join(targetPath, "capability.toml");
-	if (existsSync(capTomlPath)) {
-		try {
-			const content = await readFile(capTomlPath, "utf-8");
-			const parsed = parseToml(content) as Record<string, unknown>;
-			const capability = parsed["capability"] as Record<string, unknown> | undefined;
-			if (capability?.["version"] && typeof capability["version"] === "string") {
-				version = capability["version"];
+	// If needs wrapping, generate capability.toml in target (not source)
+	if (needsWrap) {
+		// Normalize folder names (singular -> plural)
+		await normalizeFolderNames(targetPath);
+
+		// Discover content and generate capability.toml
+		const content = await discoverContent(targetPath);
+		await generateFileSourceCapabilityToml(
+			id,
+			config.source,
+			shortContentHash(contentHash),
+			content,
+			targetPath,
+		);
+
+		if (!options?.silent) {
+			const parts: string[] = [];
+			if (content.skills.length > 0) parts.push(`${content.skills.length} skills`);
+			if (content.agents.length > 0) parts.push(`${content.agents.length} agents`);
+			if (content.commands.length > 0) parts.push(`${content.commands.length} commands`);
+			if (parts.length > 0) {
+				console.log(`    Wrapped: ${parts.join(", ")}`);
 			}
-		} catch {
-			// Ignore parse errors
 		}
 	}
+
+	// Detect version using unified version detection
+	// Fallback to short content hash for file sources
+	const versionResult = await detectDisplayVersion(
+		targetPath,
+		shortContentHash(contentHash),
+		"content_hash",
+	);
 
 	return {
 		id,
 		path: targetPath,
-		version,
+		version: versionResult.version,
+		versionSource: versionResult.source,
+		contentHash,
 		updated: true,
-		wrapped: false,
+		wrapped: needsWrap,
 	};
+}
+
+/**
+ * Generate a capability.toml for a wrapped file source
+ */
+async function generateFileSourceCapabilityToml(
+	id: string,
+	source: string,
+	hashVersion: string,
+	content: DiscoveredContent,
+	targetPath: string,
+): Promise<void> {
+	// Try to get metadata from plugin.json
+	const pluginMeta = await parsePluginJson(targetPath);
+
+	// Try to get description from README
+	const readmeDesc = await readReadmeDescription(targetPath);
+
+	// Build description based on available sources
+	let description: string;
+	if (pluginMeta?.description) {
+		description = pluginMeta.description;
+	} else if (readmeDesc) {
+		description = readmeDesc;
+	} else {
+		// Fallback: build from discovered content
+		const parts: string[] = [];
+		if (content.skills.length > 0) {
+			parts.push(`${content.skills.length} skill${content.skills.length > 1 ? "s" : ""}`);
+		}
+		if (content.agents.length > 0) {
+			parts.push(`${content.agents.length} agent${content.agents.length > 1 ? "s" : ""}`);
+		}
+		if (content.commands.length > 0) {
+			parts.push(`${content.commands.length} command${content.commands.length > 1 ? "s" : ""}`);
+		}
+		description = parts.length > 0 ? `${parts.join(", ")}` : `Wrapped from ${source}`;
+	}
+
+	// Use plugin metadata for name and version if available
+	const name = pluginMeta?.name || `${id} (wrapped)`;
+	const version = pluginMeta?.version || hashVersion;
+
+	// Build TOML content
+	let tomlContent = `# Auto-generated by OmniDev - DO NOT EDIT
+# This capability was wrapped from a local directory
+
+[capability]
+id = "${id}"
+name = "${name}"
+version = "${version}"
+description = "${description}"
+`;
+
+	// Add author if available from plugin.json
+	if (pluginMeta?.author?.name || pluginMeta?.author?.email) {
+		tomlContent += "\n[capability.author]\n";
+		if (pluginMeta.author.name) {
+			tomlContent += `name = "${pluginMeta.author.name}"\n`;
+		}
+		if (pluginMeta.author.email) {
+			tomlContent += `email = "${pluginMeta.author.email}"\n`;
+		}
+	}
+
+	// Add metadata section
+	tomlContent += `
+[capability.metadata]
+wrapped = true
+source = "${source}"
+`;
+
+	await writeFile(join(targetPath, "capability.toml"), tomlContent, "utf-8");
 }
 
 /**
@@ -1095,12 +1347,17 @@ export async function fetchAllCapabilitySources(
 			const lockEntry: CapabilityLockEntry = {
 				source: typeof source === "string" ? source : source.source,
 				version: result.version,
+				version_source: result.versionSource,
 				updated_at: new Date().toISOString(),
 			};
 
 			// Git source: use commit and ref
 			if (result.commit) {
 				lockEntry.commit = result.commit;
+			}
+			// File source: use content hash
+			if (result.contentHash) {
+				lockEntry.content_hash = result.contentHash;
 			}
 			// Only access ref if it's a git source
 			if (!isFileSourceConfig(source)) {
@@ -1111,8 +1368,13 @@ export async function fetchAllCapabilitySources(
 			}
 
 			// Check if lock entry changed
+			// For git sources: compare commit hash
+			// For file sources: compare content hash
 			const existing = lockFile.capabilities[id];
-			const hasChanged = !existing || existing.commit !== result.commit;
+			const hasChanged =
+				!existing ||
+				(result.commit && existing.commit !== result.commit) ||
+				(result.contentHash && existing.content_hash !== result.contentHash);
 
 			if (hasChanged) {
 				lockFile.capabilities[id] = lockEntry;

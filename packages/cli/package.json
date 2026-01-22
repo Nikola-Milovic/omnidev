@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Nikola-Milovic/omnidev.git",
+		"url": "https://github.com/frmlabz/omnidev.git",
 		"directory": "packages/cli"
 	},
 	"exports": {
@@ -28,11 +28,12 @@
 	},
 	"dependencies": {
 		"@inquirer/prompts": "^8.1.0",
-		"@omnidev-ai/core": "workspace:*",
 		"@stricli/core": "^1.2.5"
 	},
 	"devDependencies": {
 		"@omnidev-ai/adapters": "workspace:*",
+		"@omnidev-ai/capability": "workspace:*",
+		"@omnidev-ai/core": "workspace:*",
 		"bunup": "^0.16.20"
 	}
 }

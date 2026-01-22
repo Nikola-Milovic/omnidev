@@ -35,7 +35,8 @@ function scanForBunRuntimeApis(rootDir) {
 	return hits;
 }
 
-const PACKAGES = ["packages/core", "packages/cli"];
+// Only public packages that get published
+const PACKAGES = ["packages/cli", "packages/capability"];
 const CHECK_ONLY = process.argv.includes("--check") || process.env.OMNIDEV_PUBLISH === "false";
 
 const internalVersions = new Map();
@@ -45,13 +46,14 @@ for (const pkgDir of PACKAGES) {
 	internalVersions.set(pkg.name, pkg.version);
 }
 
-const coreVersion = internalVersions.get("@omnidev-ai/core");
+// CLI and capability should have the same version (fixed in changeset config)
 const cliVersion = internalVersions.get("@omnidev-ai/cli");
-if (coreVersion && cliVersion && coreVersion !== cliVersion) {
+const capabilityVersion = internalVersions.get("@omnidev-ai/capability");
+if (cliVersion && capabilityVersion && cliVersion !== capabilityVersion) {
 	console.error(
-		`❌ Version mismatch: @omnidev-ai/core@${coreVersion} != @omnidev-ai/cli@${cliVersion}`,
+		`❌ Version mismatch: @omnidev-ai/cli@${cliVersion} != @omnidev-ai/capability@${capabilityVersion}`,
 	);
-	console.error("   Core and CLI must share the same version.");
+	console.error("   CLI and capability must share the same version.");
 	process.exit(1);
 }
 
@@ -87,20 +89,6 @@ for (const pkgDir of PACKAGES) {
 
 	let needsFix = false;
 
-	// CLI bundles adapters internally, so remove from published deps.
-	// Core is external and must remain as a dependency.
-	if (packedPkg.name === "@omnidev-ai/cli" && packedPkg.dependencies) {
-		if (packedPkg.dependencies["@omnidev-ai/adapters"]) {
-			delete packedPkg.dependencies["@omnidev-ai/adapters"];
-			needsFix = true;
-		}
-	}
-	// HACK/TODO: Core exposes test-utils for local dev, but it's bun:test-based.
-	// Strip from published exports until we make test-utils Node-compatible or split packages.
-	if (packedPkg.name === "@omnidev-ai/core" && packedPkg.exports?.["./test-utils"]) {
-		delete packedPkg.exports["./test-utils"];
-		needsFix = true;
-	}
 	for (const depsKey of ["dependencies", "peerDependencies", "optionalDependencies"]) {
 		const deps = packedPkg[depsKey];
 		if (!deps) continue;

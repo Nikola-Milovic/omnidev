@@ -1,7 +1,16 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import { mkdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
+
+// Mock adapters to prevent network calls
+mock.module("@omnidev-ai/adapters", () => ({
+	getEnabledAdapters: mock(async () => []),
+}));
+
+// Import the sync module to spy on syncAgentConfiguration
+import * as syncModule from "@omnidev-ai/core";
+
 import { runAddCap, runAddMcp } from "./add";
 
 describe("add commands", () => {
@@ -13,7 +22,18 @@ describe("add commands", () => {
 	let originalLog: typeof console.log;
 	let originalError: typeof console.error;
 
+	let syncSpy: ReturnType<typeof spyOn>;
+
 	beforeEach(() => {
+		// Mock syncAgentConfiguration to prevent network calls
+		syncSpy = spyOn(syncModule, "syncAgentConfiguration").mockResolvedValue({
+			capabilities: [],
+			skillCount: 0,
+			ruleCount: 0,
+			docCount: 0,
+			warnings: [],
+		});
+
 		// Mock process.exit
 		exitCode = undefined;
 		originalExit = process.exit;
@@ -36,6 +56,7 @@ describe("add commands", () => {
 	});
 
 	afterEach(() => {
+		syncSpy.mockRestore();
 		process.exit = originalExit;
 		console.log = originalLog;
 		console.error = originalError;

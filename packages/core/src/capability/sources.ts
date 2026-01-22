@@ -65,8 +65,10 @@ export interface SourceUpdateInfo {
 async function spawnCapture(
 	command: string,
 	args: string[],
-	options?: { cwd?: string },
+	options?: { cwd?: string; timeout?: number },
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+	const timeout = options?.timeout ?? 60000; // Default 60 second timeout for git operations
+
 	return await new Promise((resolve, reject) => {
 		const child = spawn(command, args, {
 			cwd: options?.cwd,
@@ -75,6 +77,14 @@ async function spawnCapture(
 
 		let stdout = "";
 		let stderr = "";
+		let timedOut = false;
+
+		const timeoutId = setTimeout(() => {
+			timedOut = true;
+			child.kill("SIGTERM");
+			// Force kill after 5 seconds if SIGTERM doesn't work
+			setTimeout(() => child.kill("SIGKILL"), 5000);
+		}, timeout);
 
 		child.stdout?.setEncoding("utf-8");
 		child.stderr?.setEncoding("utf-8");
@@ -86,9 +96,21 @@ async function spawnCapture(
 			stderr += chunk;
 		});
 
-		child.on("error", (error) => reject(error));
+		child.on("error", (error) => {
+			clearTimeout(timeoutId);
+			reject(error);
+		});
 		child.on("close", (exitCode) => {
-			resolve({ exitCode: exitCode ?? 0, stdout, stderr });
+			clearTimeout(timeoutId);
+			if (timedOut) {
+				resolve({
+					exitCode: 124, // Standard timeout exit code
+					stdout,
+					stderr: `${stderr}\nProcess timed out after ${timeout}ms`,
+				});
+			} else {
+				resolve({ exitCode: exitCode ?? 0, stdout, stderr });
+			}
 		});
 	});
 }

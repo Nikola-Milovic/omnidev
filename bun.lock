@@ -43,7 +43,7 @@
     },
     "packages/capability": {
       "name": "@omnidev-ai/capability",
-      "version": "0.12.0",
+      "version": "0.13.1",
       "bin": {
         "capability": "./dist/cli/index.js",
       },
@@ -56,18 +56,18 @@
     },
     "packages/cli": {
       "name": "@omnidev-ai/cli",
-      "version": "0.12.0",
+      "version": "0.13.1",
       "bin": {
         "omnidev": "./dist/index.js",
       },
       "dependencies": {
         "@inquirer/prompts": "^8.1.0",
-        "@omnidev-ai/adapters": "workspace:*",
-        "@omnidev-ai/capability": "workspace:*",
-        "@omnidev-ai/core": "workspace:*",
         "@stricli/core": "^1.2.5",
       },
       "devDependencies": {
+        "@omnidev-ai/adapters": "workspace:*",
+        "@omnidev-ai/capability": "workspace:*",
+        "@omnidev-ai/core": "workspace:*",
         "bunup": "^0.16.20",
       },
     },
@@ -76,9 +76,6 @@
       "version": "0.12.0",
       "dependencies": {
         "smol-toml": "^1.6.0",
-      },
-      "devDependencies": {
-        "bunup": "^0.16.20",
       },
     },
   },

@@ -5,6 +5,8 @@ export default defineConfig({
 	format: ["esm"],
 	target: "node",
 	clean: true,
+	// Disable code splitting to avoid duplicate exports when bundling workspace packages
+	splitting: false,
 	external: [
 		"@inquirer/prompts",
 		"@stricli/core",

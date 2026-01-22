@@ -31,9 +31,7 @@
 		"@stricli/core": "^1.2.5"
 	},
 	"devDependencies": {
-		"@omnidev-ai/adapters": "workspace:*",
 		"@omnidev-ai/capability": "workspace:*",
-		"@omnidev-ai/core": "workspace:*",
 		"bunup": "^0.16.20"
 	}
 }

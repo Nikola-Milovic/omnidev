@@ -1,0 +1,166 @@
+---
+/**
+ * ConfigSprawl - Visualizes the configuration sprawl problem across AI tools
+ */
+
+interface ConfigItem {
+	tool: string;
+	path: string;
+}
+
+const configs: ConfigItem[] = [
+	{ tool: "OpenCode", path: ".opencode/skill/<name>/" },
+	{ tool: "Claude Code", path: ".claude/skills/<name>/" },
+	{ tool: "Codex", path: ".codex/skills/<name>/" },
+	{ tool: "Cursor", path: ".cursor/skills/<name>/" },
+	{ tool: "Amp", path: ".agents/skills/<name>/" },
+	{ tool: "Antigravity", path: ".agent/skills/<name>/" },
+];
+---
+
+<div class="config-sprawl">
+	<div class="config-sprawl__container">
+		<div class="config-sprawl__table">
+			{configs.map((config, index) => (
+				<div class="config-sprawl__row" style={`animation-delay: ${index * 0.08}s`}>
+					<div class="config-sprawl__tool">{config.tool}</div>
+					<div class="config-sprawl__path">
+						<code>{config.path}</code>
+					</div>
+				</div>
+			))}
+		</div>
+	</div>
+</div>
+
+<style>
+	.config-sprawl {
+		display: flex;
+		justify-content: center;
+		margin-top: var(--od-space-8);
+	}
+
+	.config-sprawl__container {
+		position: relative;
+		border-radius: var(--od-radius-xl);
+		padding: 2px;
+		background: linear-gradient(
+			135deg,
+			rgba(132, 204, 22, 0.4) 0%,
+			rgba(139, 92, 246, 0.3) 25%,
+			rgba(244, 114, 182, 0.3) 50%,
+			rgba(251, 146, 60, 0.3) 75%,
+			rgba(132, 204, 22, 0.4) 100%
+		);
+		background-size: 300% 300%;
+		animation: gradient-border 8s ease infinite;
+		box-shadow: 
+			0 0 40px rgba(132, 204, 22, 0.15),
+			0 0 80px rgba(139, 92, 246, 0.1);
+	}
+
+	@keyframes gradient-border {
+		0% { background-position: 0% 50%; }
+		50% { background-position: 100% 50%; }
+		100% { background-position: 0% 50%; }
+	}
+
+	.config-sprawl__table {
+		background: var(--od-surface);
+		border-radius: calc(var(--od-radius-xl) - 2px);
+		overflow: hidden;
+	}
+
+	.config-sprawl__row {
+		display: grid;
+		grid-template-columns: 160px 1fr;
+		border-bottom: 1px solid var(--od-border-subtle);
+		margin: 0;
+		animation: fadeInRow 0.4s ease-out both;
+	}
+
+	.config-sprawl__row:last-child {
+		border-bottom: none;
+	}
+
+	@keyframes fadeInRow {
+		from {
+			opacity: 0;
+			transform: translateX(-10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
+	.config-sprawl__tool {
+		padding: var(--od-space-4) var(--od-space-6);
+		font-family: var(--od-font-display);
+		font-weight: var(--od-weight-medium);
+		font-size: 0.9375rem;
+		color: var(--od-text-primary);
+		background: var(--od-surface-elevated);
+		border-right: 1px solid var(--od-border-subtle);
+		display: flex;
+		align-items: center;
+	}
+
+	.config-sprawl__path {
+		padding: var(--od-space-4) var(--od-space-6);
+		display: flex;
+		align-items: center;
+	}
+
+	.config-sprawl__path code {
+		font-family: var(--od-font-mono);
+		font-size: 0.875rem;
+		font-weight: var(--od-weight-medium);
+		color: #f87171;
+		background: rgba(248, 113, 113, 0.1);
+		padding: var(--od-space-1) var(--od-space-3);
+		border-radius: var(--od-radius-md);
+		border: 1px solid rgba(248, 113, 113, 0.15);
+		letter-spacing: -0.01em;
+	}
+
+	/* Light mode adjustments */
+	[data-theme="light"] .config-sprawl__container {
+		background: linear-gradient(
+			135deg,
+			rgba(132, 204, 22, 0.6) 0%,
+			rgba(139, 92, 246, 0.5) 25%,
+			rgba(244, 114, 182, 0.5) 50%,
+			rgba(251, 146, 60, 0.5) 75%,
+			rgba(132, 204, 22, 0.6) 100%
+		);
+		background-size: 300% 300%;
+		animation: gradient-border 8s ease infinite;
+	}
+
+	[data-theme="light"] .config-sprawl__path code {
+		color: #dc2626;
+		background: rgba(220, 38, 38, 0.08);
+		border-color: rgba(220, 38, 38, 0.15);
+	}
+
+	/* Responsive */
+	@media (max-width: 640px) {
+		.config-sprawl__row {
+			grid-template-columns: 120px 1fr;
+		}
+
+		.config-sprawl__tool,
+		.config-sprawl__path {
+			padding: var(--od-space-3) var(--od-space-4);
+		}
+
+		.config-sprawl__tool {
+			font-size: 0.875rem;
+		}
+
+		.config-sprawl__path code {
+			font-size: 0.75rem;
+		}
+	}
+</style>

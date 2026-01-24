@@ -16,12 +16,14 @@ import ProviderGrid from "../../components/ProviderGrid.astro";
 import CodeExample from "../../components/CodeExample.astro";
 import QuickStart from "../../components/QuickStart.astro";
 import Footer from "../../components/Footer.astro";
+import ConfigSprawl from "../../components/ConfigSprawl.astro";
 
 <Hero
   title="The Missing Package Manager for AI Coding Capabilities"
-  tagline="Discover, install, and share agent capabilities across Claude, Cursor, Codex, and more. Version-lock your capability set and keep an eye on supply-chain risk. Capabilities include skills, agents, commands, hooks, rules, instructions, and more."
+  tagline="Discover, install, and share agent capabilities across Claude, Cursor, Codex, and more. Version-lock your capability set and keep an eye on supply-chain risk."
+  badge="Open Source CLI"
   primaryCta={{ text: "Get Started", href: "/getting-started/" }}
-  secondaryCta={{ text: "View on GitHub", href: "https://github.com/frmlabz/omnidev" }}
+  secondaryCta={{ text: "GitHub", href: "https://github.com/frmlabz/omnidev" }}
 >
   <Terminal title="~">
     <div class="od-terminal__line">
@@ -49,21 +51,16 @@ import Footer from "../../components/Footer.astro";
     title="The Problem"
     description="Every AI coding tool invented its own configuration format. Different folders, different formats, different terminology."
   >
-    <div class="od-problem__image-wrapper">
-      <img
-        src="/img/config-sprawl.png"
-        alt="Configuration sprawl showing multiple AI tool config folders"
-        class="od-problem__image"
-      />
-    </div>
+    <ConfigSprawl />
 
-      <span class="od-problem__joke">The solution? <a href="https://xkcd.com/927/" target="_blank" rel="noopener">Another standard</a>.</span>
+    <span class="od-problem__joke">The solution? <a href="https://xkcd.com/927/" target="_blank" rel="noopener">Another standard</a>.</span>
   </Section>
 </div>
 
 <Section
   title="The Solution"
   description="Write once in OMNI.md and omni.toml. OmniDev generates the rest."
+  gradient={true}
 >
   <div class="od-solution__flow">
     <div class="od-solution__source">
@@ -83,7 +80,7 @@ import Footer from "../../components/Footer.astro";
   </div>
 </Section>
 
-<Section title="Everything You Need">
+<Section title="Everything You Need" gradient={true}>
   <FeatureGrid>
     <FeatureCard
       icon="package"
@@ -119,19 +116,20 @@ import Footer from "../../components/Footer.astro";
 </Section>
 
 <Section
-  title="Supply Chain Security (WIP)"
+  title="Supply Chain Security"
   description="Third-party capabilities can expand your attack surface. OmniDev scans for common exploits before they reach your agent."
+  gradient={true}
 >
   <div class="od-security">
     <div class="od-security__icon" aria-hidden="true">
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="32"
-        height="32"
+        width="36"
+        height="36"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        stroke-width="2"
+        stroke-width="1.75"
         stroke-linecap="round"
         stroke-linejoin="round"
       >
@@ -139,11 +137,22 @@ import Footer from "../../components/Footer.astro";
       </svg>
     </div>
     <div class="od-security__content">
+      <h3 class="od-security__title">Automated Threat Detection</h3>
       <p class="od-security__text">
-        Run <code>omnidev security issues</code> to scan for suspicious scripts, symlink escapes, Unicode tricks, and binaries. Still evolving.
+        Run <code>omnidev security issues</code> to scan capabilities for common attack vectors before installation. Our scanner detects:
       </p>
+      
+      <div class="od-security__threats">
+        <span class="od-security__threat">Suspicious scripts</span>
+        <span class="od-security__threat">Symlink escapes</span>
+        <span class="od-security__threat">Unicode tricks</span>
+        <span class="od-security__threat">Hidden binaries</span>
+        <span class="od-security__threat">Path traversal</span>
+      </div>
+      
       <div class="od-security__cta">
-        <a class="od-btn od-btn--secondary" href="/commands/security/">Learn more</a>
+        <a class="od-btn od-btn--primary" href="/commands/security/">View Security Docs</a>
+        <span class="od-security__badge">Work in Progress</span>
       </div>
     </div>
   </div>
@@ -152,6 +161,7 @@ import Footer from "../../components/Footer.astro";
 <Section
   title="Works With Your Tools"
   description="Define once, deploy everywhere. OmniDev adapts to each provider's format."
+  gradient={true}
 >
   <ProviderGrid
     providers={[
@@ -164,42 +174,42 @@ import Footer from "../../components/Footer.astro";
   />
 </Section>
 
-<Section title="See It In Action">
+<Section title="See It In Action" gradient={true}>
   <CodeExample
     panels={[
       {
         filename: "omni.toml",
-        content: `<span style="color: #6b7280"># Define capability sources</span>
-<span style="color: #9ca3af">[capabilities.sources]</span>
-obsidian = <span style="color: #7dd3fc">"github:kepano/obsidian-skills"</span>
-ui-design = <span style="color: #7dd3fc">"github:company/ui-patterns"</span>
+        content: `<span style="color: #71717a"># Define capability sources</span>
+<span style="color: #a1a1aa">[capabilities.sources]</span>
+obsidian = <span style="color: #a3e635">"github:kepano/obsidian-skills"</span>
+ui-design = <span style="color: #a3e635">"github:company/ui-patterns"</span>
 
-<span style="color: #6b7280"># Create profiles for different contexts</span>
-<span style="color: #9ca3af">[profiles.frontend]</span>
+<span style="color: #71717a"># Create profiles for different contexts</span>
+<span style="color: #a1a1aa">[profiles.frontend]</span>
 capabilities = [
-  <span style="color: #7dd3fc">"ui-design"</span>,
-  <span style="color: #7dd3fc">"accessibility"</span>
+  <span style="color: #a3e635">"ui-design"</span>,
+  <span style="color: #a3e635">"accessibility"</span>
 ]`,
       },
       {
         filename: "Terminal",
-        content: `<span style="color: #6b7280">$</span> omnidev init
-<span style="color: #4ade80">✓</span> Created omni.toml
-<span style="color: #4ade80">✓</span> Created OMNI.md
+        content: `<span style="color: #71717a">$</span> omnidev init
+<span style="color: #10b981">✓</span> Created omni.toml
+<span style="color: #10b981">✓</span> Created OMNI.md
 
-<span style="color: #6b7280">$</span> omnidev sync
-<span style="color: #9ca3af">↓ Fetching capabilities...</span>
-<span style="color: #4ade80">✓</span> obsidian (v1.2.0)
-<span style="color: #4ade80">✓</span> ui-design (v0.4.1)
-<span style="color: #4ade80">✓</span> Generated CLAUDE.md
-<span style="color: #4ade80">✓</span> Generated AGENTS.md
-<span style="color: #4ade80">✓</span> Sync complete`,
+<span style="color: #71717a">$</span> omnidev sync
+<span style="color: #a1a1aa">↓ Fetching capabilities...</span>
+<span style="color: #10b981">✓</span> obsidian (v1.2.0)
+<span style="color: #10b981">✓</span> ui-design (v0.4.1)
+<span style="color: #10b981">✓</span> Generated CLAUDE.md
+<span style="color: #10b981">✓</span> Generated AGENTS.md
+<span style="color: #10b981">✓</span> Sync complete`,
       },
     ]}
   />
 </Section>
 
-<Section title="Get Started in Seconds">
+<Section title="Get Started in Seconds" gradient={true}>
   <QuickStart />
 </Section>
 

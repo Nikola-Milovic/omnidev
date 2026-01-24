@@ -30,23 +30,83 @@ const socialLinks = socials.length > 0 ? socials : defaultSocials;
 
 <footer class="od-footer">
 	<div class="od-footer__content">
-		<p class="od-footer__text">Created by {author}</p>
-		<div class="od-footer__socials">
-			{
-				socialLinks.map((social) => (
-					<a
-						href={social.url}
-						class="od-footer__social-link"
-						target="_blank"
-						rel="noopener noreferrer"
-						aria-label={social.name}
-					>
-						<Fragment set:html={social.icon} />
-					</a>
-				))
-			}
+		<div class="od-footer__brand">
+			<div class="od-footer__logo-wrapper">
+				<img src="/logo.svg" alt="omnidev" class="od-footer__logo-icon" />
+				<span class="od-footer__logo">omnidev</span>
+			</div>
+			<p class="od-footer__tagline">The missing package manager for AI coding capabilities.</p>
 		</div>
-		<p class="od-footer__text">Part of the <a href="https://frmlabz.com" target="_blank" rel="noopener noreferrer">FRMLabz</a> family.</p>
-		<p class="od-footer__copyright">&copy; {new Date().getFullYear()} omnidev. MIT License.</p>
+		
+		<div class="od-footer__meta">
+			<p class="od-footer__text">Created by {author}</p>
+			<div class="od-footer__socials">
+				{
+					socialLinks.map((social) => (
+						<a
+							href={social.url}
+							class="od-footer__social-link"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label={social.name}
+						>
+							<Fragment set:html={social.icon} />
+						</a>
+					))
+				}
+			</div>
+		</div>
+		
+		<div class="od-footer__bottom">
+			<p class="od-footer__text">Part of the <a href="https://frmlabz.com" target="_blank" rel="noopener noreferrer">FRMLabz</a> family.</p>
+			<p class="od-footer__copyright">&copy; {new Date().getFullYear()} omnidev. MIT License.</p>
+		</div>
 	</div>
 </footer>
+
+<style>
+	.od-footer__brand {
+		margin-bottom: var(--od-space-6);
+	}
+	
+	.od-footer__logo-wrapper {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--od-space-3);
+		margin-bottom: var(--od-space-2);
+	}
+	
+	.od-footer__logo-icon {
+		width: 32px;
+		height: 32px;
+		color: var(--od-accent-primary);
+	}
+	
+	.od-footer__logo {
+		font-family: var(--od-font-display);
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--od-text-primary);
+		letter-spacing: -0.02em;
+	}
+	
+	.od-footer__tagline {
+		font-size: 0.875rem;
+		color: var(--od-text-muted);
+		margin: var(--od-space-2) 0 0;
+	}
+	
+	.od-footer__meta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--od-space-4);
+		margin-bottom: var(--od-space-6);
+	}
+	
+	.od-footer__bottom {
+		padding-top: var(--od-space-6);
+		border-top: 1px solid var(--od-border-subtle);
+	}
+</style>

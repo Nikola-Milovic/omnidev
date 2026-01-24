@@ -5,12 +5,28 @@ interface Props {
 	id?: string;
 	fullWidth?: boolean;
 	class?: string;
+	gradient?: boolean;
 }
 
-const { title, description, id, fullWidth = false, class: className = "" } = Astro.props;
+const { 
+	title, 
+	description, 
+	id, 
+	fullWidth = false, 
+	class: className = "",
+	gradient = false 
+} = Astro.props;
 ---
 
-<section id={id} class:list={["od-section", { "od-section--full": fullWidth }, className]}>
+<section 
+	id={id} 
+	class:list={[
+		"od-section", 
+		{ "od-section--full": fullWidth },
+		{ "od-section--gradient": gradient },
+		className
+	]}
+>
 	{
 		(title || description) && (
 			<div class="od-section__header">
@@ -21,3 +37,26 @@ const { title, description, id, fullWidth = false, class: className = "" } = Ast
 	}
 	<slot />
 </section>
+
+<style>
+	.od-section--gradient {
+		position: relative;
+	}
+	
+	.od-section--gradient::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 100%;
+		max-width: 800px;
+		height: 1px;
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			rgba(6, 182, 212, 0.3) 50%,
+			transparent 100%
+		);
+	}
+</style>

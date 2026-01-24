@@ -13,8 +13,8 @@ const { panels } = Astro.props;
 
 <div class="od-code-example">
 	{
-		panels.map((panel) => (
-			<div class="od-code-example__panel">
+		panels.map((panel, index) => (
+			<div class="od-code-example__panel" style={`animation-delay: ${index * 0.1}s`}>
 				<div class="od-code-example__header">
 					<div class="od-code-example__dots">
 						<span class="od-code-example__dot od-code-example__dot--red" />
@@ -22,6 +22,7 @@ const { panels } = Astro.props;
 						<span class="od-code-example__dot od-code-example__dot--green" />
 					</div>
 					<span class="od-code-example__filename">{panel.filename}</span>
+					<div class="od-code-example__spacer" />
 				</div>
 				<div class="od-code-example__body">
 					<pre><code set:html={panel.content} /></pre>
@@ -30,3 +31,10 @@ const { panels } = Astro.props;
 		))
 	}
 </div>
+
+<style>
+	.od-code-example__spacer {
+		width: 52px;
+		flex-shrink: 0;
+	}
+</style>

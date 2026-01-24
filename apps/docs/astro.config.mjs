@@ -8,7 +8,7 @@ export default defineConfig({
 		starlight({
 			title: "omnidev",
 			logo: {
-				src: "./public/logo.png",
+				src: "./public/logo.svg",
 				replacesTitle: false,
 			},
 			customCss: ["./src/styles/custom.css"],
@@ -81,7 +81,7 @@ export default defineConfig({
 					tag: "link",
 					attrs: {
 						rel: "stylesheet",
-						href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap",
+						href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
 					},
 				},
 			],

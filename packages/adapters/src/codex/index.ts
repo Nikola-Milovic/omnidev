@@ -8,6 +8,7 @@ import type {
 	SyncBundle,
 } from "@omnidev-ai/core";
 import { executeWriters } from "../writers/index.js";
+import { CodexTomlWriter } from "../writers/codex-toml.js";
 import { InstructionsMdWriter } from "../writers/instructions-md.js";
 import { SkillsWriter } from "../writers/skills.js";
 import type { AdapterWriterConfig } from "../writers/types.js";
@@ -22,6 +23,7 @@ export const codexAdapter: ProviderAdapter & { writers: AdapterWriterConfig[] } 
 	writers: [
 		{ writer: InstructionsMdWriter, outputPath: "AGENTS.md" },
 		{ writer: SkillsWriter, outputPath: ".codex/skills/" },
+		{ writer: CodexTomlWriter, outputPath: ".codex/config.toml" },
 	],
 
 	async init(ctx: ProviderContext): Promise<ProviderInitResult> {

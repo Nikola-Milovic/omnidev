@@ -36,6 +36,7 @@
       "version": "0.1.2",
       "dependencies": {
         "@omnidev-ai/core": "workspace:*",
+        "smol-toml": "^1.6.0",
       },
       "devDependencies": {
         "@types/bun": "^1.1.17",
@@ -43,7 +44,7 @@
     },
     "packages/capability": {
       "name": "@omnidev-ai/capability",
-      "version": "0.13.1",
+      "version": "0.13.4",
       "bin": {
         "capability": "./dist/cli/index.js",
       },
@@ -56,7 +57,7 @@
     },
     "packages/cli": {
       "name": "@omnidev-ai/cli",
-      "version": "0.13.1",
+      "version": "0.13.4",
       "bin": {
         "omnidev": "./dist/index.js",
       },

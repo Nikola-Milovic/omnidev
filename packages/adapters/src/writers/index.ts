@@ -10,6 +10,7 @@
 export type { AdapterWriterConfig, FileWriter, WriterContext, WriterResult } from "./types.js";
 
 // Writers
+export { CodexTomlWriter } from "./codex-toml.js";
 export { CursorRulesWriter } from "./cursor-rules.js";
 export { HooksWriter } from "./hooks.js";
 export { InstructionsMdWriter } from "./instructions-md.js";

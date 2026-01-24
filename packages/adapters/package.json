@@ -10,7 +10,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@omnidev-ai/core": "workspace:*"
+		"@omnidev-ai/core": "workspace:*",
+		"smol-toml": "^1.6.0"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.1.17"

@@ -331,17 +331,17 @@ capabilities = ["standard"]
 
 			// Verify cursor specific files
 			expect(existsSync("CLAUDE.md")).toBe(true);
-			expect(existsSync(".claude/skills")).toBe(true);
+			expect(existsSync(".cursor/skills")).toBe(true);
 			expect(existsSync(".cursor/rules")).toBe(true);
 
 			// Verify CLAUDE.md contains instructions
 			const claudeMd = readFileSync("CLAUDE.md", "utf-8");
 			expect(claudeMd).toContain("## Rules");
 
-			// Verify skills were written to .claude/skills
+			// Verify skills were written to .cursor/skills
 			const skillFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.skill);
 			expect(skillFiles.length).toBeGreaterThan(0);
-			expect(skillFiles.some((f) => f.includes(".claude/skills"))).toBe(true);
+			expect(skillFiles.some((f) => f.includes(".cursor/skills"))).toBe(true);
 
 			// Verify rules were written to .cursor/rules
 			const ruleFiles = findFilesWithMarker(".", FIXTURE_MARKERS.standard.rule);

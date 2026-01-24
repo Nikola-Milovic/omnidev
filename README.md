@@ -55,29 +55,39 @@ This creates an `omni.toml` configuration file and `.omni/` directory with your 
 ## What Can OmniDev Do?
 
 ### Manage Capabilities
+
 Install reusable AI capabilities from GitHub or local directories:
+
 ```bash
 omnidev add cap obsidian --github kepano/obsidian-skills
 omnidev add cap my-local --local ./capabilities/custom
 ```
 
 ### Switch Profiles
+
 Use different capability sets for different contexts:
+
 ```bash
 omnidev profile set frontend   # Load UI/accessibility tools
 omnidev profile set backend    # Load database/API tools
 ```
 
 ### Add MCP Servers
+
 Integrate Model Context Protocol servers:
+
 ```bash
 omnidev add mcp filesystem --command npx --args "-y @modelcontextprotocol/server-filesystem /path"
 ```
+
 MCP-only environment variables can be set in `omni.toml` with `env = { KEY = "value" }` under `[mcps.<name>]` or via `omnidev add mcp --env KEY=value`.
+
 ### Write Once, Use Everywhere
+
 Define your project instructions in `OMNI.md` and OmniDev generates provider-specific files (`CLAUDE.md`, `AGENTS.md`, etc.) automatically.
 
 ### Claude Plugin Wrapping
+
 OmniDev can auto-wrap existing `.claude-plugin` directories as capabilities. Just point to a repo with a `.claude-plugin/` folder and OmniDev handles the rest—including `hooks.json` parsing and path variable resolution (`${CLAUDE_PLUGIN_ROOT}` → absolute paths).
 
 ## Provider Support
@@ -89,32 +99,30 @@ OmniDev can auto-wrap existing `.claude-plugin` directories as capabilities. Jus
 | **Commands** | ✅* | ✅ | ❌ | ✅ |
 | **Hooks** | ✅ | ❌ | ❌ | ❌ |
 | **Rules** | ✅ | ✅ | ✅ | ✅ |
-| **MCP Servers** | ✅ | ❌ | ✅ | ✅ |
+| **MCP Servers** | ✅ | ✅ | ✅ | ✅ |
 
 **Notes:**
+
 - **Claude Code Commands**: Merged into skills (Claude Code doesn't have a native commands concept)
-- **Cursor Agents**: Written to `.cursor/agents/` with YAML frontmatter (name, description, model, readonly)
-- **Cursor Commands**: Written to `.cursor/commands/` as plain Markdown files
-- **MCP Servers**: Claude Code & OpenCode use `.mcp.json`; Codex uses `.codex/config.toml`
 - **Codex MCP**: Supports `stdio` and `http` transports only (SSE skipped with warning)
 
 ## Documentation
 
-- **[Getting Started](https://omnidev.nikolamilovic2001.workers.dev/getting-started/)** — Installation and first steps
-- **[Configuration](https://omnidev.nikolamilovic2001.workers.dev/configuration/config-files/)** — Configure capabilities, profiles, and providers
-- **[Capabilities](https://omnidev.nikolamilovic2001.workers.dev/capabilities/overview/)** — Create and share capabilities
-- **[Commands](https://omnidev.nikolamilovic2001.workers.dev/commands/init/)** — CLI reference
+- **[Getting Started](https://omnidev.frmtools.com/getting-started/)** — Installation and first steps
+- **[Configuration](https://omnidev.frmtools.com/configuration/config-files/)** — Configure capabilities, profiles, and providers
+- **[Capabilities](https://omnidev.frmtools.com/capabilities/overview/)** — Create and share capabilities
+- **[Commands](https://omnidev.frmtools.com/commands/init/)** — CLI reference
 - **[Examples](examples/)** — Sample configurations for different setups
 
 ## Examples
 
 Check out the [examples/](examples/) directory for sample configurations:
+
 - [basic.toml](examples/basic.toml) — Simple single-capability setup
 - [profiles.toml](examples/profiles.toml) — Multiple profiles for different contexts
 - [mcp.toml](examples/mcp.toml) — MCP server integration
 
 Explore community capabilities at [omnidev-capabilities](https://github.com/frmlabz/omnidev-capabilities).
-
 
 ## 🤝 Contributing
 

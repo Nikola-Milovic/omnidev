@@ -15,6 +15,7 @@ export { ClaudeCommandsAsSkillsWriter } from "./claude-commands-as-skills.js";
 export { CodexTomlWriter } from "./codex-toml.js";
 export { CursorAgentsWriter } from "./cursor-agents.js";
 export { CursorCommandsWriter } from "./cursor-commands.js";
+export { CursorMcpJsonWriter } from "./cursor-mcp-json.js";
 export { CursorRulesWriter } from "./cursor-rules.js";
 export { HooksWriter } from "./hooks.js";
 export { InstructionsMdWriter } from "./instructions-md.js";

@@ -9,6 +9,7 @@ import type {
 } from "@omnidev-ai/core";
 import { CursorAgentsWriter } from "../writers/cursor-agents.js";
 import { CursorCommandsWriter } from "../writers/cursor-commands.js";
+import { CursorMcpJsonWriter } from "../writers/cursor-mcp-json.js";
 import { CursorRulesWriter } from "../writers/cursor-rules.js";
 import { executeWriters } from "../writers/index.js";
 import { InstructionsMdWriter } from "../writers/instructions-md.js";
@@ -28,6 +29,7 @@ export const cursorAdapter: ProviderAdapter & { writers: AdapterWriterConfig[] }
 		{ writer: CursorRulesWriter, outputPath: ".cursor/rules/" },
 		{ writer: CursorAgentsWriter, outputPath: ".cursor/agents/" },
 		{ writer: CursorCommandsWriter, outputPath: ".cursor/commands/" },
+		{ writer: CursorMcpJsonWriter, outputPath: ".cursor/mcp.json" },
 	],
 
 	async init(ctx: ProviderContext): Promise<ProviderInitResult> {

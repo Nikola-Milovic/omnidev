@@ -77,6 +77,22 @@ MCP-only environment variables can be set in `omni.toml` with `env = { KEY = "va
 ### Write Once, Use Everywhere
 Define your project instructions in `OMNI.md` and OmniDev generates provider-specific files (`CLAUDE.md`, `AGENTS.md`, etc.) automatically.
 
+### Claude Plugin Wrapping
+OmniDev can auto-wrap existing `.claude-plugin` directories as capabilities. Just point to a repo with a `.claude-plugin/` folder and OmniDev handles the rest—including `hooks.json` parsing and path variable resolution (`${CLAUDE_PLUGIN_ROOT}` → absolute paths).
+
+## Provider Support
+
+| Feature | Claude Code | Cursor | Codex | OpenCode |
+|---------|:-----------:|:------:|:-----:|:--------:|
+| **Skills** | ✅ | ✅ | ✅ | ✅ |
+| **Agents** | ✅ | ❌ | ❌ | ✅ |
+| **Commands** | ✅* | ❌ | ❌ | ✅ |
+| **Hooks** | ✅ | ❌ | ❌ | ❌ |
+| **Rules** | ✅ | ✅ | ✅ | ✅ |
+| **MCP Servers** | ✅ | ❌ | ✅ | ✅ |
+
+*Claude Code commands are merged into skills (Claude Code doesn't have a native commands concept)
+
 ## Documentation
 
 - **[Getting Started](https://omnidev.nikolamilovic2001.workers.dev/getting-started/)** — Installation and first steps

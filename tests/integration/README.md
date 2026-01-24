@@ -48,6 +48,9 @@ Test cases are self-contained bash scripts in `tests/integration/cases/`:
 | `05-capability-toggle.sh` | Enable/disable capabilities |
 | `06-doctor.sh` | Run doctor command |
 | `07-full-workflow.sh` | Comprehensive 30-step workflow test |
+| `08-security.sh` | Security scanning and trusted sources |
+| `09-claude-plugin-wrapping.sh` | Claude plugin wrapping to capability |
+| `10-agents-commands.sh` | Subagents and commands sync for Claude Code and OpenCode |
 
 ## Structure
 

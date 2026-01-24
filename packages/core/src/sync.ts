@@ -104,50 +104,48 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 			});
 		});
 
-		// Check if capability needs building (has index.ts but no dist/index.js)
+		// Check if capability has a build script - always rebuild to ensure latest changes
 		const hasIndexTs = existsSync(join(capabilityPath, "index.ts"));
-		const hasBuiltIndex = existsSync(join(capabilityPath, "dist", "index.js"));
+		let hasBuildScript = false;
+		try {
+			const pkgJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+			hasBuildScript = Boolean(pkgJson.scripts?.build);
+		} catch {
+			// Ignore parse errors
+		}
 
-		if (hasIndexTs && !hasBuiltIndex) {
-			// Check if package.json has a build script
-			let hasBuildScript = false;
-			try {
-				const pkgJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-				hasBuildScript = Boolean(pkgJson.scripts?.build);
-			} catch {
-				// Ignore parse errors
-			}
+		if (hasBuildScript) {
+			// Always rebuild capabilities with build scripts to ensure latest changes
+			await new Promise<void>((resolve, reject) => {
+				const cmd = hasBun ? "bun" : "npm";
+				const args = ["run", "build"];
 
-			if (hasBuildScript) {
-				// Build silently (only show errors)
-				await new Promise<void>((resolve, reject) => {
-					const cmd = hasBun ? "bun" : "npm";
-					const args = ["run", "build"];
-
-					const proc = spawn(cmd, args, {
-						cwd: capabilityPath,
-						stdio: "pipe",
-					});
-
-					let stderr = "";
-					proc.stderr?.on("data", (data) => {
-						stderr += data.toString();
-					});
-
-					proc.on("close", (code) => {
-						if (code === 0) {
-							resolve();
-						} else {
-							reject(new Error(`Failed to build capability ${capabilityPath}:\n${stderr}`));
-						}
-					});
-
-					proc.on("error", (error) => {
-						reject(error);
-					});
+				const proc = spawn(cmd, args, {
+					cwd: capabilityPath,
+					stdio: "pipe",
 				});
-			} else if (!silent) {
-				// Warn user that capability has TypeScript but no build setup
+
+				let stderr = "";
+				proc.stderr?.on("data", (data) => {
+					stderr += data.toString();
+				});
+
+				proc.on("close", (code) => {
+					if (code === 0) {
+						resolve();
+					} else {
+						reject(new Error(`Failed to build capability ${capabilityPath}:\n${stderr}`));
+					}
+				});
+
+				proc.on("error", (error) => {
+					reject(error);
+				});
+			});
+		} else if (hasIndexTs && !silent) {
+			// Warn user that capability has TypeScript but no build setup
+			const hasBuiltIndex = existsSync(join(capabilityPath, "dist", "index.js"));
+			if (!hasBuiltIndex) {
 				console.warn(
 					`Warning: Capability at ${capabilityPath} has index.ts but no build script.\n` +
 						`  Add a "build" script to package.json (e.g., "build": "tsc") to compile TypeScript.`,

@@ -13,6 +13,8 @@ export type { AdapterWriterConfig, FileWriter, WriterContext, WriterResult } fro
 export { ClaudeAgentsWriter } from "./claude-agents.js";
 export { ClaudeCommandsAsSkillsWriter } from "./claude-commands-as-skills.js";
 export { CodexTomlWriter } from "./codex-toml.js";
+export { CursorAgentsWriter } from "./cursor-agents.js";
+export { CursorCommandsWriter } from "./cursor-commands.js";
 export { CursorRulesWriter } from "./cursor-rules.js";
 export { HooksWriter } from "./hooks.js";
 export { InstructionsMdWriter } from "./instructions-md.js";

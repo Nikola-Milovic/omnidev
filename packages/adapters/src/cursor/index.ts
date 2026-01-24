@@ -7,6 +7,8 @@ import type {
 	ProviderSyncResult,
 	SyncBundle,
 } from "@omnidev-ai/core";
+import { CursorAgentsWriter } from "../writers/cursor-agents.js";
+import { CursorCommandsWriter } from "../writers/cursor-commands.js";
 import { CursorRulesWriter } from "../writers/cursor-rules.js";
 import { executeWriters } from "../writers/index.js";
 import { InstructionsMdWriter } from "../writers/instructions-md.js";
@@ -14,7 +16,7 @@ import { SkillsWriter } from "../writers/skills.js";
 import type { AdapterWriterConfig } from "../writers/types.js";
 
 /**
- * Cursor adapter - writes CLAUDE.md, skills, and rules.
+ * Cursor adapter - writes CLAUDE.md, skills, rules, agents, and commands.
  */
 export const cursorAdapter: ProviderAdapter & { writers: AdapterWriterConfig[] } = {
 	id: "cursor",
@@ -24,6 +26,8 @@ export const cursorAdapter: ProviderAdapter & { writers: AdapterWriterConfig[] }
 		{ writer: InstructionsMdWriter, outputPath: "CLAUDE.md" },
 		{ writer: SkillsWriter, outputPath: ".claude/skills/" },
 		{ writer: CursorRulesWriter, outputPath: ".cursor/rules/" },
+		{ writer: CursorAgentsWriter, outputPath: ".cursor/agents/" },
+		{ writer: CursorCommandsWriter, outputPath: ".cursor/commands/" },
 	],
 
 	async init(ctx: ProviderContext): Promise<ProviderInitResult> {

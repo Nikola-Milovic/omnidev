@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Test: Agents and commands sync for Claude Code and OpenCode
+# Test: Agents and commands sync for Claude Code, Cursor, and OpenCode
 # Validates: subagents -> .claude/agents/, commands -> .claude/skills/ (claude)
+#            subagents -> .cursor/agents/, commands -> .cursor/commands/ (cursor)
 #            subagents -> .opencode/agents/, commands -> .opencode/commands/ (opencode)
 
 set -euo pipefail
@@ -48,15 +49,46 @@ assert_file_contains ".claude/skills/review-pr/SKILL.md" "FIXTURE_MARKER:STANDAR
 success "Claude Code agents and commands test passed"
 
 # ============================================================================
-# Test 2: OpenCode provider
+# Test 2: Cursor provider
+# ============================================================================
+info "Testing Cursor provider..."
+
+# Clean up Claude Code files and switch to Cursor
+rm -rf .claude CLAUDE.md
+
+run_omnidev provider enable cursor
+run_omnidev provider disable claude-code
+run_omnidev sync
+
+info "Validating CLAUDE.md exists (Cursor uses CLAUDE.md)..."
+assert_file_exists "CLAUDE.md"
+
+info "Validating subagent synced to .cursor/agents/..."
+assert_file_exists ".cursor/agents/code-reviewer.md"
+assert_file_contains ".cursor/agents/code-reviewer.md" "name: code-reviewer"
+assert_file_contains ".cursor/agents/code-reviewer.md" "description: \"Reviews code for quality and best practices\""
+# Cursor maps 'sonnet' to 'inherit'
+assert_file_contains ".cursor/agents/code-reviewer.md" "model: inherit"
+assert_file_contains ".cursor/agents/code-reviewer.md" "FIXTURE_MARKER:STANDARD_SUBAGENT"
+
+info "Validating command synced to .cursor/commands/..."
+assert_file_exists ".cursor/commands/review-pr.md"
+# Cursor commands are plain markdown with heading
+assert_file_contains ".cursor/commands/review-pr.md" "# review-pr"
+assert_file_contains ".cursor/commands/review-pr.md" "FIXTURE_MARKER:STANDARD_COMMAND"
+
+success "Cursor agents and commands test passed"
+
+# ============================================================================
+# Test 3: OpenCode provider
 # ============================================================================
 info "Testing OpenCode provider..."
 
-# Clean up Claude Code files and reinit with OpenCode
-rm -rf .claude CLAUDE.md
+# Clean up Cursor files and switch to OpenCode
+rm -rf .cursor CLAUDE.md
 
 run_omnidev provider enable opencode
-run_omnidev provider disable claude-code
+run_omnidev provider disable cursor
 run_omnidev sync
 
 info "Validating AGENTS.md exists..."
@@ -85,11 +117,12 @@ assert_file_contains ".opencode/commands/review-pr.md" "FIXTURE_MARKER:STANDARD_
 success "OpenCode agents and commands test passed"
 
 # ============================================================================
-# Test 3: Both providers enabled
+# Test 4: All three providers enabled
 # ============================================================================
-info "Testing both providers enabled..."
+info "Testing all three providers enabled..."
 
 run_omnidev provider enable claude-code
+run_omnidev provider enable cursor
 run_omnidev sync
 
 info "Validating both CLAUDE.md and AGENTS.md exist..."
@@ -100,6 +133,10 @@ info "Validating Claude Code agents..."
 assert_file_exists ".claude/agents/code-reviewer.md"
 assert_file_contains ".claude/agents/code-reviewer.md" "FIXTURE_MARKER:STANDARD_SUBAGENT"
 
+info "Validating Cursor agents..."
+assert_file_exists ".cursor/agents/code-reviewer.md"
+assert_file_contains ".cursor/agents/code-reviewer.md" "FIXTURE_MARKER:STANDARD_SUBAGENT"
+
 info "Validating OpenCode agents..."
 assert_file_exists ".opencode/agents/code-reviewer.md"
 assert_file_contains ".opencode/agents/code-reviewer.md" "FIXTURE_MARKER:STANDARD_SUBAGENT"
@@ -107,6 +144,10 @@ assert_file_contains ".opencode/agents/code-reviewer.md" "FIXTURE_MARKER:STANDAR
 info "Validating Claude Code commands as skills..."
 assert_file_exists ".claude/skills/review-pr/SKILL.md"
 assert_file_contains ".claude/skills/review-pr/SKILL.md" "FIXTURE_MARKER:STANDARD_COMMAND"
+
+info "Validating Cursor commands..."
+assert_file_exists ".cursor/commands/review-pr.md"
+assert_file_contains ".cursor/commands/review-pr.md" "FIXTURE_MARKER:STANDARD_COMMAND"
 
 info "Validating OpenCode commands..."
 assert_file_exists ".opencode/commands/review-pr.md"

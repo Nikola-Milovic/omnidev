@@ -85,13 +85,18 @@ OmniDev can auto-wrap existing `.claude-plugin` directories as capabilities. Jus
 | Feature | Claude Code | Cursor | Codex | OpenCode |
 |---------|:-----------:|:------:|:-----:|:--------:|
 | **Skills** | ✅ | ✅ | ✅ | ✅ |
-| **Agents** | ✅ | ❌ | ❌ | ✅ |
-| **Commands** | ✅* | ❌ | ❌ | ✅ |
+| **Agents** | ✅ | ✅ | ❌ | ✅ |
+| **Commands** | ✅* | ✅ | ❌ | ✅ |
 | **Hooks** | ✅ | ❌ | ❌ | ❌ |
 | **Rules** | ✅ | ✅ | ✅ | ✅ |
 | **MCP Servers** | ✅ | ❌ | ✅ | ✅ |
 
-*Claude Code commands are merged into skills (Claude Code doesn't have a native commands concept)
+**Notes:**
+- **Claude Code Commands**: Merged into skills (Claude Code doesn't have a native commands concept)
+- **Cursor Agents**: Written to `.cursor/agents/` with YAML frontmatter (name, description, model, readonly)
+- **Cursor Commands**: Written to `.cursor/commands/` as plain Markdown files
+- **MCP Servers**: Claude Code & OpenCode use `.mcp.json`; Codex uses `.codex/config.toml`
+- **Codex MCP**: Supports `stdio` and `http` transports only (SSE skipped with warning)
 
 ## Documentation
 

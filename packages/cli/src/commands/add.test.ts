@@ -11,6 +11,13 @@ mock.module("@omnidev-ai/adapters", () => ({
 // Import the sync module to spy on syncAgentConfiguration
 import * as syncModule from "@omnidev-ai/core";
 
+// Mock validateGitCapability to return valid for all repos in tests
+const validateGitCapabilityMock = spyOn(syncModule, "validateGitCapability").mockResolvedValue({
+	valid: true,
+	hasCapabilityToml: true,
+	canBeWrapped: true,
+});
+
 import { runAddCap, runAddMcp } from "./add";
 
 describe("add commands", () => {
@@ -57,6 +64,12 @@ describe("add commands", () => {
 
 	afterEach(() => {
 		syncSpy.mockRestore();
+		// Reset validateGitCapability mock to default valid state
+		validateGitCapabilityMock.mockResolvedValue({
+			valid: true,
+			hasCapabilityToml: true,
+			canBeWrapped: true,
+		});
 		process.exit = originalExit;
 		console.log = originalLog;
 		console.error = originalError;
@@ -93,6 +106,62 @@ capabilities = []
 
 			expect(exitCode).toBe(1);
 			expect(consoleErrors.join("\n")).toContain("Invalid GitHub repository format");
+		});
+
+		test("should show error when github repo does not exist", async () => {
+			mkdirSync(".omni", { recursive: true });
+			await writeFile(
+				"omni.toml",
+				`[profiles.default]
+capabilities = []
+`,
+				"utf-8",
+			);
+
+			// Mock validation to return invalid
+			validateGitCapabilityMock.mockResolvedValueOnce({
+				valid: false,
+				hasCapabilityToml: false,
+				canBeWrapped: false,
+				error: "Repository not found",
+			});
+
+			try {
+				await runAddCap({ github: "user/non-existent-repo" }, "test-cap");
+			} catch {
+				// Expected to throw due to process.exit mock
+			}
+
+			expect(exitCode).toBe(1);
+			expect(consoleErrors.join("\n")).toContain("Repository not found");
+		});
+
+		test("should show error when github repo is not a valid capability", async () => {
+			mkdirSync(".omni", { recursive: true });
+			await writeFile(
+				"omni.toml",
+				`[profiles.default]
+capabilities = []
+`,
+				"utf-8",
+			);
+
+			// Mock validation to return invalid (no capability content)
+			validateGitCapabilityMock.mockResolvedValueOnce({
+				valid: false,
+				hasCapabilityToml: false,
+				canBeWrapped: false,
+				error: "Repository does not contain a capability.toml and cannot be auto-wrapped",
+			});
+
+			try {
+				await runAddCap({ github: "user/empty-repo" }, "test-cap");
+			} catch {
+				// Expected to throw due to process.exit mock
+			}
+
+			expect(exitCode).toBe(1);
+			expect(consoleErrors.join("\n")).toContain("cannot be auto-wrapped");
 		});
 
 		test("should add capability source from GitHub", async () => {

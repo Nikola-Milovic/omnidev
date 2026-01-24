@@ -10,6 +10,7 @@ import {
 	syncAgentConfiguration,
 	readCapabilityIdFromPath,
 	detectPinVersion,
+	validateGitCapability,
 	type McpConfig,
 	type McpTransport,
 } from "@omnidev-ai/core";
@@ -101,6 +102,19 @@ export async function runAddCap(flags: AddCapFlags, name?: string): Promise<void
 				process.exit(1);
 			}
 			source = `github:${flags.github}`;
+
+			// Validate repository exists and is a valid capability
+			console.log(`  Validating repository ${flags.github}...`);
+			const validation = await validateGitCapability(source, flags.path);
+			if (!validation.valid) {
+				console.error(`✗ ${validation.error}`);
+				process.exit(1);
+			}
+			if (validation.hasCapabilityToml) {
+				console.log(`  Found capability.toml`);
+			} else {
+				console.log(`  Repository can be auto-wrapped as capability`);
+			}
 		} else {
 			// This shouldn't happen due to earlier validation, but satisfy TypeScript
 			throw new Error("Unreachable: no source specified");

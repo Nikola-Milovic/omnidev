@@ -511,6 +511,154 @@ export async function detectDisplayVersion(
 }
 
 /**
+ * Result of validating a Git capability source
+ */
+export interface ValidateCapabilityResult {
+	/** Whether the source is valid */
+	valid: boolean;
+	/** Whether it has a capability.toml */
+	hasCapabilityToml: boolean;
+	/** Whether it can be wrapped (has skills/agents/etc) */
+	canBeWrapped: boolean;
+	/** Error message if invalid */
+	error?: string;
+	/** Capability ID from capability.toml if present */
+	capabilityId?: string;
+}
+
+/**
+ * Validate that a Git repository exists and is a valid capability source.
+ * This checks:
+ * 1. Repository can be cloned (exists and is accessible)
+ * 2. Repository has capability.toml OR can be wrapped (has skills/agents/etc)
+ *
+ * @param sourceUrl - Git source URL or shorthand (e.g., "github:user/repo")
+ * @param subPath - Optional subdirectory within the repo
+ * @returns Validation result
+ */
+export async function validateGitCapability(
+	sourceUrl: string,
+	subPath?: string,
+): Promise<ValidateCapabilityResult> {
+	const gitUrl = sourceToGitUrl(sourceUrl);
+	const tempPath = join(OMNI_LOCAL, "_temp", `_validate-${Date.now()}`);
+
+	try {
+		// Ensure parent directory exists
+		await mkdir(join(tempPath, ".."), { recursive: true });
+
+		// Try to clone the repository
+		const args = ["clone", "--depth", "1", gitUrl, tempPath];
+		const { exitCode, stderr } = await spawnCapture("git", args, { timeout: 30000 });
+
+		if (exitCode !== 0) {
+			// Check for common error patterns
+			const stderrLower = stderr.toLowerCase();
+			if (
+				stderrLower.includes("not found") ||
+				stderrLower.includes("repository not found") ||
+				stderrLower.includes("does not exist")
+			) {
+				return {
+					valid: false,
+					hasCapabilityToml: false,
+					canBeWrapped: false,
+					error: "Repository not found",
+				};
+			}
+			if (stderrLower.includes("could not resolve host")) {
+				return {
+					valid: false,
+					hasCapabilityToml: false,
+					canBeWrapped: false,
+					error: "Could not resolve host - check your network connection",
+				};
+			}
+			if (stderrLower.includes("authentication") || stderrLower.includes("permission denied")) {
+				return {
+					valid: false,
+					hasCapabilityToml: false,
+					canBeWrapped: false,
+					error: "Authentication failed - repository may be private",
+				};
+			}
+			return {
+				valid: false,
+				hasCapabilityToml: false,
+				canBeWrapped: false,
+				error: `Failed to clone repository: ${stderr.trim()}`,
+			};
+		}
+
+		// Determine which directory to check
+		const checkPath = subPath ? join(tempPath, subPath) : tempPath;
+
+		// Check if the subpath exists
+		if (subPath && !existsSync(checkPath)) {
+			return {
+				valid: false,
+				hasCapabilityToml: false,
+				canBeWrapped: false,
+				error: `Path '${subPath}' not found in repository`,
+			};
+		}
+
+		// Check for capability.toml
+		const hasCapToml = hasCapabilityToml(checkPath);
+		let capabilityId: string | undefined;
+
+		if (hasCapToml) {
+			// Try to read the capability ID
+			const tomlPath = join(checkPath, "capability.toml");
+			try {
+				const content = await readFile(tomlPath, "utf-8");
+				const parsed = parseToml(content) as Record<string, unknown>;
+				const capability = parsed["capability"] as Record<string, unknown> | undefined;
+				if (capability?.["id"] && typeof capability["id"] === "string") {
+					capabilityId = capability["id"];
+				}
+			} catch {
+				// Ignore parse errors - just don't include the ID
+			}
+
+			const result: ValidateCapabilityResult = {
+				valid: true,
+				hasCapabilityToml: true,
+				canBeWrapped: true,
+			};
+			if (capabilityId) {
+				result.capabilityId = capabilityId;
+			}
+			return result;
+		}
+
+		// Check if it can be wrapped
+		const canWrap = await shouldWrapDirectory(checkPath);
+
+		if (!canWrap) {
+			return {
+				valid: false,
+				hasCapabilityToml: false,
+				canBeWrapped: false,
+				error:
+					"Repository does not contain a capability.toml and cannot be auto-wrapped (no skills, agents, commands, rules, docs, or .claude-plugin found)",
+			};
+		}
+
+		return {
+			valid: true,
+			hasCapabilityToml: false,
+			canBeWrapped: true,
+		};
+	} finally {
+		// Clean up temp directory
+		if (existsSync(tempPath)) {
+			await rm(tempPath, { recursive: true });
+		}
+	}
+}
+
+/**
  * Detect a version to pin for a git repository.
  * Clones the repo temporarily, checks for version in capability.toml,
  * falls back to HEAD commit hash.

@@ -20,6 +20,7 @@ export {
 	parseFileSourcePath,
 	readCapabilityIdFromPath,
 	detectPinVersion,
+	validateGitCapability,
 	checkVersionMismatch,
 	verifyIntegrity,
 } from "./sources";
@@ -29,5 +30,6 @@ export type {
 	SourceUpdateInfo,
 	DiscoveredContent,
 	SyncWarning,
+	ValidateCapabilityResult,
 } from "./sources";
 export { loadSubagents } from "./subagents";

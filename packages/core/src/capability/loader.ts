@@ -422,8 +422,9 @@ export async function loadCapability(capabilityPath: string): Promise<LoadedCapa
 			? (exportsAny.gitignore as string[])
 			: undefined;
 
-	// Load hooks from hooks/hooks.toml if present
-	const hooks = loadCapabilityHooks(id, capabilityPath);
+	// Load hooks from hooks/hooks.toml or hooks.json if present
+	// Resolve capability root variables to absolute paths during loading
+	const hooks = loadCapabilityHooks(id, capabilityPath, { resolveCapabilityRoot: true });
 
 	// Build result object with explicit handling for optional typeDefinitions
 	const result: LoadedCapability = {

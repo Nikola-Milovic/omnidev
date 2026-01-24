@@ -93,8 +93,11 @@ export const VARIABLE_MAPPINGS = {
 	OMNIDEV_PROJECT_DIR: "CLAUDE_PROJECT_DIR",
 } as const;
 
-/** The hooks configuration filename within a capability */
+/** The hooks configuration filename within a capability (OmniDev format) */
 export const HOOKS_CONFIG_FILENAME = "hooks.toml";
+
+/** The Claude hooks configuration filename (JSON format) */
+export const CLAUDE_HOOKS_CONFIG_FILENAME = "hooks.json";
 
 /** The hooks directory name within a capability */
 export const HOOKS_DIRECTORY = "hooks";

@@ -20,6 +20,7 @@ export {
 	DEFAULT_PROMPT_TIMEOUT,
 	VARIABLE_MAPPINGS,
 	HOOKS_CONFIG_FILENAME,
+	CLAUDE_HOOKS_CONFIG_FILENAME,
 	HOOKS_DIRECTORY,
 } from "./constants.js";
 
@@ -76,6 +77,8 @@ export {
 	transformHooksConfig,
 	containsClaudeVariables,
 	containsOmnidevVariables,
+	resolveCapabilityRoot,
+	resolveCapabilityRootInConfig,
 } from "./variables.js";
 
 // Loader
@@ -97,3 +100,7 @@ export {
 	countHooks,
 	getEventsWithHooks,
 } from "./merger.js";
+
+// JSON loader (Claude plugin hooks.json format)
+export type { LoadJsonHooksResult } from "./json-loader.js";
+export { loadHooksJson } from "./json-loader.js";

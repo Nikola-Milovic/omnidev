@@ -149,3 +149,86 @@ export function containsOmnidevVariables(content: string): boolean {
 	}
 	return false;
 }
+
+/**
+ * Resolve capability root variable to actual path
+ *
+ * Replaces ${OMNIDEV_CAPABILITY_ROOT} and ${CLAUDE_PLUGIN_ROOT} with the actual capability path.
+ * Used during hook loading when the capability path is known.
+ *
+ * @param content - String containing variable references
+ * @param capabilityPath - The actual absolute path to the capability
+ * @returns String with variables replaced by the actual path
+ */
+export function resolveCapabilityRoot(content: string, capabilityPath: string): string {
+	let result = content;
+
+	// Resolve both OMNIDEV_CAPABILITY_ROOT and CLAUDE_PLUGIN_ROOT
+	const variables = ["OMNIDEV_CAPABILITY_ROOT", "CLAUDE_PLUGIN_ROOT"];
+
+	for (const varName of variables) {
+		// Handle ${VAR} format
+		result = result.replace(new RegExp(`\\$\\{${varName}\\}`, "g"), capabilityPath);
+		// Handle $VAR format (not followed by alphanumeric or underscore)
+		result = result.replace(new RegExp(`\\$${varName}(?![A-Za-z0-9_])`, "g"), capabilityPath);
+	}
+
+	return result;
+}
+
+/**
+ * Resolve capability root in all hooks within a HooksConfig
+ *
+ * @param config - The hooks configuration
+ * @param capabilityPath - The actual absolute path to the capability
+ * @returns New HooksConfig with resolved paths
+ */
+export function resolveCapabilityRootInConfig(
+	config: HooksConfig,
+	capabilityPath: string,
+): HooksConfig {
+	const result: HooksConfig = {};
+
+	if (config.description !== undefined) {
+		result.description = config.description;
+	}
+
+	const events = [
+		"PreToolUse",
+		"PostToolUse",
+		"PermissionRequest",
+		"UserPromptSubmit",
+		"Stop",
+		"SubagentStop",
+		"Notification",
+		"SessionStart",
+		"SessionEnd",
+		"PreCompact",
+	] as const;
+
+	for (const event of events) {
+		const matchers = config[event];
+		if (matchers) {
+			result[event] = matchers.map((matcher) => ({
+				...matcher,
+				hooks: matcher.hooks.map((hook) => {
+					if (hook.type === "command") {
+						return {
+							...hook,
+							command: resolveCapabilityRoot(hook.command, capabilityPath),
+						};
+					}
+					if (hook.type === "prompt") {
+						return {
+							...hook,
+							prompt: resolveCapabilityRoot(hook.prompt, capabilityPath),
+						};
+					}
+					return hook;
+				}),
+			}));
+		}
+	}
+
+	return result;
+}

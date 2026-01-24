@@ -383,12 +383,16 @@ If the capability name is omitted, it will be inferred from:
 - For local sources: the ID in capability.toml or directory name
 - For GitHub sources: the repository name or last path segment
 
+Claude plugins (.claude-plugin/plugin.json) are automatically wrapped as OmniDev capabilities.
+Hooks defined in hooks.json are also supported and will be synced to .claude/settings.json.
+
 Examples:
   omnidev add cap my-cap --github expo/skills              # Uses version = "latest"
   omnidev add cap --github expo/skills                     # Infers name as "skills"
   omnidev add cap --github expo/skills --pin               # Pins to detected version
   omnidev add cap --local ./capabilities/my-cap            # Infers name from capability.toml
-  omnidev add cap custom-name --local ./capabilities/my-cap`,
+  omnidev add cap custom-name --local ./capabilities/my-cap
+  omnidev add cap --github user/claude-plugin              # Auto-wraps Claude plugins`,
 	},
 	parameters: {
 		flags: {

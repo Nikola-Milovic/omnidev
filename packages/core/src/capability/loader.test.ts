@@ -656,7 +656,7 @@ command = "echo test"`,
 		expect(capability.hooks?.config.PreToolUse?.[0]?.matcher).toBe("Bash");
 	});
 
-	test("loads capability with hooks and transforms CLAUDE_ variables", async () => {
+	test("loads capability with hooks and resolves CLAUDE_ variables to absolute paths", async () => {
 		const capPath = join(".omni", "capabilities", "hooks-transform");
 		mkdirSync(capPath, { recursive: true });
 		writeFileSync(
@@ -682,12 +682,16 @@ command = "\${CLAUDE_PLUGIN_ROOT}/hooks/validate.sh"`,
 
 		const capability = await loadCapability(capPath);
 
-		// CLAUDE_PLUGIN_ROOT should be transformed to OMNIDEV_CAPABILITY_ROOT
+		// CLAUDE_PLUGIN_ROOT should be resolved to the absolute capability path
 		const command = capability.hooks?.config.PreToolUse?.[0]?.hooks[0];
 		expect(command?.type).toBe("command");
 		if (command?.type === "command") {
-			expect(command.command).toContain("OMNIDEV_CAPABILITY_ROOT");
+			// Should be resolved to absolute path, not contain any variables
+			expect(command.command).toContain("/hooks/validate.sh");
 			expect(command.command).not.toContain("CLAUDE_PLUGIN_ROOT");
+			expect(command.command).not.toContain("OMNIDEV_CAPABILITY_ROOT");
+			// Should contain the capability path
+			expect(command.command).toContain(capPath);
 		}
 	});
 

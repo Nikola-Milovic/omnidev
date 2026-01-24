@@ -68,6 +68,25 @@ omnidev add cap --github expo/skills
 omnidev add cap --local ./capabilities/my-cap
 ```
 
+### Claude Plugin Wrapping
+
+OmniDev can automatically wrap Claude plugins (repositories with `.claude-plugin/plugin.json`) as capabilities:
+
+```bash
+# Add a Claude plugin - auto-detected and wrapped
+omnidev add cap --github user/claude-plugin
+```
+
+When wrapping a Claude plugin, OmniDev will:
+
+1. Extract metadata from `.claude-plugin/plugin.json` (name, version, description)
+2. Generate `capability.toml` automatically
+3. Detect content directories: `skills/`, `commands/`, `agents/`, `rules/`, `docs/`
+4. Load hooks from `hooks.json` (at root) or `hooks/hooks.json`
+5. Resolve `${CLAUDE_PLUGIN_ROOT}` paths to absolute paths
+
+Hooks defined in `hooks.json` are merged into `.claude/settings.json` during sync.
+
 ## `omnidev add mcp`
 
 Add an MCP server and enable it.

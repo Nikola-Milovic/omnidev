@@ -283,6 +283,74 @@ interface SyncBundle {
 }
 ```
 
+## Claude Plugin Wrapping
+
+OmniDev can automatically wrap Claude plugins (repositories with `.claude-plugin/plugin.json`) as OmniDev capabilities.
+
+### Supported Features
+
+When wrapping a Claude plugin, OmniDev will:
+
+1. **Extract metadata** from `.claude-plugin/plugin.json` (name, version, description)
+2. **Generate `capability.toml`** automatically from the plugin metadata
+3. **Detect content directories**: skills/, commands/, agents/, rules/, docs/
+4. **Load hooks** from `hooks.json` (at root) or `hooks/hooks.json`
+5. **Resolve path variables**: `${CLAUDE_PLUGIN_ROOT}` is resolved to the absolute capability path
+
+### hooks.json Format
+
+Claude plugins use `hooks.json` for lifecycle hooks:
+
+```json
+{
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js\""
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-edit.sh"
+        }
+      ]
+    }
+  ]
+}
+```
+
+OmniDev supports loading hooks from these locations (in priority order):
+1. `hooks/hooks.toml` (OmniDev native format, takes priority)
+2. `hooks/hooks.json` (Claude format in hooks directory)
+3. `hooks.json` (Claude format at root)
+
+If `hooks.toml` exists, it takes priority. Otherwise, both `hooks.json` locations are loaded and merged.
+
+### Path Variable Resolution
+
+The `${CLAUDE_PLUGIN_ROOT}` variable in hook commands is resolved to the absolute path of the capability during loading. This ensures hooks work correctly regardless of where the project is located.
+
+### Adding a Claude Plugin
+
+```bash
+omnidev add cap --github user/claude-plugin
+```
+
+This will:
+1. Clone the repository
+2. Detect the `.claude-plugin/plugin.json` format
+3. Generate a `capability.toml` wrapper
+4. Sync skills, rules, commands, agents to your project
+5. Merge hooks into `.claude/settings.json`
+
 ## FAQ
 
 ### Q: Can I use multiple providers at once?

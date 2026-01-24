@@ -3,16 +3,27 @@ interface Provider {
 	name: string;
 }
 
+interface Props {
+	providers: Provider[];
+	tagline?: string;
+}
+
 const { providers, tagline } = Astro.props;
 ---
 
 <div class="od-provider-grid" id="od-provider-grid-root">
 	{
 		providers &&
-			providers.map((provider: Provider) => {
+			providers.map((provider: Provider, index: number) => {
 				return (
-					<div class="od-provider-grid__item" data-provider={provider.name}>
-						<img class="od-provider-img" alt={provider.name} />
+					<div 
+						class="od-provider-grid__item" 
+						data-provider={provider.name}
+						style={`animation-delay: ${index * 0.1}s`}
+					>
+						<div class="od-provider-grid__icon-wrapper">
+							<img class="od-provider-img" alt={provider.name} />
+						</div>
 						<span>{provider.name}</span>
 					</div>
 				);
@@ -64,3 +75,26 @@ const { providers, tagline } = Astro.props;
 		attributeFilter: ["data-theme"],
 	});
 </script>
+
+<style>
+	.od-provider-grid__icon-wrapper {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		border-radius: var(--od-radius-lg);
+		background: var(--od-surface);
+		border: 1px solid var(--od-border-subtle);
+		transition: 
+			border-color var(--od-transition-base),
+			background-color var(--od-transition-base),
+			box-shadow var(--od-transition-base);
+	}
+	
+	.od-provider-grid__item:hover .od-provider-grid__icon-wrapper {
+		border-color: var(--od-border);
+		background: var(--od-surface-hover);
+		box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+	}
+</style>

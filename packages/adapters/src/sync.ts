@@ -1,5 +1,5 @@
 import type { ProviderContext, SyncBundle } from "@omnidev-ai/core";
-import { executeWriters, type AdapterWriterConfig } from "./writers/index.js";
+import { executeWriters, type AdapterWriterConfig } from "./writers/generic/index.js";
 
 /**
  * Adapter with writers declaration.

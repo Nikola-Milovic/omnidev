@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { SyncBundle, Subagent, SubagentModel } from "@omnidev-ai/core";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "../generic/types.js";
 
 /**
  * Map OmniDev model names to Cursor model values.

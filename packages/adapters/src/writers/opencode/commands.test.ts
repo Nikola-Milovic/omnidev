@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Command, SyncBundle } from "@omnidev-ai/core";
-import { OpenCodeCommandsWriter } from "./opencode-commands.js";
+import { OpenCodeCommandsWriter } from "./commands.js";
 
 describe("OpenCodeCommandsWriter", () => {
 	let testDir: string;

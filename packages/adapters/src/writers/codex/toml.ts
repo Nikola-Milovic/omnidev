@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { McpConfig, SyncBundle } from "@omnidev-ai/core";
 import { stringify } from "smol-toml";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "../generic/types.js";
 
 /**
  * Codex MCP server config format (for `.codex/config.toml`)

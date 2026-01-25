@@ -35,13 +35,13 @@ export {
 	type WriterResult,
 	type ExecuteWritersResult,
 	// Writers
-	CursorRulesWriter,
 	HooksWriter,
 	InstructionsMdWriter,
 	SkillsWriter,
 	// Execution
 	executeWriters,
-} from "./writers/index.js";
+} from "./writers/generic/index.js";
+export { CursorRulesWriter } from "./writers/cursor/index.js";
 
 // Re-export types from core for convenience
 export type {

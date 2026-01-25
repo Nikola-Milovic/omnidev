@@ -7,14 +7,18 @@ import type {
 	ProviderSyncResult,
 	SyncBundle,
 } from "@omnidev-ai/core";
-import { CursorAgentsWriter } from "../writers/cursor-agents.js";
-import { CursorCommandsWriter } from "../writers/cursor-commands.js";
-import { CursorMcpJsonWriter } from "../writers/cursor-mcp-json.js";
-import { CursorRulesWriter } from "../writers/cursor-rules.js";
-import { executeWriters } from "../writers/index.js";
-import { InstructionsMdWriter } from "../writers/instructions-md.js";
-import { SkillsWriter } from "../writers/skills.js";
-import type { AdapterWriterConfig } from "../writers/types.js";
+import {
+	executeWriters,
+	InstructionsMdWriter,
+	SkillsWriter,
+	type AdapterWriterConfig,
+} from "../writers/generic/index.js";
+import {
+	CursorAgentsWriter,
+	CursorCommandsWriter,
+	CursorMcpJsonWriter,
+	CursorRulesWriter,
+} from "../writers/cursor/index.js";
 
 /**
  * Cursor adapter - writes CLAUDE.md, skills, rules, agents, and commands.

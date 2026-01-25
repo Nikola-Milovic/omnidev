@@ -5,13 +5,14 @@ import type {
 	ProviderSyncResult,
 	SyncBundle,
 } from "@omnidev-ai/core";
-import { executeWriters } from "../writers/index.js";
-import { ClaudeAgentsWriter } from "../writers/claude-agents.js";
-import { ClaudeCommandsAsSkillsWriter } from "../writers/claude-commands-as-skills.js";
-import { HooksWriter } from "../writers/hooks.js";
-import { InstructionsMdWriter } from "../writers/instructions-md.js";
-import { SkillsWriter } from "../writers/skills.js";
-import type { AdapterWriterConfig } from "../writers/types.js";
+import {
+	executeWriters,
+	HooksWriter,
+	InstructionsMdWriter,
+	SkillsWriter,
+	type AdapterWriterConfig,
+} from "../writers/generic/index.js";
+import { ClaudeAgentsWriter, ClaudeCommandsAsSkillsWriter } from "../writers/claude/index.js";
 
 /**
  * Claude Code adapter - writes CLAUDE.md, skills, and hooks.

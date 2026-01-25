@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Subagent, SyncBundle } from "@omnidev-ai/core";
-import { ClaudeAgentsWriter } from "./claude-agents.js";
+import { ClaudeAgentsWriter } from "./agents.js";
 
 describe("ClaudeAgentsWriter", () => {
 	let testDir: string;

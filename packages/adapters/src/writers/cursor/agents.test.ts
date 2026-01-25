@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Subagent, SyncBundle } from "@omnidev-ai/core";
-import { CursorAgentsWriter } from "./cursor-agents.js";
+import { CursorAgentsWriter } from "./agents.js";
 
 describe("CursorAgentsWriter", () => {
 	let testDir: string;

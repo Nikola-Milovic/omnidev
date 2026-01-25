@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { SyncBundle, Command } from "@omnidev-ai/core";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "../generic/types.js";
 
 /**
  * Generate YAML frontmatter for a skill derived from a command.

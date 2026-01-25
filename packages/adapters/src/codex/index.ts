@@ -7,11 +7,13 @@ import type {
 	ProviderSyncResult,
 	SyncBundle,
 } from "@omnidev-ai/core";
-import { executeWriters } from "../writers/index.js";
-import { CodexTomlWriter } from "../writers/codex-toml.js";
-import { InstructionsMdWriter } from "../writers/instructions-md.js";
-import { SkillsWriter } from "../writers/skills.js";
-import type { AdapterWriterConfig } from "../writers/types.js";
+import {
+	executeWriters,
+	InstructionsMdWriter,
+	SkillsWriter,
+	type AdapterWriterConfig,
+} from "../writers/generic/index.js";
+import { CodexTomlWriter } from "../writers/codex/index.js";
 
 /**
  * Codex adapter - generates AGENTS.md and skills.

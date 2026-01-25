@@ -3,8 +3,7 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { OmniConfig, SyncBundle } from "@omnidev-ai/core";
 import { syncAdaptersWithWriters, type AdapterWithWriters } from "./sync.js";
-import { InstructionsMdWriter } from "./writers/instructions-md.js";
-import { SkillsWriter } from "./writers/skills.js";
+import { InstructionsMdWriter, SkillsWriter } from "./writers/generic/index.js";
 
 describe("syncAdaptersWithWriters", () => {
 	let testDir: string;

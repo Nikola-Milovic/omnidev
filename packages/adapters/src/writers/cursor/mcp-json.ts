@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { McpConfig, SyncBundle } from "@omnidev-ai/core";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "../generic/types.js";
 
 /**
  * Cursor MCP server config format (for `.cursor/mcp.json`)

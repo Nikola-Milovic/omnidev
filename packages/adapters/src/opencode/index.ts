@@ -7,12 +7,13 @@ import type {
 	ProviderSyncResult,
 	SyncBundle,
 } from "@omnidev-ai/core";
-import { executeWriters } from "../writers/index.js";
-import { InstructionsMdWriter } from "../writers/instructions-md.js";
-import { OpenCodeAgentsWriter } from "../writers/opencode-agents.js";
-import { OpenCodeCommandsWriter } from "../writers/opencode-commands.js";
-import { SkillsWriter } from "../writers/skills.js";
-import type { AdapterWriterConfig } from "../writers/types.js";
+import {
+	executeWriters,
+	InstructionsMdWriter,
+	SkillsWriter,
+	type AdapterWriterConfig,
+} from "../writers/generic/index.js";
+import { OpenCodeAgentsWriter, OpenCodeCommandsWriter } from "../writers/opencode/index.js";
 
 /**
  * OpenCode adapter - generates .opencode/instructions.md and skills from OMNI.md.

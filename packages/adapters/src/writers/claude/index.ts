@@ -1,2 +1,2 @@
-export { ClaudeAgentsWriter } from "./agents.js";
-export { ClaudeCommandsAsSkillsWriter } from "./commands-as-skills.js";
+export { ClaudeAgentsWriter } from "./agents";
+export { ClaudeCommandsAsSkillsWriter } from "./commands-as-skills";

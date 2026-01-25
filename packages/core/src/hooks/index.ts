@@ -22,7 +22,7 @@ export {
 	HOOKS_CONFIG_FILENAME,
 	CLAUDE_HOOKS_CONFIG_FILENAME,
 	HOOKS_DIRECTORY,
-} from "./constants.js";
+} from "./constants";
 
 // Types
 export type {
@@ -48,7 +48,7 @@ export type {
 	DoctorCheckStatus,
 	HooksDoctorCheck,
 	HooksDoctorResult,
-} from "./types.js";
+} from "./types";
 
 // Type guards
 export {
@@ -58,7 +58,7 @@ export {
 	isPromptHookEvent,
 	isHookEvent,
 	isHookType,
-} from "./types.js";
+} from "./types";
 
 // Validation
 export {
@@ -68,7 +68,7 @@ export {
 	findDuplicateCommands,
 	createEmptyHooksConfig,
 	createEmptyValidationResult,
-} from "./validation.js";
+} from "./validation";
 
 // Variable transformation
 export {
@@ -79,28 +79,28 @@ export {
 	containsOmnidevVariables,
 	resolveCapabilityRoot,
 	resolveCapabilityRootInConfig,
-} from "./variables.js";
+} from "./variables";
 
 // Loader
-export type { LoadHooksOptions, LoadHooksResult } from "./loader.js";
+export type { LoadHooksOptions, LoadHooksResult } from "./loader";
 export {
 	loadHooksFromCapability,
 	loadCapabilityHooks,
 	hasHooks,
 	getHooksDirectory,
 	getHooksConfigPath,
-} from "./loader.js";
+} from "./loader";
 
 // Merger
-export type { DeduplicateOptions } from "./merger.js";
+export type { DeduplicateOptions } from "./merger";
 export {
 	mergeHooksConfigs,
 	mergeAndDeduplicateHooks,
 	hasAnyHooks,
 	countHooks,
 	getEventsWithHooks,
-} from "./merger.js";
+} from "./merger";
 
 // JSON loader (Claude plugin hooks.json format)
-export type { LoadJsonHooksResult } from "./json-loader.js";
-export { loadHooksJson } from "./json-loader.js";
+export type { LoadJsonHooksResult } from "./json-loader";
+export { loadHooksJson } from "./json-loader";

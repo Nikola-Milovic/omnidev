@@ -17,7 +17,7 @@ import {
 	getProviderGitignoreFiles,
 	promptForGitignoreProviderFiles,
 	promptForProviders,
-} from "../prompts/provider.js";
+} from "#prompts/provider";
 
 const execAsync = promisify(exec);
 

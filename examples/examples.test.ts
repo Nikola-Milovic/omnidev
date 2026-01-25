@@ -3,8 +3,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { captureConsole, setupTestDir } from "@omnidev-ai/core/test-utils";
-import { runInit } from "../packages/cli/src/commands/init.js";
-import { runSync } from "../packages/cli/src/commands/sync.js";
+import { runInit } from "../packages/cli/src/commands/init";
+import { runSync } from "../packages/cli/src/commands/sync";
 
 /**
  * Integration tests that validate each example configuration file works.

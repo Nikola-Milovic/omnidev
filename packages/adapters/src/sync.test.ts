@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { OmniConfig, SyncBundle } from "@omnidev-ai/core";
-import { syncAdaptersWithWriters, type AdapterWithWriters } from "./sync.js";
-import { InstructionsMdWriter, SkillsWriter } from "./writers/generic/index.js";
+import { syncAdaptersWithWriters, type AdapterWithWriters } from "./sync";
+import { InstructionsMdWriter, SkillsWriter } from "./writers/generic/index";
 
 describe("syncAdaptersWithWriters", () => {
 	let testDir: string;

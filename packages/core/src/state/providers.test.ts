@@ -7,7 +7,7 @@ import {
 	isProviderEnabled,
 	readEnabledProviders,
 	writeEnabledProviders,
-} from "./providers.js";
+} from "./providers";
 
 describe("providers state", () => {
 	let testDir: string;

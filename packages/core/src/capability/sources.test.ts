@@ -19,7 +19,7 @@ import type {
 	CapabilitiesLockFile,
 	FileCapabilitySourceConfig,
 	GitCapabilitySourceConfig,
-} from "../types/index.js";
+} from "#types/index";
 
 describe("parseSourceConfig", () => {
 	test("parses simple github shorthand", () => {

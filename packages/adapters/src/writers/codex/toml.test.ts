@@ -3,7 +3,7 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { parse } from "smol-toml";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { LoadedCapability, McpConfig, SyncBundle } from "@omnidev-ai/core";
-import { buildCodexMcpConfig, CodexTomlWriter } from "./toml.js";
+import { buildCodexMcpConfig, CodexTomlWriter } from "./toml";
 
 describe("CodexTomlWriter", () => {
 	let testDir: string;

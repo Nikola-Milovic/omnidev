@@ -1,9 +1,9 @@
 import type { ProviderAdapter, ProviderId } from "@omnidev-ai/core";
 import { readEnabledProviders } from "@omnidev-ai/core";
-import { claudeCodeAdapter } from "./claude-code/index.js";
-import { codexAdapter } from "./codex/index.js";
-import { cursorAdapter } from "./cursor/index.js";
-import { opencodeAdapter } from "./opencode/index.js";
+import { claudeCodeAdapter } from "./claude-code/index";
+import { codexAdapter } from "./codex/index";
+import { cursorAdapter } from "./cursor/index";
+import { opencodeAdapter } from "./opencode/index";
 
 export interface AdapterRegistry {
 	adapters: Map<ProviderId, ProviderAdapter>;

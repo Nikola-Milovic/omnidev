@@ -1,12 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "./dist",
-		"paths": {
-			"@omnidev-ai/core": ["../core/src/index.ts"],
-			"@omnidev-ai/core/*": ["../core/src/*"],
-			"@omnidev-ai/adapters": ["../adapters/src/index.ts"]
-		}
+		"outDir": "./dist"
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist", "**/*.test.ts"]

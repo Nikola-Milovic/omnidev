@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 import { buildCapabilityRegistry } from "./capability/registry";
 import { fetchAllCapabilitySources, type SyncWarning } from "./capability/sources";
 import { loadConfig } from "./config/config";
-import { hasAnyHooks } from "./hooks/merger.js";
+import { hasAnyHooks } from "./hooks/merger";
 import { syncMcpJson } from "./mcp-json/manager";
 import {
 	buildManifestFromCapabilities,

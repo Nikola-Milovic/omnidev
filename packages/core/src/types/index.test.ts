@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { ProviderConfig } from "./index.js";
-import { getActiveProviders } from "./index.js";
+import type { ProviderConfig } from "./index";
+import { getActiveProviders } from "./index";
 
 describe("getActiveProviders", () => {
 	test("returns providers array when present", () => {

@@ -8,8 +8,8 @@ import {
 	writeEnabledProviders,
 } from "@omnidev-ai/core";
 import { buildCommand } from "@stricli/core";
-import { promptForProviders } from "../prompts/provider.js";
-import { initializeAdaptersForProviders } from "./init.js";
+import { promptForProviders } from "#prompts/provider";
+import { initializeAdaptersForProviders } from "./init";
 
 const PROVIDERS_STATE_PATH = ".omni/state/providers.json";
 

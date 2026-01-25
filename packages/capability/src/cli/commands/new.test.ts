@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runNew, isValidCapabilityId } from "./new.js";
+import { runNew, isValidCapabilityId } from "./new";
 
 describe("capability new command", () => {
 	let testDir: string;

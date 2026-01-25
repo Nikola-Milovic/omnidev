@@ -8,7 +8,7 @@ import {
 	hasHooks,
 	getHooksDirectory,
 	getHooksConfigPath,
-} from "./loader.js";
+} from "./loader";
 
 describe("hooks loader", () => {
 	let testDir: string;

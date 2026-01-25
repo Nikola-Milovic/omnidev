@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parse as parseToml } from "smol-toml";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import type { CapabilityConfig, OmniConfig } from "../types/index.js";
-import { generateMcpCapabilities, normalizeFolderNames } from "./sources.js";
+import type { CapabilityConfig, OmniConfig } from "#types/index";
+import { generateMcpCapabilities, normalizeFolderNames } from "./sources";
 
 describe("wrapping integration - expo-like structure", () => {
 	const testDir = setupTestDir("test-expo-", { chdir: true });

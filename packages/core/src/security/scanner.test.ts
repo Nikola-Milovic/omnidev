@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdir, rm, writeFile, symlink } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { scanCapability, scanCapabilities, formatScanResults } from "./scanner.js";
-import type { SecurityConfig } from "./types.js";
+import { scanCapability, scanCapabilities, formatScanResults } from "./scanner";
+import type { SecurityConfig } from "./types";
 
 describe("security scanner", () => {
 	let testDir: string;

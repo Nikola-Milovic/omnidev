@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { SyncBundle } from "@omnidev-ai/core";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "./types";
 
 /**
  * Writer for skills directories.

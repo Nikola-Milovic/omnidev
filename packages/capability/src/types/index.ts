@@ -13,9 +13,9 @@ export type {
 	CapabilityCommandFunc,
 	CapabilityRouteMap,
 	CapabilityRoute,
-} from "./cli.js";
+} from "./cli";
 
-export { isCapabilityCommand, isCapabilityRouteMap } from "./cli.js";
+export { isCapabilityCommand, isCapabilityRouteMap } from "./cli";
 
 // Capability export types
 export type {
@@ -25,4 +25,4 @@ export type {
 	SubagentExport,
 	CommandExport,
 	CapabilityExport,
-} from "./exports.js";
+} from "./exports";

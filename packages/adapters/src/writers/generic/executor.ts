@@ -1,5 +1,5 @@
 import type { SyncBundle } from "@omnidev-ai/core";
-import type { AdapterWriterConfig, WriterResult } from "./types.js";
+import type { AdapterWriterConfig, WriterResult } from "./types";
 
 /**
  * Result of executing all writers.

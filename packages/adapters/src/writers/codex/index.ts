@@ -1,1 +1,1 @@
-export { buildCodexMcpConfig, CodexTomlWriter } from "./toml.js";
+export { buildCodexMcpConfig, CodexTomlWriter } from "./toml";

@@ -1,8 +1,8 @@
 // Capability Export Types (for capability developers)
-export * from "./capability-export.js";
+export * from "./capability-export";
 
 // Hooks Types - import for use in this file
-import type { HooksConfig, CapabilityHooks } from "../hooks/types.js";
+import type { HooksConfig, CapabilityHooks } from "#hooks/types";
 
 // Re-export all hooks types
 export type {
@@ -16,7 +16,7 @@ export type {
 	HookValidationResult,
 	HookValidationIssue,
 	CapabilityHooks,
-} from "../hooks/types.js";
+} from "#hooks/types";
 
 // Capability Types
 export interface CapabilityMetadata {

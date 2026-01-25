@@ -12,13 +12,13 @@ import {
 	InstructionsMdWriter,
 	SkillsWriter,
 	type AdapterWriterConfig,
-} from "../writers/generic/index.js";
+} from "#writers/generic/index";
 import {
 	CursorAgentsWriter,
 	CursorCommandsWriter,
 	CursorMcpJsonWriter,
 	CursorRulesWriter,
-} from "../writers/cursor/index.js";
+} from "#writers/cursor/index";
 
 /**
  * Cursor adapter - writes CLAUDE.md, skills, rules, agents, and commands.

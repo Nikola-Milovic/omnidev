@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { LoadedCapability, McpConfig, SyncBundle } from "@omnidev-ai/core";
-import { buildCursorMcpConfig, CursorMcpJsonWriter } from "./mcp-json.js";
+import { buildCursorMcpConfig, CursorMcpJsonWriter } from "./mcp-json";
 
 describe("CursorMcpJsonWriter", () => {
 	let testDir: string;

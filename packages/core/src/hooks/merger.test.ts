@@ -5,9 +5,9 @@ import {
 	hasAnyHooks,
 	countHooks,
 	getEventsWithHooks,
-} from "./merger.js";
-import type { CapabilityHooks, HooksConfig } from "./types.js";
-import { createEmptyValidationResult } from "./validation.js";
+} from "./merger";
+import type { CapabilityHooks, HooksConfig } from "./types";
+import { createEmptyValidationResult } from "./validation";
 
 function createCapabilityHooks(name: string, config: HooksConfig): CapabilityHooks {
 	return {

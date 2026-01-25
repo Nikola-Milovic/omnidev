@@ -5,10 +5,10 @@
  * and used in OmniConfig. This file contains additional types for the scanner implementation.
  */
 
-import type { SecurityConfig, ScanSettings } from "../types/index.js";
+import type { SecurityConfig, ScanSettings } from "#types/index";
 
 // Re-export the base types from the main types file
-export type { SecurityMode, ScanSettings, SecurityConfig } from "../types/index.js";
+export type { SecurityMode, ScanSettings, SecurityConfig } from "#types/index";
 
 /**
  * Severity level for security findings

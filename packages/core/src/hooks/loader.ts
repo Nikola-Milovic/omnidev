@@ -15,25 +15,21 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseToml } from "smol-toml";
-import {
-	HOOKS_DIRECTORY,
-	HOOKS_CONFIG_FILENAME,
-	CLAUDE_HOOKS_CONFIG_FILENAME,
-} from "./constants.js";
-import type { HooksConfig, HookValidationResult, CapabilityHooks } from "./types.js";
+import { HOOKS_DIRECTORY, HOOKS_CONFIG_FILENAME, CLAUDE_HOOKS_CONFIG_FILENAME } from "./constants";
+import type { HooksConfig, HookValidationResult, CapabilityHooks } from "./types";
 import {
 	validateHooksConfig,
 	createEmptyHooksConfig,
 	createEmptyValidationResult,
-} from "./validation.js";
+} from "./validation";
 import {
 	transformToOmnidev,
 	containsClaudeVariables,
 	resolveCapabilityRootInConfig,
-} from "./variables.js";
-import { loadHooksJson } from "./json-loader.js";
-import { HOOK_EVENTS } from "./constants.js";
-import type { HookMatcher } from "./types.js";
+} from "./variables";
+import { loadHooksJson } from "./json-loader";
+import { HOOK_EVENTS } from "./constants";
+import type { HookMatcher } from "./types";
 
 export interface LoadHooksOptions {
 	/** Transform Claude variables to OmniDev format (default: true) */

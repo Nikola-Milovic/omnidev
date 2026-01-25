@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import type { ProviderId } from "../types/index.js";
+import type { ProviderId } from "#types/index";
 
 const STATE_DIR = ".omni/state";
 const PROVIDERS_PATH = `${STATE_DIR}/providers.json`;

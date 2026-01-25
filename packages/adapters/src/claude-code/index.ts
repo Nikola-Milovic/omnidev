@@ -11,8 +11,8 @@ import {
 	InstructionsMdWriter,
 	SkillsWriter,
 	type AdapterWriterConfig,
-} from "../writers/generic/index.js";
-import { ClaudeAgentsWriter, ClaudeCommandsAsSkillsWriter } from "../writers/claude/index.js";
+} from "#writers/generic/index";
+import { ClaudeAgentsWriter, ClaudeCommandsAsSkillsWriter } from "#writers/claude/index";
 
 /**
  * Claude Code adapter - writes CLAUDE.md, skills, and hooks.

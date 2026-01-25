@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Skill, SyncBundle } from "@omnidev-ai/core";
-import { SkillsWriter } from "./skills.js";
+import { SkillsWriter } from "./skills";
 
 describe("SkillsWriter", () => {
 	let testDir: string;

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { SyncBundle } from "@omnidev-ai/core";
-import type { FileWriter, WriterContext, WriterResult } from "./types.js";
+import type { FileWriter, WriterContext, WriterResult } from "./types";
 
 /**
  * Writer for instructions markdown files (CLAUDE.md, AGENTS.md, etc.)

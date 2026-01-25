@@ -6,8 +6,8 @@ import {
 	isPromptHookEvent,
 	isHookEvent,
 	isHookType,
-} from "./types.js";
-import type { Hook } from "./types.js";
+} from "./types";
+import type { Hook } from "./types";
 
 describe("hook type guards", () => {
 	describe("isHookCommand", () => {

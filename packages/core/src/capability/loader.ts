@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseCapabilityConfig } from "../config/parser";
-import { loadCapabilityHooks } from "../hooks/loader.js";
+import { loadCapabilityHooks } from "#hooks/loader";
 import type {
 	CapabilityConfig,
 	Command,

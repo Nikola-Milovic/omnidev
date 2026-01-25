@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Rule, SyncBundle } from "@omnidev-ai/core";
-import { CursorRulesWriter } from "./rules.js";
+import { CursorRulesWriter } from "./rules";
 
 describe("CursorRulesWriter", () => {
 	let testDir: string;

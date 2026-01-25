@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import { runCapabilityNew } from "./capability.js";
+import { runCapabilityNew } from "./capability";
 
 // Mock @inquirer/prompts
 mock.module("@inquirer/prompts", () => ({

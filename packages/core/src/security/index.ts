@@ -7,5 +7,5 @@
  * - Suspicious script patterns in hooks
  */
 
-export * from "./scanner.js";
-export * from "./types.js";
+export * from "./scanner";
+export * from "./types";

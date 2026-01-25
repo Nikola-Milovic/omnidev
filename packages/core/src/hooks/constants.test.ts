@@ -13,7 +13,7 @@ import {
 	VARIABLE_MAPPINGS,
 	HOOKS_CONFIG_FILENAME,
 	HOOKS_DIRECTORY,
-} from "./constants.js";
+} from "./constants";
 
 describe("hook constants", () => {
 	test("HOOK_EVENTS contains all 10 events", () => {

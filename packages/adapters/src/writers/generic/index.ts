@@ -1,5 +1,5 @@
-export type { AdapterWriterConfig, FileWriter, WriterContext, WriterResult } from "./types.js";
-export { executeWriters, type ExecuteWritersResult } from "./executor.js";
-export { HooksWriter } from "./hooks.js";
-export { InstructionsMdWriter } from "./instructions-md.js";
-export { SkillsWriter } from "./skills.js";
+export type { AdapterWriterConfig, FileWriter, WriterContext, WriterResult } from "./types";
+export { executeWriters, type ExecuteWritersResult } from "./executor";
+export { HooksWriter } from "./hooks";
+export { InstructionsMdWriter } from "./instructions-md";
+export { SkillsWriter } from "./skills";

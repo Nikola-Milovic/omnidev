@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { parse } from "smol-toml";
-import type { Provider, ProviderConfig } from "../types/index.js";
+import type { Provider, ProviderConfig } from "#types/index";
 
 const PROVIDER_CONFIG_PATH = ".omni/provider.toml";
 

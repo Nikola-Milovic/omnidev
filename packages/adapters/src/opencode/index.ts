@@ -12,8 +12,8 @@ import {
 	InstructionsMdWriter,
 	SkillsWriter,
 	type AdapterWriterConfig,
-} from "../writers/generic/index.js";
-import { OpenCodeAgentsWriter, OpenCodeCommandsWriter } from "../writers/opencode/index.js";
+} from "#writers/generic/index";
+import { OpenCodeAgentsWriter, OpenCodeCommandsWriter } from "#writers/opencode/index";
 
 /**
  * OpenCode adapter - generates .opencode/instructions.md and skills from OMNI.md.

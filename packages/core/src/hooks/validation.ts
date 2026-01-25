@@ -7,9 +7,9 @@
 
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
-import { HOOK_EVENTS, VARIABLE_MAPPINGS } from "./constants.js";
-import type { HooksConfig, HookValidationResult, HookValidationIssue, HookEvent } from "./types.js";
-import { isHookEvent, isHookType, isPromptHookEvent, isMatcherEvent } from "./types.js";
+import { HOOK_EVENTS, VARIABLE_MAPPINGS } from "./constants";
+import type { HooksConfig, HookValidationResult, HookValidationIssue, HookEvent } from "./types";
+import { isHookEvent, isHookType, isPromptHookEvent, isMatcherEvent } from "./types";
 
 interface ValidationOptions {
 	/** Base path for resolving script files */

@@ -9,10 +9,10 @@
  */
 
 // Export builder functions
-export { command, routes } from "./builders.js";
+export { command, routes } from "./builders";
 
 // Export debug utility
-export { debug } from "./debug.js";
+export { debug } from "./debug";
 
 // Export all types
-export * from "./types/index.js";
+export * from "./types/index";

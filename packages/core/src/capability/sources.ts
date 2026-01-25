@@ -21,8 +21,8 @@ import type {
 	GitCapabilitySourceConfig,
 	OmniConfig,
 	VersionSource,
-} from "../types/index.js";
-import { isFileSourceConfig } from "../types/index.js";
+} from "#types/index";
+import { isFileSourceConfig } from "#types/index";
 import { createHash } from "node:crypto";
 
 // Local path for .omni directory
@@ -1443,7 +1443,7 @@ export async function fetchCapabilitySource(
  */
 function generateMcpCapabilityTomlContent(
 	id: string,
-	mcpConfig: import("../types/index.js").McpConfig,
+	mcpConfig: import("#types/index").McpConfig,
 ): string {
 	const transport = mcpConfig.transport ?? "stdio";
 	const isRemote = transport === "http" || transport === "sse";
@@ -1512,7 +1512,7 @@ generated_from_omni_toml = true
  */
 async function generateMcpCapabilityToml(
 	id: string,
-	mcpConfig: import("../types/index.js").McpConfig,
+	mcpConfig: import("#types/index").McpConfig,
 	targetPath: string,
 ): Promise<void> {
 	const tomlContent = generateMcpCapabilityTomlContent(id, mcpConfig);

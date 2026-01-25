@@ -37,7 +37,7 @@
 		// Bun-specific
 		"types": ["bun"],
 
-		// Workspace path mapping
+		// Workspace path mapping (needed for examples and other non-workspace consumers)
 		"paths": {
 			"@omnidev-ai/core": ["./packages/core/src/index.ts"],
 			"@omnidev-ai/core/*": ["./packages/core/src/*"],

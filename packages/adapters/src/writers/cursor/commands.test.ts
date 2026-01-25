@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { Command, SyncBundle } from "@omnidev-ai/core";
-import { CursorCommandsWriter } from "./commands.js";
+import { CursorCommandsWriter } from "./commands";
 
 describe("CursorCommandsWriter", () => {
 	let testDir: string;

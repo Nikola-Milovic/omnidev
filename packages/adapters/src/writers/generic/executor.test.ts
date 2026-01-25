@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
 import { tmpdir } from "@omnidev-ai/core/test-utils";
 import type { SyncBundle } from "@omnidev-ai/core";
-import { executeWriters } from "./executor.js";
-import { InstructionsMdWriter } from "./instructions-md.js";
-import { SkillsWriter } from "./skills.js";
-import type { AdapterWriterConfig, FileWriter } from "./types.js";
+import { executeWriters } from "./executor";
+import { InstructionsMdWriter } from "./instructions-md";
+import { SkillsWriter } from "./skills";
+import type { AdapterWriterConfig, FileWriter } from "./types";
 
 describe("executeWriters", () => {
 	let testDir: string;

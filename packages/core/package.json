@@ -4,9 +4,13 @@
 	"private": true,
 	"type": "module",
 	"license": "MIT",
+	"imports": {
+		"#*": "./src/*.ts"
+	},
 	"exports": {
 		".": "./src/index.ts",
-		"./test-utils": "./src/test-utils/index.ts"
+		"./test-utils": "./src/test-utils/index.ts",
+		"./*": "./src/*.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc --noEmit"

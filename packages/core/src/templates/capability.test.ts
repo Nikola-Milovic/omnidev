@@ -5,7 +5,7 @@ import {
 	generateHookScript,
 	generateRuleTemplate,
 	generateSkillTemplate,
-} from "./capability.js";
+} from "./capability";
 
 describe("generateCapabilityToml", () => {
 	test("generates valid TOML with required fields", () => {

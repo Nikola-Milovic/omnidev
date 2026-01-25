@@ -1,2 +1,2 @@
-export { OpenCodeAgentsWriter } from "./agents.js";
-export { OpenCodeCommandsWriter } from "./commands.js";
+export { OpenCodeAgentsWriter } from "./agents";
+export { OpenCodeCommandsWriter } from "./commands";

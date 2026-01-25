@@ -6,10 +6,10 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { HOOK_EVENTS } from "./constants.js";
-import type { HooksConfig, Hook, HookMatcher, HookEvent, HookValidationResult } from "./types.js";
-import { isHookEvent, isHookType } from "./types.js";
-import { createEmptyHooksConfig, createEmptyValidationResult } from "./validation.js";
+import { HOOK_EVENTS } from "./constants";
+import type { HooksConfig, Hook, HookMatcher, HookEvent, HookValidationResult } from "./types";
+import { isHookEvent, isHookType } from "./types";
+import { createEmptyHooksConfig, createEmptyValidationResult } from "./validation";
 
 /**
  * Claude hooks.json format types

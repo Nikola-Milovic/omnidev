@@ -12,8 +12,8 @@ import {
 	InstructionsMdWriter,
 	SkillsWriter,
 	type AdapterWriterConfig,
-} from "../writers/generic/index.js";
-import { CodexTomlWriter } from "../writers/codex/index.js";
+} from "#writers/generic/index";
+import { CodexTomlWriter } from "#writers/codex/index";
 
 /**
  * Codex adapter - generates AGENTS.md and skills.

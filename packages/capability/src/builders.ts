@@ -5,7 +5,7 @@
  * without requiring direct use of the type definitions.
  */
 
-import type { CapabilityCommand, CapabilityRouteMap } from "./types/cli.js";
+import type { CapabilityCommand, CapabilityRouteMap } from "./types/cli";
 
 /**
  * Create a capability command.

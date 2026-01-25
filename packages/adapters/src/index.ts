@@ -6,10 +6,10 @@
  */
 
 // Export all adapters
-export { claudeCodeAdapter } from "./claude-code/index.js";
-export { codexAdapter } from "./codex/index.js";
-export { cursorAdapter } from "./cursor/index.js";
-export { opencodeAdapter } from "./opencode/index.js";
+export { claudeCodeAdapter } from "./claude-code/index";
+export { codexAdapter } from "./codex/index";
+export { cursorAdapter } from "./cursor/index";
+export { opencodeAdapter } from "./opencode/index";
 
 // Export adapter utilities
 export {
@@ -17,14 +17,14 @@ export {
 	getAllAdapters,
 	getEnabledAdapters,
 	type AdapterRegistry,
-} from "./registry.js";
+} from "./registry";
 
 // Export sync with writers
 export {
 	syncAdaptersWithWriters,
 	type AdapterWithWriters,
 	type SyncAdaptersResult,
-} from "./sync.js";
+} from "./sync";
 
 // Export writers
 export {
@@ -40,8 +40,8 @@ export {
 	SkillsWriter,
 	// Execution
 	executeWriters,
-} from "./writers/generic/index.js";
-export { CursorRulesWriter } from "./writers/cursor/index.js";
+} from "./writers/generic/index";
+export { CursorRulesWriter } from "./writers/cursor/index";
 
 // Re-export types from core for convenience
 export type {

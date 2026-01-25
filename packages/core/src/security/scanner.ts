@@ -19,8 +19,8 @@ import type {
 	ScanSummary,
 	SecurityConfig,
 	SecurityFinding,
-} from "./types.js";
-import { DEFAULT_SCAN_SETTINGS } from "./types.js";
+} from "./types";
+import { DEFAULT_SCAN_SETTINGS } from "./types";
 
 /**
  * Suspicious Unicode codepoint ranges

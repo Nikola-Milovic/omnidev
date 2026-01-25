@@ -7,7 +7,7 @@
 
 import { existsSync, mkdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import type { FindingType } from "../security/types.js";
+import type { FindingType } from "#security/types";
 
 const OMNI_DIR = ".omni";
 const SECURITY_PATH = `${OMNI_DIR}/security.json`;

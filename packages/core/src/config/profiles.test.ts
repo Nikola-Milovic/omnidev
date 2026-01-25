@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import { readActiveProfileState } from "../state/active-profile.js";
-import type { OmniConfig } from "../types/index.js";
-import { getActiveProfile, resolveEnabledCapabilities, setActiveProfile } from "./profiles.js";
+import { readActiveProfileState } from "#state/active-profile";
+import type { OmniConfig } from "#types/index";
+import { getActiveProfile, resolveEnabledCapabilities, setActiveProfile } from "./profiles";
 
 describe("getActiveProfile", () => {
 	setupTestDir("profiles-test-", { chdir: true, createOmniDir: true });

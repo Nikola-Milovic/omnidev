@@ -5,8 +5,8 @@
  * Used when generating provider settings from all active capabilities.
  */
 
-import { HOOK_EVENTS } from "./constants.js";
-import type { HooksConfig, HookMatcher, CapabilityHooks, HookEvent } from "./types.js";
+import { HOOK_EVENTS } from "./constants";
+import type { HooksConfig, HookMatcher, CapabilityHooks, HookEvent } from "./types";
 
 /**
  * Merge hooks from multiple capabilities into a single HooksConfig.

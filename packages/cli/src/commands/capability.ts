@@ -21,7 +21,7 @@ import {
 } from "@omnidev-ai/core";
 import { buildCommand, buildRouteMap } from "@stricli/core";
 // Note: buildCommand and buildRouteMap are still used for the CLI commands in this file
-import { isValidCapabilityId } from "../prompts/capability.js";
+import { isValidCapabilityId } from "#prompts/capability";
 
 /**
  * Run the capability list command.

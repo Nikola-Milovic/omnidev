@@ -6,8 +6,8 @@ import {
 	transformHooksConfig,
 	containsClaudeVariables,
 	containsOmnidevVariables,
-} from "./variables.js";
-import type { HooksConfig } from "./types.js";
+} from "./variables";
+import type { HooksConfig } from "./types";
 
 describe("variable transformation", () => {
 	describe("transformToOmnidev", () => {

@@ -1,4 +1,4 @@
-export { CursorAgentsWriter } from "./agents.js";
-export { CursorCommandsWriter } from "./commands.js";
-export { buildCursorMcpConfig, CursorMcpJsonWriter } from "./mcp-json.js";
-export { CursorRulesWriter } from "./rules.js";
+export { CursorAgentsWriter } from "./agents";
+export { CursorCommandsWriter } from "./commands";
+export { buildCursorMcpConfig, CursorMcpJsonWriter } from "./mcp-json";
+export { CursorRulesWriter } from "./rules";

@@ -1,5 +1,5 @@
-import { loadBaseConfig, loadConfig, writeConfig } from "./config.js";
-import { getActiveProfile, resolveEnabledCapabilities } from "./profiles.js";
+import { loadBaseConfig, loadConfig, writeConfig } from "./config";
+import { getActiveProfile, resolveEnabledCapabilities } from "./profiles";
 
 /**
  * Get enabled capabilities for the active profile

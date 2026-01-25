@@ -7,8 +7,8 @@ import {
 	findDuplicateCommands,
 	createEmptyHooksConfig,
 	createEmptyValidationResult,
-} from "./validation.js";
-import type { HooksConfig } from "./types.js";
+} from "./validation";
+import type { HooksConfig } from "./types";
 
 describe("hooks validation", () => {
 	describe("validateHooksConfig", () => {

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { tmpdir } from "../test-utils/index.js";
+import { tmpdir } from "#test-utils/index";
 import { patchAddCapabilitySource, patchAddMcp, patchAddToProfile } from "./toml-patcher";
 
 describe("toml-patcher", () => {

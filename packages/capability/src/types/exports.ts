@@ -6,7 +6,7 @@
  * in their index.ts default export.
  */
 
-import type { CapabilityCommand, CapabilityRouteMap } from "./cli.js";
+import type { CapabilityCommand, CapabilityRouteMap } from "./cli";
 
 /**
  * File content structure for programmatic file creation.

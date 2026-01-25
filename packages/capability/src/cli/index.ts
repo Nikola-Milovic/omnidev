@@ -7,8 +7,8 @@
  */
 
 import { parseArgs } from "node:util";
-import { runNew } from "./commands/new.js";
-import { runBuild } from "./commands/build.js";
+import { runNew } from "./commands/new";
+import { runBuild } from "./commands/build";
 
 const VERSION = "0.12.0";
 

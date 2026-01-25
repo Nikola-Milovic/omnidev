@@ -14,7 +14,7 @@ import {
 	type SESSION_START_MATCHERS,
 	type PRE_COMPACT_MATCHERS,
 	type VARIABLE_MAPPINGS,
-} from "./constants.js";
+} from "./constants";
 
 // ============ Core Type Derivations ============
 

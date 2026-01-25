@@ -1,5 +1,5 @@
 import { getEnabledCapabilities } from "../config/capabilities";
-import { mergeHooksConfigs } from "../hooks/merger.js";
+import { mergeHooksConfigs } from "#hooks/merger";
 import type { HooksConfig, CapabilityHooks, Doc, LoadedCapability, Rule, Skill } from "../types";
 import { discoverCapabilities, loadCapability } from "./loader";
 

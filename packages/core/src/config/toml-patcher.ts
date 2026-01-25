@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import type { CapabilitySourceConfig, McpConfig } from "../types/index.js";
+import type { CapabilitySourceConfig, McpConfig } from "#types/index";
 
 const CONFIG_PATH = "omni.toml";
 

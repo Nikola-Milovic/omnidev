@@ -8,8 +8,8 @@
  * When importing external capabilities, CLAUDE_ variables are transformed to OMNIDEV_.
  */
 
-import { VARIABLE_MAPPINGS } from "./constants.js";
-import type { HooksConfig, Hook, HookMatcher } from "./types.js";
+import { VARIABLE_MAPPINGS } from "./constants";
+import type { HooksConfig, Hook, HookMatcher } from "./types";
 
 // Build reverse mapping (Claude -> OmniDev)
 const REVERSE_MAPPINGS = Object.fromEntries(

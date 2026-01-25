@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFile, writeFile } from "node:fs/promises";
 import { setupTestDir } from "@omnidev-ai/core/test-utils";
-import { parseProviderFlag } from "./provider.js";
+import { parseProviderFlag } from "./provider";
 
 const testDir = setupTestDir("provider-test-", { chdir: true });
 

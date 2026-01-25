@@ -1,6 +1,6 @@
-import { readActiveProfileState, writeActiveProfileState } from "../state/active-profile.js";
-import type { OmniConfig, ProfileConfig } from "../types/index.js";
-import { loadConfig, writeConfig } from "./config.js";
+import { readActiveProfileState, writeActiveProfileState } from "#state/active-profile";
+import type { OmniConfig, ProfileConfig } from "#types/index";
+import { loadConfig, writeConfig } from "./config";
 
 /**
  * Gets the name of the currently active profile from the state file.

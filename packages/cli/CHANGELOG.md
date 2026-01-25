@@ -1,5 +1,34 @@
 # @omnidev-ai/cli
 
+## 0.14.0
+
+### Minor Changes
+
+- 7c43c20: Add hooks.json support for Claude plugin wrapping
+
+  - Support loading hooks from `hooks.json` (Claude plugin format) in addition to `hooks.toml`
+  - Check for hooks in: `hooks/hooks.toml` (priority), `hooks/hooks.json`, and `hooks.json` (root)
+  - Resolve `${CLAUDE_PLUGIN_ROOT}` and `${OMNIDEV_CAPABILITY_ROOT}` to absolute paths during loading
+  - Add `resolveCapabilityRoot` option to hook loading
+  - Update CLI help text to mention Claude plugin auto-wrapping
+  - Add integration test for Claude plugin wrapping flow
+
+### Patch Changes
+
+- 2f0e614: Minor fixes preparing for launch
+- 095dce8: Validate GitHub repository before adding to omni.toml
+
+  The `add cap` command now validates that a GitHub repository exists and is a valid capability before writing to omni.toml. This prevents adding invalid or non-existent repositories to the configuration.
+
+  Validation checks:
+
+  - Repository exists and is accessible
+  - Repository contains capability.toml OR can be auto-wrapped (has skills, agents, commands, rules, docs, or .claude-plugin)
+
+  If validation fails, the command exits with an appropriate error message without modifying omni.toml.
+
+- c98c316: Change how internally packages are imported, move away from relative imports with `.js` extension to node subpath imports
+
 ## 0.13.4
 
 ## 0.13.3

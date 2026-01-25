@@ -1,5 +1,12 @@
 # @omnidev-ai/capability
 
+## 0.14.0
+
+### Patch Changes
+
+- 2f0e614: Minor fixes preparing for launch
+- c98c316: Change how internally packages are imported, move away from relative imports with `.js` extension to node subpath imports
+
 ## 0.13.4
 
 ### Patch Changes

@@ -1,5 +1,74 @@
 # @omnidev-ai/core
 
+## 0.13.0
+
+### Minor Changes
+
+- fe94ed9: Add writers for subagents and commands to Claude Code, Cursor, and OpenCode
+
+  **Claude Code:**
+
+  - `ClaudeAgentsWriter`: writes subagents to `.claude/agents/<name>.md`
+  - `ClaudeCommandsAsSkillsWriter`: transforms commands into skills at `.claude/skills/<name>/SKILL.md`
+
+  **Cursor:**
+
+  - `CursorAgentsWriter`: writes subagents to `.cursor/agents/<name>.md` with YAML frontmatter (name, description, model, readonly)
+  - `CursorCommandsWriter`: writes commands to `.cursor/commands/<name>.md` as plain Markdown
+
+  **OpenCode:**
+
+  - `OpenCodeAgentsWriter`: writes subagents to `.opencode/agents/<name>.md` with OpenCode-specific format
+  - `OpenCodeCommandsWriter`: writes commands to `.opencode/commands/<name>.md`
+
+  **Type Extensions:**
+
+  - Extended `Subagent` type with OpenCode-specific fields: `mode`, `temperature`, `maxSteps`, `hidden`, `toolPermissions`, `permissions`, `modelId`
+  - Extended `Command` type with OpenCode-specific fields: `agent`, `modelId`
+
+  **Automatic Mappings:**
+
+  - Model mapping: Claude (sonnet/opus/haiku) → OpenCode (anthropic/claude-\*), Cursor (fast/inherit)
+  - Permission mode mapping: Claude → OpenCode permissions object, Cursor readonly flag
+
+- 0cccb98: Add `always_disabled` support and improved `omni.local.toml` merging
+
+  - Added `always_disabled` option to `[capabilities]` section that removes capabilities from ALL profiles
+  - Supports group references in `always_disabled` (e.g., `group:noisy-tools`)
+  - Improved config merging for `omni.local.toml`:
+    - Capability sources and groups are now properly deep-merged
+    - `always_enabled` and `always_disabled` are combined from both configs
+  - Updated documentation with detailed merge behavior and examples
+
+- 7c43c20: Add hooks.json support for Claude plugin wrapping
+
+  - Support loading hooks from `hooks.json` (Claude plugin format) in addition to `hooks.toml`
+  - Check for hooks in: `hooks/hooks.toml` (priority), `hooks/hooks.json`, and `hooks.json` (root)
+  - Resolve `${CLAUDE_PLUGIN_ROOT}` and `${OMNIDEV_CAPABILITY_ROOT}` to absolute paths during loading
+  - Add `resolveCapabilityRoot` option to hook loading
+  - Update CLI help text to mention Claude plugin auto-wrapping
+  - Add integration test for Claude plugin wrapping flow
+
+### Patch Changes
+
+- 75e667c: Always rebuild capabilities with build scripts during sync
+
+  Sync now always rebuilds capabilities that have a build script in their package.json, ensuring the latest TypeScript changes are compiled even when dist/index.js already exists.
+
+- 2f0e614: Minor fixes preparing for launch
+- 095dce8: Validate GitHub repository before adding to omni.toml
+
+  The `add cap` command now validates that a GitHub repository exists and is a valid capability before writing to omni.toml. This prevents adding invalid or non-existent repositories to the configuration.
+
+  Validation checks:
+
+  - Repository exists and is accessible
+  - Repository contains capability.toml OR can be auto-wrapped (has skills, agents, commands, rules, docs, or .claude-plugin)
+
+  If validation fails, the command exits with an appropriate error message without modifying omni.toml.
+
+- c98c316: Change how internally packages are imported, move away from relative imports with `.js` extension to node subpath imports
+
 ## 0.12.0
 
 ### Minor Changes

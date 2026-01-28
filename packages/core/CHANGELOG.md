@@ -1,5 +1,13 @@
 # @omnidev-ai/core
 
+## 0.13.1
+
+### Patch Changes
+
+- 3014846: Fix TOML parsing error when capability README contains HTML with double quotes
+
+  Adds `escapeTomlString` helper to properly escape special characters (backslashes, double quotes, newlines, tabs) when generating capability.toml files from wrapped repositories.
+
 ## 0.13.0
 
 ### Minor Changes

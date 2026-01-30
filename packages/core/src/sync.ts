@@ -30,11 +30,14 @@ export interface SyncOptions {
 
 /**
  * Install dependencies and build TypeScript capabilities in .omni/capabilities/
- * Only processes capabilities that have a package.json
+ * Only processes capabilities that have a package.json and are not wrapped.
+ * Wrapped capabilities are auto-generated from external sources and their
+ * package.json dependencies are not relevant to the capability itself.
  */
 export async function installCapabilityDependencies(silent: boolean): Promise<void> {
 	const { existsSync, readdirSync, readFileSync } = await import("node:fs");
 	const { join } = await import("node:path");
+	const { parse } = await import("smol-toml");
 
 	const capabilitiesDir = ".omni/capabilities";
 
@@ -69,56 +72,35 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 
 		const capabilityPath = join(capabilitiesDir, entry.name);
 		const packageJsonPath = join(capabilityPath, "package.json");
+		const capabilityTomlPath = join(capabilityPath, "capability.toml");
 
 		// Skip if no package.json
 		if (!existsSync(packageJsonPath)) {
 			continue;
 		}
 
-		// Install dependencies silently (only show errors)
-		await new Promise<void>((resolve, reject) => {
-			const useNpmCi = hasNpm && existsSync(join(capabilityPath, "package-lock.json"));
-			const cmd = hasBun ? "bun" : "npm";
-			const args = hasBun ? ["install"] : useNpmCi ? ["ci"] : ["install"];
-
-			const proc = spawn(cmd, args, {
-				cwd: capabilityPath,
-				stdio: "pipe",
-			});
-
-			let stderr = "";
-			proc.stderr?.on("data", (data) => {
-				stderr += data.toString();
-			});
-
-			proc.on("close", (code) => {
-				if (code === 0) {
-					resolve();
-				} else {
-					reject(new Error(`Failed to install dependencies for ${capabilityPath}:\n${stderr}`));
+		// Skip wrapped capabilities - their package.json dependencies are from
+		// the original source and are not relevant to the generated capability
+		if (existsSync(capabilityTomlPath)) {
+			try {
+				const tomlContent = readFileSync(capabilityTomlPath, "utf-8");
+				const parsed = parse(tomlContent) as {
+					capability?: { metadata?: { wrapped?: boolean } };
+				};
+				if (parsed.capability?.metadata?.wrapped === true) {
+					continue;
 				}
-			});
-
-			proc.on("error", (error) => {
-				reject(error);
-			});
-		});
-
-		// Check if capability has a build script - always rebuild to ensure latest changes
-		const hasIndexTs = existsSync(join(capabilityPath, "index.ts"));
-		let hasBuildScript = false;
-		try {
-			const pkgJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-			hasBuildScript = Boolean(pkgJson.scripts?.build);
-		} catch {
-			// Ignore parse errors
+			} catch {
+				// If we can't parse capability.toml, continue with installation
+			}
 		}
 
-		if (hasBuildScript) {
-			// Always rebuild capabilities with build scripts to ensure latest changes
+		try {
+			// Install dependencies silently (only show errors)
 			await new Promise<void>((resolve, reject) => {
+				const useNpmCi = hasNpm && existsSync(join(capabilityPath, "package-lock.json"));
 				const cmd = hasBun ? "bun" : "npm";
-				const args = ["run", "build"];
+				const args = hasBun ? ["install"] : useNpmCi ? ["ci"] : ["install"];
 
 				const proc = spawn(cmd, args, {
 					cwd: capabilityPath,
@@ -134,7 +116,7 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 					if (code === 0) {
 						resolve();
 					} else {
-						reject(new Error(`Failed to build capability ${capabilityPath}:\n${stderr}`));
+						reject(new Error(`Failed to install dependencies for ${capabilityPath}:\n${stderr}`));
 					}
 				});
 
@@ -142,15 +124,59 @@ export async function installCapabilityDependencies(silent: boolean): Promise<vo
 					reject(error);
 				});
 			});
-		} else if (hasIndexTs && !silent) {
-			// Warn user that capability has TypeScript but no build setup
-			const hasBuiltIndex = existsSync(join(capabilityPath, "dist", "index.js"));
-			if (!hasBuiltIndex) {
-				console.warn(
-					`Warning: Capability at ${capabilityPath} has index.ts but no build script.\n` +
-						`  Add a "build" script to package.json (e.g., "build": "tsc") to compile TypeScript.`,
-				);
+
+			// Check if capability has a build script - always rebuild to ensure latest changes
+			const hasIndexTs = existsSync(join(capabilityPath, "index.ts"));
+			let hasBuildScript = false;
+			try {
+				const pkgJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+				hasBuildScript = Boolean(pkgJson.scripts?.build);
+			} catch {
+				// Ignore parse errors
 			}
+
+			if (hasBuildScript) {
+				// Always rebuild capabilities with build scripts to ensure latest changes
+				await new Promise<void>((resolve, reject) => {
+					const cmd = hasBun ? "bun" : "npm";
+					const args = ["run", "build"];
+
+					const proc = spawn(cmd, args, {
+						cwd: capabilityPath,
+						stdio: "pipe",
+					});
+
+					let stderr = "";
+					proc.stderr?.on("data", (data) => {
+						stderr += data.toString();
+					});
+
+					proc.on("close", (code) => {
+						if (code === 0) {
+							resolve();
+						} else {
+							reject(new Error(`Failed to build capability ${capabilityPath}:\n${stderr}`));
+						}
+					});
+
+					proc.on("error", (error) => {
+						reject(error);
+					});
+				});
+			} else if (hasIndexTs && !silent) {
+				// Warn user that capability has TypeScript but no build setup
+				const hasBuiltIndex = existsSync(join(capabilityPath, "dist", "index.js"));
+				if (!hasBuiltIndex) {
+					console.warn(
+						`Warning: Capability at ${capabilityPath} has index.ts but no build script.\n` +
+							`  Add a "build" script to package.json (e.g., "build": "tsc") to compile TypeScript.`,
+					);
+				}
+			}
+		} catch (error) {
+			// Log warning but continue with other capabilities
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.warn(`Warning: ${errorMessage}`);
 		}
 	}
 }

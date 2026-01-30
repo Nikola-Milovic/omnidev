@@ -758,39 +758,67 @@ async function cloneRepo(gitUrl: string, targetPath: string, ref?: string): Prom
 }
 
 /**
- * Fetch and update an existing repository
+ * Fetch and update an existing repository.
+ * Uses hard reset to always match remote state, ignoring any local changes.
  */
 async function fetchRepo(repoPath: string, ref?: string): Promise<boolean> {
-	// Fetch latest
-	const fetchResult = await spawnCapture("git", ["fetch", "--depth", "1", "origin"], {
+	// Fetch latest - if ref is specified, fetch that specific ref
+	const fetchArgs = ["fetch", "--depth", "1", "origin"];
+	if (ref) {
+		fetchArgs.push(ref);
+	}
+	const fetchResult = await spawnCapture("git", fetchArgs, {
 		cwd: repoPath,
 	});
 	if (fetchResult.exitCode !== 0) {
 		throw new Error(`Failed to fetch in ${repoPath}: ${fetchResult.stderr.trim()}`);
 	}
 
-	// Get current and remote commits
+	// Get current commit
 	const currentCommit = await getRepoCommit(repoPath);
 
-	// Check remote commit
-	const targetRef = ref || "HEAD";
-	const lsResult = await spawnCapture("git", ["ls-remote", "origin", targetRef], {
+	// Determine the reset target
+	// If a specific ref was fetched, use FETCH_HEAD
+	// Otherwise, get the default branch and reset to origin/<branch>
+	let resetTarget: string;
+	if (ref) {
+		resetTarget = "FETCH_HEAD";
+	} else {
+		// Get the default branch name from remote
+		const remoteShowResult = await spawnCapture("git", ["remote", "show", "origin"], {
+			cwd: repoPath,
+		});
+		let defaultBranch = "main";
+		if (remoteShowResult.exitCode === 0) {
+			const match = remoteShowResult.stdout.match(/HEAD branch:\s*(\S+)/);
+			if (match?.[1]) {
+				defaultBranch = match[1];
+			}
+		}
+		resetTarget = `origin/${defaultBranch}`;
+	}
+
+	// Get the target commit to check if update is needed
+	const revParseResult = await spawnCapture("git", ["rev-parse", resetTarget], {
 		cwd: repoPath,
 	});
-	if (lsResult.exitCode !== 0) {
-		throw new Error(`Failed to ls-remote in ${repoPath}: ${lsResult.stderr.trim()}`);
+	if (revParseResult.exitCode !== 0) {
+		throw new Error(
+			`Failed to resolve ${resetTarget} in ${repoPath}: ${revParseResult.stderr.trim()}`,
+		);
+	}
+	const targetCommit = revParseResult.stdout.trim();
+
+	if (currentCommit === targetCommit) {
+		return false; // No update needed
 	}
 
-	const remoteCommit = lsResult.stdout.split("\t")[0];
-
-	if (currentCommit === remoteCommit) {
-		return false; // No update
-	}
-
-	// Pull changes
-	const pullResult = await spawnCapture("git", ["pull", "--ff-only"], { cwd: repoPath });
-	if (pullResult.exitCode !== 0) {
-		throw new Error(`Failed to pull in ${repoPath}: ${pullResult.stderr.trim()}`);
+	// Hard reset to target - always matches remote, ignores local divergence
+	const resetResult = await spawnCapture("git", ["reset", "--hard", resetTarget], {
+		cwd: repoPath,
+	});
+	if (resetResult.exitCode !== 0) {
+		throw new Error(`Failed to reset in ${repoPath}: ${resetResult.stderr.trim()}`);
 	}
 
 	return true; // Updated
